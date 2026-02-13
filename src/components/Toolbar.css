@@ -360,3 +360,20 @@
     padding: 15px;
   }
 }
+
+/* Touch-friendly interactions for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .category-accordion {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .category-section {
+    /* Prevent touch events from being blocked */
+    pointer-events: auto;
+  }
+  
+  .toolbar-icons {
+    /* Ensure touch events work on icon container */
+    pointer-events: auto;
+  }
+}

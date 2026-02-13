@@ -15,19 +15,24 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
   const inputRef = useRef(null);
   
   const activeCanvasRef = canvasRef || localCanvasRef;
-
   // Touch event handlers for icon drop from toolbar
   useEffect(() => {
     const handleIconTouchDrop = (e) => {
+      console.log('Canvas received touch drop event:', e.detail);
       const { icon, clientX, clientY } = e.detail;
       const rect = activeCanvasRef.current?.getBoundingClientRect();
+      
+      console.log('Canvas rect:', rect);
       
       if (rect) {
         const x = clientX - rect.left;
         const y = clientY - rect.top;
         
+        console.log('Drop position relative to canvas:', x, y);
+        
         // Check if drop is within canvas bounds
         if (x >= 0 && y >= 0 && x <= rect.width && y <= rect.height) {
+          console.log('Drop is within canvas bounds, creating item');
           const newItem = {
             id: Date.now(),
             serviceType: icon.id,
@@ -38,19 +43,26 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
             y: y - 40,
           };
           
-          setItems(prevItems => [...prevItems, newItem]);
+          setItems(prevItems => {
+            console.log('Adding new item:', newItem);
+            return [...prevItems, newItem];
+          });
           
           // Haptic feedback
           if (navigator.vibrate) {
             navigator.vibrate(30);
           }
+        } else {
+          console.log('Drop is outside canvas bounds');
         }
       }
     };
     
+    console.log('Setting up touch drop listener');
     document.addEventListener('iconTouchDrop', handleIconTouchDrop);
     
     return () => {
+      console.log('Removing touch drop listener');
       document.removeEventListener('iconTouchDrop', handleIconTouchDrop);
     };
   }, [setItems, activeCanvasRef]);

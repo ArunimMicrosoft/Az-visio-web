@@ -8,6 +8,9 @@
   background-size: 20px 20px;
   overflow: hidden;
   cursor: default;
+  /* Ensure canvas can receive touch events */
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
 }
 
 .connections-svg {
