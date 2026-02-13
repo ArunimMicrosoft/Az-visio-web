@@ -275,9 +275,16 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
             }}
             onMouseDown={itemOnMouseDown}
             onMouseUp={itemOnMouseUp}
-          >
-            <div className="item-symbol">
-              <img src={item.path} alt={item.name} className="item-image" />
+          >            <div className="item-symbol">
+              <img 
+                src={encodeURI(item.path)} 
+                alt={item.name} 
+                className="item-image"
+                onError={(e) => {
+                  console.error('Failed to load icon on canvas:', item.path);
+                  e.target.style.display = 'none';
+                }}
+              />
             </div>
             <span className="item-label">{item.name}</span>
             {selectedItem === item.id && (

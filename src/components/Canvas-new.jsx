@@ -449,9 +449,16 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
             onTouchStart={itemOnTouchStart}
             onTouchMove={itemOnTouchMove}
             onTouchEnd={itemOnTouchEnd}
-          >
-            <div className="item-symbol">
-              <img src={item.path} alt={item.name} className="item-image" />
+          >            <div className="item-symbol">
+              <img 
+                src={encodeURI(item.path)} 
+                alt={item.name} 
+                className="item-image"
+                onError={(e) => {
+                  console.error('Failed to load icon on canvas:', item.path);
+                  e.target.style.display = 'none';
+                }}
+              />
             </div>
             
             {editingItem === item.id ? (
