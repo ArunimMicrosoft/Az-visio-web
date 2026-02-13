@@ -8,6 +8,8 @@ const Toolbar = () => {
   const [expandedCategories, setExpandedCategories] = useState(['compute']);
   // Track if toolbar is visible on mobile
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Track if user is dragging an icon
+  const [isDragging, setIsDragging] = useState(false);
   
   // Toggle a category's expanded state
   const toggleCategory = (category) => {
@@ -21,6 +23,31 @@ const Toolbar = () => {
   // Check if category is expanded
   const isCategoryExpanded = (category) => expandedCategories.includes(category);
 
+  // Listen for drag events and close menu on mobile when dragging starts
+  React.useEffect(() => {
+    const handleTouchMoveGlobal = (e) => {
+      if (e.target.closest('.azure-icon')) {
+        setIsDragging(true);
+        // Close mobile menu when user starts dragging an icon
+        if (isMobileMenuOpen && window.innerWidth <= 768) {
+          setIsMobileMenuOpen(false);
+        }
+      }
+    };
+
+    const handleTouchEndGlobal = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener('touchmove', handleTouchMoveGlobal);
+    document.addEventListener('touchend', handleTouchEndGlobal);
+    
+    return () => {
+      document.removeEventListener('touchmove', handleTouchMoveGlobal);
+      document.removeEventListener('touchend', handleTouchEndGlobal);
+    };
+  }, [isMobileMenuOpen]);
+
   return (
     <>
       {/* Mobile Menu Toggle Button */}
@@ -33,10 +60,8 @@ const Toolbar = () => {
           {isMobileMenuOpen ? '✕' : '☰'}
         </span>
         <span className="menu-text">Services</span>
-      </button>
-
-      {/* Overlay for mobile */}
-      {isMobileMenuOpen && (
+      </button>      {/* Overlay for mobile - don't show if dragging */}
+      {isMobileMenuOpen && !isDragging && (
         <div 
           className="mobile-overlay"
           onClick={() => setIsMobileMenuOpen(false)}

@@ -48,6 +48,8 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 999;
+  /* Allow touch events to pass through to elements underneath when needed */
+  touch-action: none;
 }
 
 .toolbar {
@@ -234,7 +236,6 @@
   .mobile-overlay {
     display: block;
   }
-
   /* Toolbar becomes a sliding sidebar on mobile */
   .toolbar {
     position: fixed;
@@ -248,6 +249,18 @@
     box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
     border-right: 2px solid #dee2e6;
     border-bottom: none;
+  }
+
+  /* Ensure toolbar content is above overlay */
+  .toolbar > * {
+    position: relative;
+    z-index: 1001;
+  }
+
+  /* Make icons touchable above overlay */
+  .toolbar .azure-icon {
+    position: relative;
+    z-index: 1002;
   }
 
   /* When mobile menu is open, slide in from left */
