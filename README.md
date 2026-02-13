@@ -1,5 +1,7 @@
 # Azure Architecture Designer
 
+<!-- Deployment: Updated token -->
+
 A modern web application for designing Azure architecture diagrams, similar to Microsoft Visio. Create professional cloud architecture diagrams with drag-and-drop functionality.
 
 ## 🚀 Features
