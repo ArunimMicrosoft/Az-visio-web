@@ -1,15 +1,18 @@
 import { useState, useRef } from 'react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import Toolbar from './components/Toolbar';
 import CanvasComponent from './components/Canvas-new.jsx';
 import ControlPanel from './components/ControlPanel';
 import HelpOverlay from './components/HelpOverlay';
 import Footer from './components/Footer';
 import CostSummary from './components/CostSummary';
-import { downloadTerraform } from './utils/terraformGenerator';
-import { downloadARMTemplate } from './utils/armTemplateGenerator';
-import { generateCostPDF } from './utils/costPDFGenerator';
+import { 
+  exportJSON, 
+  exportPNG, 
+  exportPDF, 
+  exportTerraform, 
+  exportARMTemplate,
+  exportCostReport 
+} from './utils/enterpriseExporter';
 import './App.css';
 
 console.log('=== APP.JSX LOADING ===');
@@ -47,20 +50,29 @@ function App() {
       setConnections([]);
     }
   };
-
-  const handleExport = () => {
-    const diagram = { items, connections };
-    const dataStr = JSON.stringify(diagram, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'azure-architecture.json';
-    link.click();
-    URL.revokeObjectURL(url);
+  const handleExport = async () => {
+    if (items.length === 0) {
+      alert('No items on canvas to export! Please add Azure services first. ❌');
+      return;
+    }
+    try {
+      const result = await exportJSON(items, connections, {
+        environment: 'production',
+        author: 'User',
+        description: 'Azure Architecture Diagram'
+      });
+      alert(`✅ JSON exported successfully!\n\n📁 ${result.filename}\n📊 ${result.itemCount} services, ${result.connectionCount} connections`);
+    } catch (error) {
+      console.error('Error exporting JSON:', error);
+      alert(`❌ Failed to export JSON!\n\n${error.message}`);
+    }
   };
 
   const handleExportPNG = async () => {
+    if (items.length === 0) {
+      alert('No items on canvas to export! Please add Azure services first. ❌');
+      return;
+    }
     try {
       const canvasElement = canvasRef.current;
       if (!canvasElement) {
@@ -68,34 +80,23 @@ function App() {
         return;
       }
 
-      const canvas = await html2canvas(canvasElement, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        logging: false,
-        useCORS: true,
-        ignoreElements: (element) => {
-          return element.classList.contains('help-overlay') || 
-                 element.classList.contains('help-button') ||
-                 element.classList.contains('connecting-status') ||
-                 element.classList.contains('canvas-placeholder');
-        }
+      const result = await exportPNG(canvasElement, items, connections, {
+        quality: 'high',
+        environment: 'production'
       });
-
-      canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `azure-architecture-${Date.now()}.png`;
-        link.click();
-        URL.revokeObjectURL(url);
-        alert('PNG exported successfully! 🖼️✅');
-      });
+      
+      alert(`✅ PNG exported successfully!\n\n📁 ${result.filename}\n📐 ${result.dimensions.width}x${result.dimensions.height}px\n📊 ${result.size} bytes`);
     } catch (error) {
       console.error('Error exporting PNG:', error);
-      alert('Failed to export PNG! ❌');
+      alert(`❌ Failed to export PNG!\n\n${error.message}`);
     }
   };
+  
   const handleExportPDF = async () => {
+    if (items.length === 0) {
+      alert('No items on canvas to export! Please add Azure services first. ❌');
+      return;
+    }
     try {
       const canvasElement = canvasRef.current;
       if (!canvasElement) {
@@ -103,75 +104,70 @@ function App() {
         return;
       }
 
-      const canvas = await html2canvas(canvasElement, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        logging: false,
-        useCORS: true,
-        ignoreElements: (element) => {
-          return element.classList.contains('help-overlay') || 
-                 element.classList.contains('help-button') ||
-                 element.classList.contains('connecting-status') ||
-                 element.classList.contains('canvas-placeholder');
-        }
+      const result = await exportPDF(canvasElement, items, connections, {
+        title: 'Azure Architecture Diagram',
+        author: 'Architecture Team',
+        environment: 'production',
+        region: selectedRegion
       });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
-        unit: 'px',
-        format: [canvas.width, canvas.height]
-      });
-
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      pdf.save(`azure-architecture-${Date.now()}.pdf`);
-      alert('PDF exported successfully! 📄✅');
+      
+      alert(`✅ PDF exported successfully!\n\n📁 ${result.filename}\n📄 ${result.pages} pages\n📊 ${result.itemCount} services, ${result.connectionCount} connections`);
     } catch (error) {
       console.error('Error exporting PDF:', error);
-      alert('Failed to export PDF! ❌');
+      alert(`❌ Failed to export PDF!\n\n${error.message}`);
     }
   };
 
-  const handleExportTerraform = () => {
+  const handleExportTerraform = async () => {
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
       return;
     }
     try {
-      downloadTerraform(items, connections);
-      alert('Terraform configuration exported successfully! 🏗️✅');
+      const result = await exportTerraform(items, connections, {
+        environment: 'production',
+        region: selectedRegion
+      });
+      
+      alert(`✅ Terraform configuration exported successfully!\n\n📦 Files generated:\n${result.files.map(f => `  • ${f}`).join('\n')}\n\n📊 ${result.itemCount} services, ${result.connectionCount} connections`);
     } catch (error) {
       console.error('Error exporting Terraform:', error);
-      alert('Failed to export Terraform configuration! ❌');
+      alert(`❌ Failed to export Terraform!\n\n${error.message}`);
     }
   };
 
-  const handleExportARM = () => {
+  const handleExportARM = async () => {
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
       return;
     }
     try {
-      downloadARMTemplate(items, connections);
-      alert('ARM Template exported successfully! 📋✅');
+      const result = await exportARMTemplate(items, connections, {
+        environment: 'production',
+        region: selectedRegion
+      });
+      
+      alert(`✅ ARM Template exported successfully!\n\n📦 Files generated:\n${result.files.map(f => `  • ${f}`).join('\n')}\n\n📊 ${result.itemCount} services, ${result.connectionCount} connections`);
     } catch (error) {
       console.error('Error exporting ARM Template:', error);
-      alert('Failed to export ARM Template! ❌');
+      alert(`❌ Failed to export ARM Template!\n\n${error.message}`);
     }
-  };  const handleExportCostReport = () => {
+  };
+  
+  const handleExportCostReport = async () => {
     if (items.length === 0) {
       alert('No items on canvas! Please add Azure services first. ❌');
       return;
     }
     try {
-      console.log('Starting PDF generation with items:', items);
-      const fileName = generateCostPDF(items, selectedRegion, selectedCurrency);
-      console.log('PDF generated successfully:', fileName);
-      alert('Cost report PDF generated successfully! 💰✅');
+      const result = await exportCostReport(items, selectedRegion, selectedCurrency, {
+        environment: 'production'
+      });
+      
+      alert(`✅ Cost report exported successfully!\n\n📁 ${result.filename}\n🌍 Region: ${result.region}\n💱 Currency: ${result.currency}\n📊 ${result.itemCount} services analyzed`);
     } catch (error) {
-      console.error('Error generating cost PDF:', error);
-      console.error('Error stack:', error.stack);
-      alert(`Failed to generate cost report PDF! ❌\n\nError: ${error.message}`);
+      console.error('Error exporting cost report:', error);
+      alert(`❌ Failed to export cost report!\n\n${error.message}`);
     }
   };
   return (
