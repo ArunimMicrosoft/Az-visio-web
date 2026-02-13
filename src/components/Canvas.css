@@ -347,6 +347,29 @@
   }
 }
 
+/* Mobile touch-friendly styles */
+@media (hover: none) and (pointer: coarse) {
+  .canvas {
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  .canvas-item {
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  
+  .canvas-item:active {
+    cursor: grabbing;
+    box-shadow: 0 6px 20px rgba(0, 120, 212, 0.4);
+    transform: scale(1.05);
+    transition: transform 0.1s ease;
+  }
+}
+
 /* Landscape orientation adjustments */
 @media (max-width: 768px) and (orientation: landscape) {
   .canvas {

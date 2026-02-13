@@ -16,6 +16,45 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
   
   const activeCanvasRef = canvasRef || localCanvasRef;
 
+  // Touch event handlers for icon drop from toolbar
+  useEffect(() => {
+    const handleIconTouchDrop = (e) => {
+      const { icon, clientX, clientY } = e.detail;
+      const rect = activeCanvasRef.current?.getBoundingClientRect();
+      
+      if (rect) {
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        
+        // Check if drop is within canvas bounds
+        if (x >= 0 && y >= 0 && x <= rect.width && y <= rect.height) {
+          const newItem = {
+            id: Date.now(),
+            serviceType: icon.id,
+            name: icon.name,
+            path: icon.path,
+            category: icon.category,
+            x: x - 40,
+            y: y - 40,
+          };
+          
+          setItems(prevItems => [...prevItems, newItem]);
+          
+          // Haptic feedback
+          if (navigator.vibrate) {
+            navigator.vibrate(30);
+          }
+        }
+      }
+    };
+    
+    document.addEventListener('iconTouchDrop', handleIconTouchDrop);
+    
+    return () => {
+      document.removeEventListener('iconTouchDrop', handleIconTouchDrop);
+    };
+  }, [setItems, activeCanvasRef]);
+
   const handleDragOver = (e) => {
     e.preventDefault();
   };
@@ -313,6 +352,44 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
 
         const itemOnMouseUp = (e) => completeConnection(e, item);
 
+        // Touch event handlers for mobile
+        const itemOnTouchStart = (e) => {
+          e.stopPropagation();
+          const touch = e.touches[0];
+          setSelectedItem(item.id);
+          setIsDragging(true);
+          const rect = activeCanvasRef.current.getBoundingClientRect();
+          setDragOffset({
+            x: touch.clientX - rect.left - item.x,
+            y: touch.clientY - rect.top - item.y,
+          });
+          
+          // Haptic feedback
+          if (navigator.vibrate) {
+            navigator.vibrate(30);
+          }
+        };
+
+        const itemOnTouchMove = (e) => {
+          if (isDragging && selectedItem === item.id) {
+            e.preventDefault();
+            e.stopPropagation();
+            const touch = e.touches[0];
+            const rect = activeCanvasRef.current.getBoundingClientRect();
+            const x = touch.clientX - rect.left - dragOffset.x;
+            const y = touch.clientY - rect.top - dragOffset.y;
+
+            setItems(items.map(itm =>
+              itm.id === item.id ? { ...itm, x, y } : itm
+            ));
+          }
+        };
+
+        const itemOnTouchEnd = (e) => {
+          e.stopPropagation();
+          setIsDragging(false);
+        };
+
         return (
           <div
             key={item.id}
@@ -323,6 +400,9 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
             }}
             onMouseDown={itemOnMouseDown}
             onMouseUp={itemOnMouseUp}
+            onTouchStart={itemOnTouchStart}
+            onTouchMove={itemOnTouchMove}
+            onTouchEnd={itemOnTouchEnd}
           >
             <div className="item-symbol">
               <img src={item.path} alt={item.name} className="item-image" />
