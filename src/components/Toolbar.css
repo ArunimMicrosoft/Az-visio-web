@@ -1,0 +1,83 @@
+.toolbar {
+  width: 250px;
+  background-color: #f8f9fa;
+  border-right: 1px solid #dee2e6;
+  padding: 10px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.toolbar-title {
+  margin: 0 0 15px 0;
+  padding: 10px;
+  font-size: 16px;
+  color: #333;
+  border-bottom: 2px solid #0078D4;
+  flex-shrink: 0;
+}
+
+.category-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 15px;
+  flex-shrink: 0;
+}
+
+.category-tab {
+  padding: 8px 12px;
+  background-color: transparent;
+  border: none;
+  border-left: 3px solid transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.category-tab:hover {
+  background-color: #e9ecef;
+}
+
+.category-tab.active {
+  background-color: #e7f3ff;
+  border-left-color: #0078D4;
+  color: #0078D4;
+  font-weight: 600;
+}
+
+.toolbar-icons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+  padding-right: 5px;
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+.toolbar-icons::-webkit-scrollbar {
+  width: 10px;
+}
+
+.toolbar-icons::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 5px;
+  margin: 2px 0;
+}
+
+.toolbar-icons::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+  border: 2px solid #f1f1f1;
+}
+
+.toolbar-icons::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

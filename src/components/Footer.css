@@ -1,0 +1,48 @@
+.app-footer {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 20px;
+  text-align: center;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 10;
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.footer-copyright {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.footer-divider {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 300;
+}
+
+.footer-author {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.footer-author strong {
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .footer-content {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .footer-divider {
+    display: none;
+  }
+}
