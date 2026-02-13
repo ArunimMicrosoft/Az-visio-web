@@ -271,3 +271,111 @@
     opacity: 0;
   }
 }
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet (Portrait) - 768px and below */
+@media (max-width: 768px) {
+  .canvas {
+    min-height: 400px;
+    background-size: 15px 15px;
+  }
+
+  .canvas-item {
+    padding: 8px;
+  }
+
+  .item-symbol {
+    width: 50px;
+    height: 50px;
+    padding: 6px;
+  }
+
+  .item-label {
+    font-size: 11px;
+    max-width: 90px;
+  }
+
+  /* Touch-friendly hit areas */
+  .canvas-item {
+    min-width: 80px;
+    min-height: 80px;
+  }
+}
+
+/* Mobile (Portrait) - 480px and below */
+@media (max-width: 480px) {
+  .canvas {
+    min-height: 300px;
+    background-size: 12px 12px;
+  }
+
+  .canvas-item {
+    padding: 6px;
+  }
+
+  .item-symbol {
+    width: 40px;
+    height: 40px;
+    padding: 5px;
+    margin-bottom: 6px;
+  }
+
+  .item-label {
+    font-size: 10px;
+    max-width: 75px;
+  }
+
+  .item-label-edit {
+    font-size: 10px;
+    max-width: 75px;
+  }
+
+  /* Larger touch targets on mobile */
+  .canvas-item {
+    min-width: 70px;
+    min-height: 70px;
+  }
+
+  /* Thicker connection lines on mobile for better visibility */
+  .connections-svg line {
+    stroke-width: 3px;
+  }
+
+  .connections-svg marker path {
+    stroke-width: 1px;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+  .canvas {
+    min-height: 250px;
+  }
+
+  .main-content > .toolbar {
+    max-height: 50vh;
+  }
+
+  .main-content > .cost-summary {
+    max-height: 40vh;
+  }
+}
+
+/* Large Desktop - 1920px and above */
+@media (min-width: 1920px) {
+  .canvas-item {
+    padding: 12px;
+  }
+
+  .item-symbol {
+    width: 70px;
+    height: 70px;
+    padding: 10px;
+  }
+
+  .item-label {
+    font-size: 13px;
+    max-width: 120px;
+  }
+}

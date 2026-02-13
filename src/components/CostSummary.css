@@ -321,3 +321,152 @@
     padding: 6px;
   }
 }
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet (Portrait) - 768px and below */
+@media (max-width: 768px) {
+  .cost-summary {
+    width: 100%;
+    max-height: 30vh;
+    overflow-y: auto;
+    padding: 12px;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .cost-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .cost-header h3 {
+    font-size: 16px;
+  }
+
+  .cost-selectors {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .region-selector,
+  .currency-selector {
+    flex: 1;
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .cost-total {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cost-value {
+    font-size: 20px;
+  }
+
+  .cost-table {
+    font-size: 12px;
+  }
+
+  .cost-table th,
+  .cost-table td {
+    padding: 6px 4px;
+  }
+
+  .export-pdf-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+
+/* Mobile (Portrait) - 480px and below */
+@media (max-width: 480px) {
+  .cost-summary {
+    max-height: 25vh;
+    padding: 10px;
+  }
+
+  .cost-summary.empty {
+    padding: 20px;
+  }
+
+  .cost-icon {
+    font-size: 36px;
+  }
+
+  .cost-header h3 {
+    font-size: 15px;
+  }
+
+  .region-selector,
+  .currency-selector {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+
+  .cost-value {
+    font-size: 18px;
+  }
+
+  .cost-label {
+    font-size: 11px;
+  }
+
+  .cost-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  .cost-table {
+    font-size: 11px;
+  }
+
+  .cost-table th,
+  .cost-table td {
+    padding: 5px 3px;
+  }
+
+  .export-pdf-btn {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+  .cost-toggle-btn {
+    padding: 8px;
+    font-size: 13px;
+  }
+}
+
+/* Landscape orientation on mobile/tablet */
+@media (max-width: 768px) and (orientation: landscape) {
+  .cost-summary {
+    max-height: 40vh;
+  }
+}
+
+/* Large Desktop - 1920px and above */
+@media (min-width: 1920px) {
+  .cost-summary {
+    width: 380px;
+    padding: 18px;
+  }
+
+  .cost-header h3 {
+    font-size: 20px;
+  }
+
+  .cost-value {
+    font-size: 28px;
+  }
+
+  .cost-table {
+    font-size: 14px;
+  }
+
+  .cost-table th,
+  .cost-table td {
+    padding: 10px;
+  }
+}

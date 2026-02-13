@@ -6,6 +6,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+  /* Touch-friendly improvements */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 code {
@@ -16,4 +19,23 @@ code {
 #root {
   width: 100vw;
   height: 100vh;
+}
+
+/* Improve scrolling on mobile */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent text selection on mobile during drag operations */
+@media (max-width: 768px) {
+  body {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  
+  /* Allow text selection in input fields and text areas */
+  input, textarea, [contenteditable] {
+    user-select: text;
+    -webkit-user-select: text;
+  }
 }

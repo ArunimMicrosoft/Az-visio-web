@@ -42,3 +42,69 @@
   max-width: 80px;
   line-height: 1.2;
 }
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet (Portrait) - 768px and below */
+@media (max-width: 768px) {
+  .azure-icon {
+    padding: 6px;
+    margin: 3px;
+    min-width: 70px;
+  }
+
+  .icon-symbol {
+    width: 45px;
+    height: 45px;
+    margin-bottom: 4px;
+  }
+
+  .icon-label {
+    font-size: 10px;
+    max-width: 70px;
+  }
+}
+
+/* Mobile (Portrait) - 480px and below */
+@media (max-width: 480px) {
+  .azure-icon {
+    padding: 5px;
+    margin: 2px;
+    min-width: 60px;
+  }
+
+  .icon-symbol {
+    width: 38px;
+    height: 38px;
+    margin-bottom: 3px;
+  }
+
+  .icon-label {
+    font-size: 9px;
+    max-width: 60px;
+    line-height: 1.1;
+  }
+  
+  /* Larger touch target on mobile */
+  .azure-icon {
+    min-height: 65px;
+  }
+}
+
+/* Large Desktop - 1920px and above */
+@media (min-width: 1920px) {
+  .azure-icon {
+    padding: 10px;
+    min-width: 100px;
+  }
+
+  .icon-symbol {
+    width: 60px;
+    height: 60px;
+  }
+
+  .icon-label {
+    font-size: 12px;
+    max-width: 100px;
+  }
+}

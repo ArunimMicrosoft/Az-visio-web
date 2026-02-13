@@ -30,3 +30,73 @@
   margin: 0;
 }
 
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet (Portrait) - 768px and below */
+@media (max-width: 768px) {
+  .main-content {
+    flex-direction: column;
+  }
+
+  /* Toolbar becomes horizontal on tablet/mobile */
+  .main-content > .toolbar {
+    width: 100%;
+    height: auto;
+    max-height: 40vh;
+    border-right: none;
+    border-bottom: 2px solid #dee2e6;
+    flex-shrink: 0;
+  }
+
+  /* Cost summary takes full width on tablet */
+  .main-content > .cost-summary {
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+    border-left: none;
+    border-top: 2px solid #dee2e6;
+    max-height: 30vh;
+  }
+
+  /* Canvas adjusts to remaining space */
+  .canvas {
+    flex: 1;
+    min-height: 400px;
+  }
+}
+
+/* Mobile (Portrait) - 480px and below */
+@media (max-width: 480px) {
+  .app {
+    font-size: 14px;
+  }
+
+  /* Toolbar more compact on mobile */
+  .main-content > .toolbar {
+    max-height: 35vh;
+    padding: 8px;
+  }
+
+  /* Cost summary more compact */
+  .main-content > .cost-summary {
+    max-height: 25vh;
+  }
+
+  /* Canvas minimum height reduced for mobile */
+  .canvas {
+    min-height: 300px;
+  }
+}
+
+/* Large Desktop - 1920px and above */
+@media (min-width: 1920px) {
+  .main-content > .toolbar {
+    width: 300px;
+  }
+
+  .main-content > .cost-summary {
+    width: 380px;
+    max-width: 380px;
+  }
+}
+
