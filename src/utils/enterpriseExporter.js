@@ -2,10 +2,10 @@
 // Follows industry best practices for file naming, metadata, validation, and error handling
 
 import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 import { generateTerraform } from './terraformGenerator-enterprise';
 import { generateARMTemplate } from './armTemplateGenerator';
 import { generateCostPDF } from './costPDFGenerator';
+import { renderDiagramToCanvas } from './canvasRenderer';
 
 /**
  * Enterprise Export Configuration
@@ -108,9 +108,104 @@ const generateServiceStatistics = (items) => {
 };
 
 /**
+ * Calculate the bounding box of all items AND connections on the canvas
+ * Returns the minimum area that contains all content with padding
+ * NOTE: This function is kept for backward compatibility but not currently used
+ * The new renderDiagramToCanvas() function handles bounds calculation internally
+ */
+// eslint-disable-next-line no-unused-vars
+const calculateDiagramBounds = (items, connections = [], padding = 80) => {
+  if (!items || items.length === 0) {
+    return { x: 0, y: 0, width: 800, height: 600 };
+  }
+  
+  const ICON_SIZE = 60; // Default icon size
+  const ICON_OFFSET = ICON_SIZE / 2; // Center of icon
+  
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  
+  // Calculate bounds from items
+  items.forEach(item => {
+    const x = item.x || 0;
+    const y = item.y || 0;
+    
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x + ICON_SIZE);
+    maxY = Math.max(maxY, y + ICON_SIZE);
+  });
+  
+  // Also calculate bounds from connections (they might extend beyond items)
+  if (connections && connections.length > 0) {
+    connections.forEach(conn => {
+      const fromItem = items.find(item => item.id === conn.from);
+      const toItem = items.find(item => item.id === conn.to);
+      
+      if (fromItem && toItem) {
+        const fromX = fromItem.x + ICON_OFFSET;
+        const fromY = fromItem.y + ICON_OFFSET;
+        const toX = toItem.x + ICON_OFFSET;
+        const toY = toItem.y + ICON_OFFSET;
+        
+        // Update bounds to include connection line endpoints
+        minX = Math.min(minX, fromX, toX);
+        minY = Math.min(minY, fromY, toY);
+        maxX = Math.max(maxX, fromX, toX);
+        maxY = Math.max(maxY, fromY, toY);
+      }
+    });
+  }
+  
+  // Ensure minimum dimensions
+  const contentWidth = maxX - minX;
+  const contentHeight = maxY - minY;
+  const finalWidth = Math.max(contentWidth, 400);
+  const finalHeight = Math.max(contentHeight, 300);
+  
+  // Add padding around the diagram
+  return {
+    x: Math.max(0, minX - padding),
+    y: Math.max(0, minY - padding),
+    width: finalWidth + (padding * 2),
+    height: finalHeight + (padding * 2)
+  };
+};
+
+/**
+ * Crop canvas to the diagram bounds and center it
+ * NOTE: This function is kept for backward compatibility but not currently used
+ * The new renderDiagramToCanvas() function handles cropping internally
+ */
+// eslint-disable-next-line no-unused-vars
+const cropAndCenterCanvas = (sourceCanvas, bounds) => {
+  // Create a new canvas with the cropped dimensions
+  const croppedCanvas = document.createElement('canvas');
+  const ctx = croppedCanvas.getContext('2d');
+  
+  croppedCanvas.width = bounds.width;
+  croppedCanvas.height = bounds.height;
+  
+  // Fill with white background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, bounds.width, bounds.height);
+  
+  // Draw the cropped portion from the source canvas
+  ctx.drawImage(
+    sourceCanvas,
+    bounds.x, bounds.y, bounds.width, bounds.height, // Source rectangle
+    0, 0, bounds.width, bounds.height                 // Destination rectangle
+  );
+  
+  return croppedCanvas;
+};
+
+/**
  * Export as JSON with enterprise metadata
  */
-export const exportJSON = (items, connections, options = {}) => {
+export const exportJSON = async (items, connections, options = {}) => {
   try {
     // Validate data
     const validation = validateExportData(items, connections);
@@ -148,8 +243,7 @@ export const exportJSON = (items, connections, options = {}) => {
         ],
         timestamp: new Date().toISOString()
       }
-    };
-    
+    };    
     // Convert to formatted JSON
     const jsonString = JSON.stringify(exportData, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
@@ -160,9 +254,9 @@ export const exportJSON = (items, connections, options = {}) => {
       throw new Error(`File size (${sizeInMB.toFixed(2)}MB) exceeds maximum allowed size (${MAX_FILE_SIZE_MB}MB)`);
     }
     
-    // Download file
+    // Download file asynchronously
     const filename = generateFileName('azure-architecture', 'json', options.environment);
-    downloadBlob(blob, filename);
+    await downloadBlob(blob, filename);
     
     return {
       success: true,
@@ -180,48 +274,28 @@ export const exportJSON = (items, connections, options = {}) => {
 
 /**
  * Export as high-quality PNG with metadata
+ * Uses custom canvas renderer instead of html2canvas for reliability
  */
 export const exportPNG = async (canvasElement, items, connections, options = {}) => {
   try {
-    if (!canvasElement) {
-      throw new Error('Canvas element not found');
-    }
+    console.log('🎨 Starting PNG export with', items.length, 'items and', connections.length, 'connections');
     
     // Validate data
     const validation = validateExportData(items, connections);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
-    
-    // High-quality rendering settings
-    const canvas = await html2canvas(canvasElement, {
-      backgroundColor: options.backgroundColor || '#ffffff',
-      scale: options.quality === 'high' ? 3 : 2, // Higher DPI for enterprise use
-      logging: false,
-      useCORS: true,
-      allowTaint: false,
-      removeContainer: true,
-      imageTimeout: 30000,
-      ignoreElements: (element) => {
-        return element.classList.contains('help-overlay') || 
-               element.classList.contains('help-button') ||
-               element.classList.contains('connecting-status') ||
-               element.classList.contains('canvas-placeholder') ||
-               element.classList.contains('mobile-menu-toggle') ||
-               element.classList.contains('mobile-overlay');
-      },
-      onclone: (clonedDoc) => {
-        // Clean up cloned document for export
-        const clonedCanvas = clonedDoc.querySelector('.canvas');
-        if (clonedCanvas) {
-          clonedCanvas.style.transform = 'none';
-          clonedCanvas.style.overflow = 'visible';
-        }
-      }
+      // Render diagram to canvas using custom renderer
+    const { canvas } = await renderDiagramToCanvas(items, connections, {
+      padding: 80,
+      scale: options.quality === 'high' ? 3 : 2,
+      showGrid: false
     });
     
+    console.log('✅ Canvas rendered:', canvas.width, 'x', canvas.height);
+    
     return new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => {
+      canvas.toBlob(async (blob) => {
         if (!blob) {
           reject(new Error('Failed to generate PNG blob'));
           return;
@@ -235,35 +309,41 @@ export const exportPNG = async (canvasElement, items, connections, options = {})
         }
         
         const filename = generateFileName('azure-architecture-diagram', 'png', options.environment);
-        downloadBlob(blob, filename);
         
-        resolve({
-          success: true,
-          filename,
-          size: blob.size,
-          dimensions: {
-            width: canvas.width,
-            height: canvas.height
-          },
-          quality: options.quality || 'standard'
-        });
+        try {
+          await downloadBlob(blob, filename);
+          
+          console.log('✅ PNG exported successfully:', filename);
+          
+          resolve({
+            success: true,
+            filename,
+            size: blob.size,
+            dimensions: {
+              width: canvas.width,
+              height: canvas.height
+            },
+            quality: options.quality || 'standard'
+          });
+        } catch (error) {
+          reject(error);
+        }
       }, 'image/png', options.quality === 'high' ? 1.0 : 0.92);
     });
     
   } catch (error) {
-    console.error('PNG Export Error:', error);
+        console.error('PNG Export Error:', error);
     throw new Error(`Failed to export PNG: ${error.message}`);
   }
 };
 
 /**
  * Export as professional PDF with metadata and documentation
+ * Uses custom canvas renderer instead of html2canvas for reliability
  */
 export const exportPDF = async (canvasElement, items, connections, options = {}) => {
   try {
-    if (!canvasElement) {
-      throw new Error('Canvas element not found');
-    }
+    console.log('📄 Starting PDF export with', items.length, 'items and', connections.length, 'connections');
     
     // Validate data
     const validation = validateExportData(items, connections);
@@ -271,22 +351,14 @@ export const exportPDF = async (canvasElement, items, connections, options = {})
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
     
-    // Capture canvas as image
-    const canvas = await html2canvas(canvasElement, {
-      backgroundColor: '#ffffff',
+    // Render diagram to canvas using custom renderer
+    const { canvas, bounds } = await renderDiagramToCanvas(items, connections, {
+      padding: 80,
       scale: 2,
-      logging: false,
-      useCORS: true,
-      allowTaint: false,
-      ignoreElements: (element) => {
-        return element.classList.contains('help-overlay') || 
-               element.classList.contains('help-button') ||
-               element.classList.contains('connecting-status') ||
-               element.classList.contains('canvas-placeholder') ||
-               element.classList.contains('mobile-menu-toggle') ||
-               element.classList.contains('mobile-overlay');
-      }
+      showGrid: false
     });
+    
+    console.log('✅ PDF Canvas rendered:', canvas.width, 'x', canvas.height);
     
     const imgData = canvas.toDataURL('image/png', 1.0);
     
@@ -342,7 +414,8 @@ export const exportPDF = async (canvasElement, items, connections, options = {})
       `Total Services: ${items.length}`,
       `Connections: ${connections.length}`,
       `Environment: ${options.environment || 'Production'}`,
-      `Region: ${options.region || 'East US'}`
+      `Region: ${options.region || 'East US'}`,
+      `Diagram Size: ${Math.round(bounds.width)}×${Math.round(bounds.height)}px`
     ];
     
     metadata.forEach(line => {
@@ -377,8 +450,7 @@ export const exportPDF = async (canvasElement, items, connections, options = {})
     pdf.setFontSize(14);
     pdf.setFont(undefined, 'bold');
     pdf.text('Architecture Diagram', pageWidth / 2, 10, { align: 'center' });
-    
-    // Calculate image dimensions to fit page with margins
+      // Calculate image dimensions to fit page with margins and center it
     const availableWidth = pageWidth - (2 * margin);
     const availableHeight = pageHeight - 25 - margin; // Account for header
     
@@ -387,15 +459,18 @@ export const exportPDF = async (canvasElement, items, connections, options = {})
     const availableRatio = availableWidth / availableHeight;
     
     if (imgRatio > availableRatio) {
+      // Width is the limiting factor
       imgWidth = availableWidth;
       imgHeight = availableWidth / imgRatio;
     } else {
+      // Height is the limiting factor
       imgHeight = availableHeight;
       imgWidth = availableHeight * imgRatio;
     }
     
+    // Center the image on the page
     const xPos = (pageWidth - imgWidth) / 2;
-    const yPos_img = 20;
+    const yPos_img = 20 + ((availableHeight - imgHeight) / 2); // Center vertically
     
     pdf.addImage(imgData, 'PNG', xPos, yPos_img, imgWidth, imgHeight, undefined, 'FAST');
     
@@ -434,7 +509,7 @@ export const exportPDF = async (canvasElement, items, connections, options = {})
 /**
  * Export Terraform with enterprise best practices
  */
-export const exportTerraform = (items, connections, options = {}) => {
+export const exportTerraform = async (items, connections, options = {}) => {
   try {
     // Validate data
     const validation = validateExportData(items, connections);
@@ -445,38 +520,47 @@ export const exportTerraform = (items, connections, options = {}) => {
     // Generate enterprise-grade Terraform configuration
     const terraformFiles = generateTerraform(items, connections);
     
-    // Download all files
+    // Download all files with delays to prevent browser lag
     const fileNames = [];
     const environment = options.environment || 'prod';
     
     // Download main.tf
     const mainFilename = generateFileName('main', 'tf', environment);
     const mainBlob = new Blob([terraformFiles.main], { type: 'text/plain;charset=utf-8' });
-    downloadBlob(mainBlob, mainFilename);
+    await downloadBlob(mainBlob, mainFilename);
     fileNames.push(mainFilename);
+    
+    // Small delay between downloads
+    await new Promise(resolve => setTimeout(resolve, 150));
     
     // Download variables.tf
     const variablesFilename = generateFileName('variables', 'tf', environment);
     const variablesBlob = new Blob([terraformFiles.variables], { type: 'text/plain;charset=utf-8' });
-    downloadBlob(variablesBlob, variablesFilename);
+    await downloadBlob(variablesBlob, variablesFilename);
     fileNames.push(variablesFilename);
+    
+    await new Promise(resolve => setTimeout(resolve, 150));
     
     // Download outputs.tf
     const outputsFilename = generateFileName('outputs', 'tf', environment);
     const outputsBlob = new Blob([terraformFiles.outputs], { type: 'text/plain;charset=utf-8' });
-    downloadBlob(outputsBlob, outputsFilename);
+    await downloadBlob(outputsBlob, outputsFilename);
     fileNames.push(outputsFilename);
+    
+    await new Promise(resolve => setTimeout(resolve, 150));
     
     // Download terraform.tfvars
     const tfvarsFilename = generateFileName('terraform', 'tfvars', environment);
     const tfvarsBlob = new Blob([terraformFiles.tfvars], { type: 'text/plain;charset=utf-8' });
-    downloadBlob(tfvarsBlob, tfvarsFilename);
+    await downloadBlob(tfvarsBlob, tfvarsFilename);
     fileNames.push(tfvarsFilename);
+    
+    await new Promise(resolve => setTimeout(resolve, 150));
     
     // Download README.md
     const readmeFilename = `README_terraform_${environment}.md`;
     const readmeBlob = new Blob([terraformFiles.readme], { type: 'text/markdown;charset=utf-8' });
-    downloadBlob(readmeBlob, readmeFilename);
+    await downloadBlob(readmeBlob, readmeFilename);
     fileNames.push(readmeFilename);
     
     return {
@@ -495,7 +579,7 @@ export const exportTerraform = (items, connections, options = {}) => {
 /**
  * Export ARM Template with enterprise standards
  */
-export const exportARMTemplate = (items, connections, options = {}) => {
+export const exportARMTemplate = async (items, connections, options = {}) => {
   try {
     // Validate data
     const validation = validateExportData(items, connections);
@@ -538,19 +622,24 @@ export const exportARMTemplate = (items, connections, options = {}) => {
     }
     
     const filename = generateFileName('azure-arm-template', 'json', options.environment);
-    downloadBlob(blob, filename);
+    await downloadBlob(blob, filename);
+    
+    // Small delay between downloads
+    await new Promise(resolve => setTimeout(resolve, 150));
     
     // Generate parameters file
     const parametersContent = generateARMParameters(armTemplate, options);
     const paramsBlob = new Blob([parametersContent], { type: 'application/json;charset=utf-8' });
     const paramsFilename = generateFileName('azure-arm-parameters', 'json', options.environment);
-    downloadBlob(paramsBlob, paramsFilename);
+    await downloadBlob(paramsBlob, paramsFilename);
+    
+    await new Promise(resolve => setTimeout(resolve, 150));
     
     // Generate deployment script
     const deployScript = generateARMDeploymentScript(filename, paramsFilename, options);
     const scriptBlob = new Blob([deployScript], { type: 'text/plain;charset=utf-8' });
     const scriptFilename = `deploy_${options.environment || 'prod'}.sh`;
-    downloadBlob(scriptBlob, scriptFilename);
+    await downloadBlob(scriptBlob, scriptFilename);
     
     return {
       success: true,
@@ -694,19 +783,36 @@ echo "=================================="
 
 /**
  * Utility function to download blob as file
+ * Optimized to prevent UI lag and memory leaks
  */
 const downloadBlob = (blob, filename) => {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.style.display = 'none';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  // Clean up URL object after a delay
-  setTimeout(() => URL.revokeObjectURL(url), 100);
+  return new Promise((resolve) => {
+    // Use requestAnimationFrame to avoid blocking the main thread
+    requestAnimationFrame(() => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      
+      document.body.appendChild(link);
+      
+      // Use setTimeout to ensure click happens after DOM update
+      setTimeout(() => {
+        link.click();
+        
+        // Clean up immediately after click
+        requestAnimationFrame(() => {
+          document.body.removeChild(link);
+          // Revoke URL after longer delay to ensure download starts
+          setTimeout(() => {
+            URL.revokeObjectURL(url);
+            resolve();
+          }, 1000);
+        });
+      }, 10);
+    });
+  });
 };
 
 /**
