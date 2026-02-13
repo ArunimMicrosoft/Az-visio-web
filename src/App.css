@@ -34,34 +34,26 @@
 
 /* Tablet (Portrait) - 768px and below */
 @media (max-width: 768px) {
-  .main-content {
-    flex-direction: column;
-  }
-
-  /* Toolbar becomes horizontal on tablet/mobile */
-  .main-content > .toolbar {
-    width: 100%;
-    height: auto;
-    max-height: 40vh;
-    border-right: none;
-    border-bottom: 2px solid #dee2e6;
-    flex-shrink: 0;
-  }
-
   /* Cost summary takes full width on tablet */
   .main-content > .cost-summary {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     width: 100%;
     max-width: 100%;
     min-width: 100%;
     border-left: none;
     border-top: 2px solid #dee2e6;
     max-height: 30vh;
+    z-index: 500;
+    border-radius: 0;
   }
 
-  /* Canvas adjusts to remaining space */
+  /* Canvas takes full remaining space */
   .canvas {
     flex: 1;
-    min-height: 400px;
+    min-height: calc(100vh - 200px);
   }
 }
 
@@ -71,12 +63,6 @@
     font-size: 14px;
   }
 
-  /* Toolbar more compact on mobile */
-  .main-content > .toolbar {
-    max-height: 35vh;
-    padding: 8px;
-  }
-
   /* Cost summary more compact */
   .main-content > .cost-summary {
     max-height: 25vh;
@@ -84,7 +70,7 @@
 
   /* Canvas minimum height reduced for mobile */
   .canvas {
-    min-height: 300px;
+    min-height: calc(100vh - 220px);
   }
 }
 
