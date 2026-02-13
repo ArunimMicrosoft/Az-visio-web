@@ -58,6 +58,18 @@
   background-color: #6a9a00;
 }
 
+.validate-btn {
+  background-color: #28a745;
+  color: white;
+  font-weight: 600;
+}
+
+.validate-btn:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
 .export-btn {
   background-color: #00BCF2;
   color: white;

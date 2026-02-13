@@ -5,7 +5,8 @@
   text-align: center;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   position: relative;
-  z-index: 10;
+  z-index: 1; /* Lower z-index so it doesn't overlap toolbar/content */
+  flex-shrink: 0; /* Prevent footer from shrinking */
 }
 
 .footer-content {

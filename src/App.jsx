@@ -5,6 +5,7 @@ import ControlPanel from './components/ControlPanel';
 import HelpOverlay from './components/HelpOverlay';
 import Footer from './components/Footer';
 import CostSummary from './components/CostSummary';
+import ValidationPanel from './components/ValidationPanel';
 import { 
   exportJSON, 
   exportPNG, 
@@ -19,29 +20,119 @@ console.log('=== APP.JSX LOADING ===');
 console.log('Imports loaded successfully');
 
 function App() {
-  console.log('=== APP FUNCTION EXECUTING ===');
-  const [items, setItems] = useState([]);
+  console.log('=== APP FUNCTION EXECUTING ===');  const [items, setItems] = useState([]);
   const [connections, setConnections] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState('eastus');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const [isValidationOpen, setIsValidationOpen] = useState(false);
   const canvasRef = useRef(null);
 
+  const handleValidate = () => {
+    if (items.length === 0) {
+      alert('⚠️ Canvas is empty! Add Azure services to validate the architecture.');
+      return;
+    }
+    setIsValidationOpen(true);
+  };
   const handleSave = () => {
-    const diagram = { items, connections };
-    localStorage.setItem('azureDiagram', JSON.stringify(diagram));
-    alert('Diagram saved successfully! ✅');
+    if (items.length === 0) {
+      alert('⚠️ Canvas is empty! Add some Azure services before saving.');
+      return;
+    }
+
+    try {
+      const diagram = {
+        items,
+        connections,
+        metadata: {
+          version: '1.0',
+          savedAt: new Date().toISOString(),
+          itemCount: items.length,
+          connectionCount: connections.length,
+          appName: 'Azure Architecture Designer'
+        }
+      };
+
+      // Create a blob with the JSON data
+      const jsonString = JSON.stringify(diagram, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      link.download = `azure-diagram-${timestamp}.json`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      alert(`✅ Diagram saved successfully!\n\n📁 File: ${link.download}\n📊 ${items.length} services, ${connections.length} connections`);
+    } catch (error) {
+      console.error('Error saving diagram:', error);
+      alert(`❌ Failed to save diagram!\n\n${error.message}`);
+    }
   };
 
   const handleLoad = () => {
-    const saved = localStorage.getItem('azureDiagram');
-    if (saved) {
-      const diagram = JSON.parse(saved);
-      setItems(diagram.items || []);
-      setConnections(diagram.connections || []);
-      alert('Diagram loaded successfully! ✅');
-    } else {
-      alert('No saved diagram found! ❌');
-    }
+    // Create file input element
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Check file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('❌ File is too large! Maximum size is 10MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      
+      reader.onload = (event) => {
+        try {
+          const content = event.target.result;
+          const diagram = JSON.parse(content);
+          
+          // Validate the loaded data
+          if (!diagram.items || !Array.isArray(diagram.items)) {
+            throw new Error('Invalid diagram file: missing or invalid items array');
+          }
+          
+          // Load the diagram
+          setItems(diagram.items || []);
+          setConnections(diagram.connections || []);
+          
+          const itemCount = diagram.items.length;
+          const connCount = (diagram.connections || []).length;
+          const savedDate = diagram.metadata?.savedAt 
+            ? new Date(diagram.metadata.savedAt).toLocaleString()
+            : 'Unknown';
+          
+          alert(`✅ Diagram loaded successfully!\n\n📁 File: ${file.name}\n📊 ${itemCount} services, ${connCount} connections\n📅 Saved: ${savedDate}`);
+        } catch (error) {
+          console.error('Error loading diagram:', error);
+          alert(`❌ Failed to load diagram!\n\n${error.message}\n\nPlease ensure the file is a valid Azure Architecture Designer JSON file.`);
+        }
+      };
+      
+      reader.onerror = () => {
+        alert('❌ Failed to read file! Please try again.');
+      };
+      
+      reader.readAsText(file);
+    };
+    
+    // Trigger file picker
+    input.click();
   };
 
   const handleClear = () => {
@@ -171,11 +262,11 @@ function App() {
     }
   };
   return (
-    <div className="app">
-      <ControlPanel
+    <div className="app">      <ControlPanel
         onSave={handleSave}
         onLoad={handleLoad}
         onClear={handleClear}
+        onValidate={handleValidate}
         onExport={handleExport}
         onExportPNG={handleExportPNG}
         onExportPDF={handleExportPDF}
@@ -198,6 +289,12 @@ function App() {
         />
       </div>
       <Footer />
+      <ValidationPanel 
+        items={items}
+        connections={connections}
+        isOpen={isValidationOpen}
+        onClose={() => setIsValidationOpen(false)}
+      />
     </div>
   );
 }
