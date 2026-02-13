@@ -124,9 +124,7 @@ const ValidationPanel = ({ items, connections, isOpen, onClose }) => {
                 </div>
               )}
             </div>
-          )}
-
-          {activeTab === 'errors' && (
+          )}          {activeTab === 'errors' && (
             <div className="errors-tab">
               {validation.errors.length === 0 ? (
                 <div className="no-issues">
@@ -142,6 +140,21 @@ const ValidationPanel = ({ items, connections, isOpen, onClose }) => {
                         <strong>{error.serviceName || 'Unknown Service'}</strong>
                       </div>
                       <p className="issue-message">{error.message}</p>
+                      
+                      {/* Show invalid connection details */}
+                      {error.invalidConnection && (
+                        <div className="invalid-connection-details">
+                          <div className="connection-flow">
+                            <span className="connection-service">{error.invalidConnection.fromName}</span>
+                            <span className="connection-arrow">→</span>
+                            <span className="connection-service error">{error.invalidConnection.toName}</span>
+                          </div>
+                          <p className="connection-reason">
+                            <strong>Why this fails:</strong> {error.invalidConnection.reason}
+                          </p>
+                        </div>
+                      )}
+                      
                       <div className="issue-meta">
                         <span className="issue-type">{error.type.replace(/_/g, ' ')}</span>
                         {error.missingServices && (
@@ -211,13 +224,11 @@ const ValidationPanel = ({ items, connections, isOpen, onClose }) => {
               )}
             </div>
           )}
-        </div>
-
-        {/* Action Buttons */}
+        </div>        {/* Action Buttons */}
         <div className="validation-footer">
           <button className="btn-secondary" onClick={onClose}>Close</button>
           {validation.isValid && (
-            <button className="btn-success">
+            <button className="btn-success" onClick={onClose}>
               ✅ Proceed to Export
             </button>
           )}

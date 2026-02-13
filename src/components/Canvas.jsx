@@ -10,23 +10,27 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
   const [connectionMode, setConnectionMode] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const localCanvasRef = useRef(null);
+  const containerRef = useRef(null);
   
   // Use passed ref or local ref
   const activeCanvasRef = canvasRef || localCanvasRef;
 
   const handleDragOver = (e) => {
     e.preventDefault();
-  };
-
-  const handleDrop = (e) => {
+  };  const handleDrop = (e) => {
     e.preventDefault();
     const iconData = e.dataTransfer.getData('azureIcon');
     
     if (iconData) {
       const icon = JSON.parse(iconData);
       const rect = activeCanvasRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      
+      // Calculate position with scroll offset
+      const scrollLeft = containerRef.current.scrollLeft;
+      const scrollTop = containerRef.current.scrollTop;
+      
+      const x = e.clientX - rect.left + scrollLeft;
+      const y = e.clientY - rect.top + scrollTop;
 
       const newItem = {
         id: Date.now(),
@@ -63,28 +67,32 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
       setConnectingFrom(null);
     }
   };
-
   const startDragging = (e, item) => {
     e.stopPropagation();
     setSelectedItem(item.id);
     setIsDragging(true);
     const rect = activeCanvasRef.current.getBoundingClientRect();
+    const scrollLeft = containerRef.current.scrollLeft;
+    const scrollTop = containerRef.current.scrollTop;
+    
     setDragOffset({
-      x: e.clientX - rect.left - item.x,
-      y: e.clientY - rect.top - item.y,
+      x: e.clientX - rect.left + scrollLeft - item.x,
+      y: e.clientY - rect.top + scrollTop - item.y,
     });
   };
-
   const handleMouseMove = (e) => {
     const rect = activeCanvasRef.current.getBoundingClientRect();
+    const scrollLeft = containerRef.current.scrollLeft;
+    const scrollTop = containerRef.current.scrollTop;
+    
     setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: e.clientX - rect.left + scrollLeft,
+      y: e.clientY - rect.top + scrollTop
     });
 
     if (isDragging && selectedItem) {
-      const x = e.clientX - rect.left - dragOffset.x;
-      const y = e.clientY - rect.top - dragOffset.y;
+      const x = e.clientX - rect.left + scrollLeft - dragOffset.x;
+      const y = e.clientY - rect.top + scrollTop - dragOffset.y;
 
       setItems(items.map(item =>
         item.id === selectedItem ? { ...item, x, y } : item
@@ -143,22 +151,22 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
     if (!item) return { x: 0, y: 0 };
     return { x: item.x + 40, y: item.y + 40 };
   };
-
   return (
-    <div
-      ref={activeCanvasRef}
-      className="canvas"
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onClick={handleCanvasClick}
-    >
-      {connectionMode && (
-        <div className="connecting-status">
-          🔗 Connection Mode - Click on another service to connect (ESC to cancel)
-        </div>
-      )}
+    <div ref={containerRef} className="canvas-container">
+      <div
+        ref={activeCanvasRef}
+        className="canvas"
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onClick={handleCanvasClick}
+      >
+        {connectionMode && (
+          <div className="connecting-status">
+            🔗 Connection Mode - Click on another service to connect (ESC to cancel)
+          </div>
+        )}
 
       <svg className="connections-svg">
         {connectionMode && connectingFrom && (
@@ -297,15 +305,14 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
             )}
           </div>
         );
-      })}
-
-      {items.length === 0 && (
+      })}      {items.length === 0 && (
         <div className="canvas-placeholder">
           <p>🎨 Drag and drop Azure services here</p>
           <p className="canvas-hint">🔗 <strong>Right-click</strong> or <strong>Ctrl+Click</strong> on an item to start connection</p>
           <p className="canvas-hint">✏️ Press DELETE to remove selected items</p>
         </div>
       )}
+      </div>
     </div>
   );
 };

@@ -51,23 +51,22 @@ export const connectionRules = {  // Compute services can connect to most things
     warning: [],
     invalid: []
   },
-
   // Storage services
   disks: {
     valid: ['vm', 'virtualmachine', 'vmss', 'vmscalesets', 'backup', 'monitor'],
     warning: [],
-    invalid: []
+    invalid: ['loadbalancer', 'loadbalancers', 'appgw', 'applicationgateway', 'applicationgateways', 'dns', 'dnszones', 'trafficmanager', 'frontdoor', 'function', 'functionapps', 'appservice', 'appservices', 'aks', 'kubernetesservices']
   },
   storage: {
     valid: ['vm', 'virtualmachine', 'vmss', 'vmscalesets', 'function', 'functionapps', 'appservice', 'appservices', 'aks', 'kubernetesservices', 'backup', 'monitor'],
     warning: [],
-    invalid: []
+    invalid: ['loadbalancer', 'loadbalancers', 'appgw', 'applicationgateway', 'applicationgateways', 'dns', 'dnszones']
   },
   storageaccounts: {
     valid: ['vm', 'virtualmachine', 'vmss', 'vmscalesets', 'function', 'functionapps', 'appservice', 'appservices', 'aks', 'kubernetesservices', 'backup', 'monitor'],
     warning: [],
-    invalid: []
-  },  datalake: {
+    invalid: ['loadbalancer', 'loadbalancers', 'appgw', 'applicationgateway', 'applicationgateways', 'dns', 'dnszones']
+  },datalake: {
     valid: ['databricks', 'azuredatabricks', 'synapse', 'synapseanalytics', 'datafactory', 'datafactories', 'aks', 'kubernetesservices'],
     warning: ['vm', 'virtualmachine'],
     invalid: []
@@ -144,22 +143,36 @@ export const connectionRules = {  // Compute services can connect to most things
     valid: ['vnet', 'virtualnetworks', 'vpngateway', 'expressroute', 'expressroutecircuits'],
     warning: [],
     invalid: []
-  },
-  loadbalancer: {
+  },  loadbalancer: {
     valid: ['vm', 'virtualmachine', 'vmss', 'vmscalesets', 'aks', 'kubernetesservices', 'vnet', 'virtualnetworks', 'appgw', 'applicationgateway', 'applicationgateways'],
     warning: [],
-    invalid: []
+    invalid: ['disks', 'storage', 'storageaccounts', 'sqldb', 'sqldatabase', 'cosmosdb', 'azurecosmosdb']
   },
   loadbalancers: {
     valid: ['vm', 'virtualmachine', 'vmss', 'vmscalesets', 'aks', 'kubernetesservices', 'vnet', 'virtualnetworks', 'appgw', 'applicationgateway', 'applicationgateways'],
     warning: [],
-    invalid: []
+    invalid: ['disks', 'storage', 'storageaccounts', 'sqldb', 'sqldatabase', 'cosmosdb', 'azurecosmosdb']
   },
   vpngateway: {
     valid: ['vnet', 'virtualnetworks'],
     warning: [],
-    invalid: []
-  },  nsg: {
+    invalid: ['disks', 'storage', 'storageaccounts', 'vm', 'virtualmachine']
+  },
+  appgw: {
+    valid: ['vnet', 'virtualnetworks', 'subnet', 'subnets', 'vm', 'virtualmachine', 'vmss', 'vmscalesets', 'appservice', 'appservices'],
+    warning: [],
+    invalid: ['disks', 'storage', 'storageaccounts', 'sqldb', 'sqldatabase']
+  },
+  applicationgateway: {
+    valid: ['vnet', 'virtualnetworks', 'subnet', 'subnets', 'vm', 'virtualmachine', 'vmss', 'vmscalesets', 'appservice', 'appservices'],
+    warning: [],
+    invalid: ['disks', 'storage', 'storageaccounts', 'sqldb', 'sqldatabase']
+  },
+  applicationgateways: {
+    valid: ['vnet', 'virtualnetworks', 'subnet', 'subnets', 'vm', 'virtualmachine', 'vmss', 'vmscalesets', 'appservice', 'appservices'],
+    warning: [],
+    invalid: ['disks', 'storage', 'storageaccounts', 'sqldb', 'sqldatabase']
+  },nsg: {
     valid: ['vm', 'virtualmachine', 'vnet', 'virtualnetworks', 'subnet', 'subnets', 'gatewaysubnet', 'networkinterface'],
     warning: [],
     invalid: []

@@ -492,6 +492,38 @@ const azurePricing = {
  * @param {string} regionKey - Azure region key (default: 'eastus')
  * @param {string} currencyKey - Currency code (default: 'USD')
  */
+/**
+ * Normalize service type to match pricing keys
+ */
+const normalizeServiceType = (serviceType) => {
+  const mappings = {
+    'virtualmachine': 'vm',
+    'vmscalesets': 'vmss',
+    'functionapps': 'function',
+    'appservices': 'appservice',
+    'kubernetesservices': 'aks',
+    'storageaccounts': 'storage',
+    'sqldatabase': 'sqldb',
+    'azurecosmosdb': 'cosmosdb',
+    'virtualnetworks': 'vnet',
+    'loadbalancers': 'loadbalancer',
+    'applicationgateway': 'appgw',
+    'applicationgateways': 'appgw',
+    'networksecuritygroups': 'nsg',
+    'publicipaddresses': 'publicip',
+    'dnszones': 'dns',
+    'applicationinsights': 'appinsights',
+    'containerregistries': 'containerregistry',
+    'eventhubs': 'eventhub',
+    'azuredatabricks': 'databricks',
+    'synapseanalytics': 'synapse',
+    'datafactories': 'datafactory'
+  };
+  
+  const normalized = serviceType.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return mappings[normalized] || normalized;
+};
+
 export const calculateCost = (items, regionKey = 'eastus', currencyKey = 'USD') => {
   const region = azureRegions[regionKey] || azureRegions['eastus'];
   const currency = currencies[currencyKey] || currencies['USD'];
@@ -500,7 +532,10 @@ export const calculateCost = (items, regionKey = 'eastus', currencyKey = 'USD') 
   const breakdown = [];
   
   items.forEach((item) => {
-    const pricing = azurePricing[item.serviceType];
+    // Normalize the service type to match pricing keys
+    const normalizedType = normalizeServiceType(item.serviceType);
+    const pricing = azurePricing[normalizedType];
+    
     if (pricing) {
       // Apply region multiplier and currency conversion
       const baseCostInRegion = pricing.baseCost * region.multiplier;

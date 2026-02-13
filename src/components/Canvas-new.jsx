@@ -12,10 +12,10 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
   const [editingItem, setEditingItem] = useState(null);
   const [editingName, setEditingName] = useState('');
   const localCanvasRef = useRef(null);
+  const containerRef = useRef(null);
   const inputRef = useRef(null);
     const activeCanvasRef = canvasRef || localCanvasRef;
-  
-  // Touch event handlers for icon drop from toolbar
+    // Touch event handlers for icon drop from toolbar
   useEffect(() => {
     const handleIconTouchDrop = (e) => {
       console.log('Canvas received touch drop event:', e.detail);
@@ -24,36 +24,36 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
       
       console.log('Canvas rect:', rect);
       
-      if (rect) {
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
+      if (rect && containerRef.current) {
+        // Calculate position with scroll offset
+        const scrollLeft = containerRef.current.scrollLeft;
+        const scrollTop = containerRef.current.scrollTop;
         
-        console.log('Drop position relative to canvas:', x, y);
+        const x = clientX - rect.left + scrollLeft;
+        const y = clientY - rect.top + scrollTop;
         
-        // Check if drop is within canvas bounds
-        if (x >= 0 && y >= 0 && x <= rect.width && y <= rect.height) {
-          console.log('Drop is within canvas bounds, creating item');
-          const newItem = {
-            id: Date.now(),
-            serviceType: icon.id,
-            name: icon.name,
-            path: icon.path,
-            category: icon.category,
-            x: x - 40,
-            y: y - 40,
-          };
-          
-          setItems(prevItems => {
-            console.log('Adding new item:', newItem);
-            return [...prevItems, newItem];
-          });
-          
-          // Haptic feedback
-          if (navigator.vibrate) {
-            navigator.vibrate(30);
-          }
-        } else {
-          console.log('Drop is outside canvas bounds');
+        console.log('Drop position relative to canvas (with scroll):', x, y);
+        
+        // Always create item (remove bounds check since we have large canvas)
+        console.log('Creating item on scrollable canvas');
+        const newItem = {
+          id: Date.now(),
+          serviceType: icon.id,
+          name: icon.name,
+          path: icon.path,
+          category: icon.category,
+          x: x - 40,
+          y: y - 40,
+        };
+        
+        setItems(prevItems => {
+          console.log('Adding new item:', newItem);
+          return [...prevItems, newItem];
+        });
+        
+        // Haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(30);
         }
       }
     };
@@ -103,16 +103,20 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
 
   const handleDragOver = (e) => {
     e.preventDefault();
-  };
-  const handleDrop = (e) => {
+  };  const handleDrop = (e) => {
     e.preventDefault();
     const iconData = e.dataTransfer.getData('azureIcon');
     
     if (iconData) {
       const icon = JSON.parse(iconData);
       const rect = activeCanvasRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      
+      // Calculate position with scroll offset
+      const scrollLeft = containerRef.current.scrollLeft;
+      const scrollTop = containerRef.current.scrollTop;
+      
+      const x = e.clientX - rect.left + scrollLeft;
+      const y = e.clientY - rect.top + scrollTop;
 
       const newItem = {
         id: Date.now(), // Unique instance ID
@@ -153,28 +157,33 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
       setConnectingFrom(null);
     }
   };
-
   const startDragging = (e, item) => {
     e.stopPropagation();
     setSelectedItem(item.id);
     setIsDragging(true);
     const rect = activeCanvasRef.current.getBoundingClientRect();
+    const scrollLeft = containerRef.current.scrollLeft;
+    const scrollTop = containerRef.current.scrollTop;
+    
     setDragOffset({
-      x: e.clientX - rect.left - item.x,
-      y: e.clientY - rect.top - item.y,
+      x: e.clientX - rect.left + scrollLeft - item.x,
+      y: e.clientY - rect.top + scrollTop - item.y,
     });
   };
 
   const handleMouseMove = (e) => {
     const rect = activeCanvasRef.current.getBoundingClientRect();
+    const scrollLeft = containerRef.current.scrollLeft;
+    const scrollTop = containerRef.current.scrollTop;
+    
     setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: e.clientX - rect.left + scrollLeft,
+      y: e.clientY - rect.top + scrollTop
     });
 
     if (isDragging && selectedItem) {
-      const x = e.clientX - rect.left - dragOffset.x;
-      const y = e.clientY - rect.top - dragOffset.y;
+      const x = e.clientX - rect.left + scrollLeft - dragOffset.x;
+      const y = e.clientY - rect.top + scrollTop - dragOffset.y;
 
       setItems(items.map(item =>
         item.id === selectedItem ? { ...item, x, y } : item
@@ -276,22 +285,22 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
     if (!item) return { x: 0, y: 0 };
     return { x: item.x + 40, y: item.y + 40 };
   };
-
   return (
-    <div
-      ref={activeCanvasRef}
-      className="canvas"
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onClick={handleCanvasClick}
-    >
-      {connectionMode && (
-        <div className="connecting-status">
-          🔗 Connection Mode - Click on another service to connect (ESC to cancel)
-        </div>
-      )}
+    <div ref={containerRef} className="canvas-container">
+      <div
+        ref={activeCanvasRef}
+        className="canvas"
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onClick={handleCanvasClick}
+      >
+        {connectionMode && (
+          <div className="connecting-status">
+            🔗 Connection Mode - Click on another service to connect (ESC to cancel)
+          </div>
+        )}
 
       <svg className="connections-svg">
         <defs>
@@ -502,6 +511,7 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
           <p className="canvas-hint">🟢 Green LED = Valid | 🟡 Yellow = Warning | 🔴 Red = Invalid</p>
         </div>
       )}
+      </div>
     </div>
   );
 };
