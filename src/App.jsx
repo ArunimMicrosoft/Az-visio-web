@@ -19,6 +19,8 @@ function App() {
   console.log('=== APP FUNCTION EXECUTING ===');
   const [items, setItems] = useState([]);
   const [connections, setConnections] = useState([]);
+  const [selectedRegion, setSelectedRegion] = useState('eastus');
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const canvasRef = useRef(null);
 
   const handleSave = () => {
@@ -163,7 +165,7 @@ function App() {
     }
     try {
       console.log('Starting PDF generation with items:', items);
-      const fileName = generateCostPDF(items);
+      const fileName = generateCostPDF(items, selectedRegion, selectedCurrency);
       console.log('PDF generated successfully:', fileName);
       alert('Cost report PDF generated successfully! 💰✅');
     } catch (error) {
@@ -190,11 +192,14 @@ function App() {
         <CanvasComponent
           items={items}
           setItems={setItems}
-          connections={connections}
-          setConnections={setConnections}
+          connections={connections}          setConnections={setConnections}
           canvasRef={canvasRef}
         />
-        <CostSummary items={items} />
+        <CostSummary 
+          items={items} 
+          onRegionChange={setSelectedRegion}
+          onCurrencyChange={setSelectedCurrency}
+        />
       </div>
       <Footer />
     </div>

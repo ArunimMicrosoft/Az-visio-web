@@ -1,0 +1,13 @@
+# Top icons per category (most commonly used)
+compute: VM, VMSS, AKS, Function Apps, App Services, Batch, Disks, Availability Sets, Container Instances, Service Fabric, Cloud Services
+storage: Storage Accounts, Data Lake, NetApp Files, Data Box, File Shares, Recovery Services, Storage Sync, Import/Export
+databases: SQL Database, Cosmos DB, MySQL, PostgreSQL, MariaDB, Synapse, Data Factory, SQL Server, SQL MI, Cache Redis
+networking: VNet, Subnet, Load Balancer, VPN Gateway, DNS, Bastion, Firewall, App Gateway, NSG, Public IP, Front Door, ExpressRoute, Private Link, NAT Gateway, Traffic Manager, Network Watcher, CDN
+security: Key Vault, Sentinel, Defender, App Security Groups, Conditional Access, MFA
+ai: Cognitive Services, Machine Learning, OpenAI, Bot Services, Computer Vision, Speech Services, Translator
+analytics: Event Hubs, Stream Analytics, Synapse, Data Factory, HD Insight, Data Lake Analytics, Azure Databricks
+integration: Service Bus, Event Hubs, API Management, Logic Apps, Event Grid, Relays, App Configuration
+monitoring: Monitor, Application Insights, Log Analytics, Activity Log, Metrics, Workbooks, Autoscale
+identity: Entra ID, Groups, Managed Identities, B2C, Identity Protection, App Registrations
+iot: IoT Hub, IoT Central, IoT Edge, Digital Twins, Time Series Insights, Device Provisioning
+management: Advisor, Cost Management, Policy, Blueprints, Automation, Azure Arc, Resource Graph

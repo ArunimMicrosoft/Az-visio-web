@@ -1,20 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { calculateCost, formatCost, getCostCategory, getCostOptimizations } from '../utils/costCalculator';
+import { calculateCost, formatCost, getCostCategory, getCostOptimizations, azureRegions, currencies } from '../utils/costCalculator';
 import './CostSummary.css';
 
-const CostSummary = ({ items }) => {
+const CostSummary = ({ items, onRegionChange, onCurrencyChange }) => {
   const [costData, setCostData] = useState(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [showOptimizations, setShowOptimizations] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState('eastus');
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');
 
   useEffect(() => {
     if (items && items.length > 0) {
-      const cost = calculateCost(items);
+      const cost = calculateCost(items, selectedRegion, selectedCurrency);
       setCostData(cost);
     } else {
       setCostData(null);
     }
-  }, [items]);
+  }, [items, selectedRegion, selectedCurrency]);
+  
+  const handleRegionChange = (region) => {
+    setSelectedRegion(region);
+    if (onRegionChange) onRegionChange(region);
+  };
+  
+  const handleCurrencyChange = (currency) => {
+    setSelectedCurrency(currency);
+    if (onCurrencyChange) onCurrencyChange(currency);
+  };
 
   if (!costData || items.length === 0) {
     return (
@@ -31,15 +43,35 @@ const CostSummary = ({ items }) => {
   return (
     <div className="cost-summary">
       <div className="cost-header">
-        <h3>💰 Cost Estimate</h3>
-        <span className="cost-region">{costData.region}</span>
+        <h3>💰 Cost Estimate</h3>        <div className="cost-selectors">
+          <select 
+            value={selectedRegion} 
+            onChange={(e) => handleRegionChange(e.target.value)}
+            className="region-selector"
+            title="Select Azure Region"
+          >
+            {Object.entries(azureRegions).map(([key, region]) => (
+              <option key={key} value={key}>{region.name}</option>
+            ))}
+          </select>
+          <select 
+            value={selectedCurrency} 
+            onChange={(e) => handleCurrencyChange(e.target.value)}
+            className="currency-selector"
+            title="Select Currency"
+          >
+            {Object.entries(currencies).map(([key, curr]) => (
+              <option key={key} value={key}>{curr.symbol} {key}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="cost-total">
         <div className="cost-monthly">
           <span className="cost-label">Monthly</span>
           <span className="cost-value" style={{ color: costCategory.color }}>
-            {formatCost(costData.totalMonthly)}
+            {formatCost(costData.totalMonthly, selectedCurrency)}
           </span>
           <span className={`cost-badge ${costCategory.category.toLowerCase()}`}>
             {costCategory.category}
@@ -49,7 +81,7 @@ const CostSummary = ({ items }) => {
         <div className="cost-yearly">
           <span className="cost-label">Yearly</span>
           <span className="cost-value">
-            {formatCost(costData.totalYearly)}
+            {formatCost(costData.totalYearly, selectedCurrency)}
           </span>
         </div>
       </div>
@@ -73,19 +105,18 @@ const CostSummary = ({ items }) => {
                 <th>Monthly Cost</th>
               </tr>
             </thead>
-            <tbody>
-              {costData.breakdown.map((item, index) => (
+            <tbody>              {costData.breakdown.map((item, index) => (
                 <tr key={index}>
                   <td className="service-name">{item.name}</td>
                   <td className="service-type">{item.serviceType}</td>
-                  <td className="service-cost">{formatCost(item.cost)}</td>
+                  <td className="service-cost">{formatCost(item.cost, selectedCurrency)}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr>
                 <td colSpan="2"><strong>Total</strong></td>
-                <td className="total-cost"><strong>{formatCost(costData.totalMonthly)}</strong></td>
+                <td className="total-cost"><strong>{formatCost(costData.totalMonthly, selectedCurrency)}</strong></td>
               </tr>
             </tfoot>
           </table>

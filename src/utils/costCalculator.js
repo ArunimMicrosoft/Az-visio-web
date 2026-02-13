@@ -2,6 +2,63 @@
 // Estimates monthly costs for Azure services based on current pricing (2026)
 
 /**
+ * Azure Regions with pricing multipliers
+ */
+export const azureRegions = {
+  'eastus': { name: 'East US', multiplier: 1.0 },
+  'eastus2': { name: 'East US 2', multiplier: 1.0 },
+  'westus': { name: 'West US', multiplier: 1.0 },
+  'westus2': { name: 'West US 2', multiplier: 1.0 },
+  'centralus': { name: 'Central US', multiplier: 1.0 },
+  'northcentralus': { name: 'North Central US', multiplier: 1.0 },
+  'southcentralus': { name: 'South Central US', multiplier: 1.0 },
+  'westcentralus': { name: 'West Central US', multiplier: 1.0 },
+  'northeurope': { name: 'North Europe', multiplier: 1.05 },
+  'westeurope': { name: 'West Europe', multiplier: 1.10 },
+  'uksouth': { name: 'UK South', multiplier: 1.12 },
+  'ukwest': { name: 'UK West', multiplier: 1.12 },
+  'francecentral': { name: 'France Central', multiplier: 1.08 },
+  'germanywestcentral': { name: 'Germany West Central', multiplier: 1.09 },
+  'switzerlandnorth': { name: 'Switzerland North', multiplier: 1.25 },
+  'norwayeast': { name: 'Norway East', multiplier: 1.15 },
+  'eastasia': { name: 'East Asia', multiplier: 1.08 },
+  'southeastasia': { name: 'Southeast Asia', multiplier: 1.12 },
+  'japaneast': { name: 'Japan East', multiplier: 1.15 },
+  'japanwest': { name: 'Japan West', multiplier: 1.18 },
+  'australiaeast': { name: 'Australia East', multiplier: 1.20 },
+  'australiasoutheast': { name: 'Australia Southeast', multiplier: 1.22 },
+  'brazilsouth': { name: 'Brazil South', multiplier: 1.30 },
+  'canadacentral': { name: 'Canada Central', multiplier: 1.05 },
+  'canadaeast': { name: 'Canada East', multiplier: 1.07 },
+  'southafricanorth': { name: 'South Africa North', multiplier: 1.25 },
+  'uaenorth': { name: 'UAE North', multiplier: 1.20 },
+  'indiacentral': { name: 'India Central', multiplier: 0.95 },
+  'southindia': { name: 'South India', multiplier: 0.97 },
+  'koreacentral': { name: 'Korea Central', multiplier: 1.10 }
+};
+
+/**
+ * Currency exchange rates (relative to USD)
+ */
+export const currencies = {
+  'USD': { symbol: '$', name: 'US Dollar', rate: 1.0 },
+  'EUR': { symbol: '€', name: 'Euro', rate: 0.92 },
+  'GBP': { symbol: '£', name: 'British Pound', rate: 0.79 },
+  'JPY': { symbol: '¥', name: 'Japanese Yen', rate: 149.50 },
+  'AUD': { symbol: 'A$', name: 'Australian Dollar', rate: 1.54 },
+  'CAD': { symbol: 'C$', name: 'Canadian Dollar', rate: 1.35 },
+  'CHF': { symbol: 'CHF', name: 'Swiss Franc', rate: 0.89 },
+  'CNY': { symbol: '¥', name: 'Chinese Yuan', rate: 7.24 },
+  'INR': { symbol: '₹', name: 'Indian Rupee', rate: 83.25 },
+  'BRL': { symbol: 'R$', name: 'Brazilian Real', rate: 4.98 },
+  'ZAR': { symbol: 'R', name: 'South African Rand', rate: 18.65 },
+  'AED': { symbol: 'د.إ', name: 'UAE Dirham', rate: 3.67 },
+  'KRW': { symbol: '₩', name: 'South Korean Won', rate: 1329.50 },
+  'SEK': { symbol: 'kr', name: 'Swedish Krona', rate: 10.42 },
+  'NOK': { symbol: 'kr', name: 'Norwegian Krone', rate: 10.68 }
+};
+
+/**
  * Azure Pricing Database (USD/month - East US region)
  * Updated: February 2026
  */
@@ -429,19 +486,34 @@ const azurePricing = {
  * Calculate total monthly cost for architecture
  * @param {Array} items - Array of Azure service items
  * @returns {Object} - Cost breakdown
+ /**
+ * Calculate cost with region and currency support
+ * @param {Array} items - Array of Azure services
+ * @param {string} regionKey - Azure region key (default: 'eastus')
+ * @param {string} currencyKey - Currency code (default: 'USD')
  */
-export const calculateCost = (items) => {
+export const calculateCost = (items, regionKey = 'eastus', currencyKey = 'USD') => {
+  const region = azureRegions[regionKey] || azureRegions['eastus'];
+  const currency = currencies[currencyKey] || currencies['USD'];
+  
   let totalCost = 0;
   const breakdown = [];
   
   items.forEach((item) => {
     const pricing = azurePricing[item.serviceType];
     if (pricing) {
-      totalCost += pricing.baseCost;
+      // Apply region multiplier and currency conversion
+      const baseCostInRegion = pricing.baseCost * region.multiplier;
+      const costInCurrency = baseCostInRegion * currency.rate;
+      
+      totalCost += costInCurrency;
       breakdown.push({
         name: item.name,
+        service: pricing.name,
         serviceType: pricing.name,
-        cost: pricing.baseCost,
+        quantity: 1,
+        monthlyCost: costInCurrency,
+        cost: costInCurrency,
         unit: pricing.unit,
         details: pricing.details
       });
@@ -452,22 +524,29 @@ export const calculateCost = (items) => {
     totalMonthly: totalCost,
     totalYearly: totalCost * 12,
     breakdown: breakdown.sort((a, b) => b.cost - a.cost),
-    currency: 'USD',
-    region: 'East US',
+    currency: currencyKey,
+    currencySymbol: currency.symbol,
+    region: region.name,
+    regionKey: regionKey,
     pricingDate: 'February 2026'
   };
 };
 
 /**
- * Format cost as currency string
+ * Format cost as currency string with proper symbol
+ * @param {number} cost - Cost amount
+ * @param {string} currencyKey - Currency code (default: 'USD')
  */
-export const formatCost = (cost) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(cost);
+export const formatCost = (cost, currencyKey = 'USD') => {
+  const currency = currencies[currencyKey] || currencies['USD'];
+  
+  // For currencies with large numbers (JPY, KRW), don't show decimals
+  const decimals = ['JPY', 'KRW'].includes(currencyKey) ? 0 : 2;
+  
+  return `${currency.symbol}${cost.toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  })}`;
 };
 
 /**
