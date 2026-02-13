@@ -13,8 +13,8 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
   const [editingName, setEditingName] = useState('');
   const localCanvasRef = useRef(null);
   const inputRef = useRef(null);
+    const activeCanvasRef = canvasRef || localCanvasRef;
   
-  const activeCanvasRef = canvasRef || localCanvasRef;
   // Touch event handlers for icon drop from toolbar
   useEffect(() => {
     const handleIconTouchDrop = (e) => {
@@ -58,12 +58,46 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
       }
     };
     
+    // Mobile click handler - add icon to center of canvas
+    const handleIconMobileClick = (e) => {
+      console.log('Canvas received mobile click event:', e.detail);
+      const { icon } = e.detail;
+      const rect = activeCanvasRef.current?.getBoundingClientRect();
+      
+      if (rect) {
+        // Place icon in center of visible canvas
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        const newItem = {
+          id: Date.now(),
+          serviceType: icon.id,
+          name: icon.name,
+          path: icon.path,
+          category: icon.category,
+          x: centerX - 40,
+          y: centerY - 40,
+        };
+        
+        setItems(prevItems => [...prevItems, newItem]);
+        
+        // Haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+        
+        console.log('Added icon to canvas center:', newItem);
+      }
+    };
+    
     console.log('Setting up touch drop listener');
     document.addEventListener('iconTouchDrop', handleIconTouchDrop);
+    document.addEventListener('iconMobileClick', handleIconMobileClick);
     
     return () => {
       console.log('Removing touch drop listener');
       document.removeEventListener('iconTouchDrop', handleIconTouchDrop);
+      document.removeEventListener('iconMobileClick', handleIconMobileClick);
     };
   }, [setItems, activeCanvasRef]);
 
