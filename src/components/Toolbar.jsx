@@ -10,6 +10,8 @@ const Toolbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   // Track if user is dragging an icon
   const [isDragging, setIsDragging] = useState(false);
+  // Track the search query
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Toggle a category's expanded state
   const toggleCategory = (category) => {
@@ -22,6 +24,26 @@ const Toolbar = () => {
 
   // Check if category is expanded
   const isCategoryExpanded = (category) => expandedCategories.includes(category);
+
+  // Filter icons based on search query
+  const filterIcons = (icons) => {
+    if (!searchQuery.trim()) return icons;
+    const query = searchQuery.toLowerCase();
+    return icons.filter(icon => 
+      icon.name.toLowerCase().includes(query) || 
+      icon.id.toLowerCase().includes(query)
+    );
+  };
+
+  // Get filtered categories (only show categories that have matching icons)
+  const getFilteredCategories = () => {
+    if (!searchQuery.trim()) return Object.keys(azureIconCategories);
+    
+    return Object.keys(azureIconCategories).filter(category => {
+      const filteredIcons = filterIcons(azureIconCategories[category]);
+      return filteredIcons.length > 0;
+    });
+  };
 
   // Listen for drag events and close menu on mobile when dragging starts
   React.useEffect(() => {
@@ -86,10 +108,37 @@ const Toolbar = () => {
         </button>
       </div>
       
+      {/* Search Box */}
+      <div className="toolbar-search">
+        <input
+          type="text"
+          className="search-input"
+          placeholder="🔍 Search services..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            if (e.target.value.trim()) {
+              setExpandedCategories(getFilteredCategories());
+            }
+          }}
+          aria-label="Search Azure services"
+        />
+        {searchQuery && (
+          <button
+            className="search-clear-btn"
+            onClick={() => setSearchQuery('')}
+            title="Clear search"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+      
       <div className="category-accordion">
-        {Object.keys(azureIconCategories).map((category) => {
+        {getFilteredCategories().map((category) => {
           const isExpanded = isCategoryExpanded(category);
-          const iconCount = azureIconCategories[category].length;
+          const filteredIcons = filterIcons(azureIconCategories[category]);
+          const iconCount = filteredIcons.length;
           
           return (
             <div key={category} className="category-section">
@@ -105,7 +154,7 @@ const Toolbar = () => {
               {isExpanded && (
                 <div className="category-content">
                   <div className="toolbar-icons">
-                    {azureIconCategories[category].map((icon) => (
+                    {filteredIcons.map((icon) => (
                       <AzureIcon key={icon.id} icon={icon} />
                     ))}
                   </div>
