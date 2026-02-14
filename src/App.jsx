@@ -14,6 +14,7 @@ import {
   exportARMTemplate,
   exportCostReport 
 } from './utils/enterpriseExporter';
+import { parseTerraform } from './utils/terraformParser';
 import './App.css';
 
 console.log('=== APP.JSX LOADING ===');
@@ -261,6 +262,77 @@ function App() {
       alert(`❌ Failed to export cost report!\n\n${error.message}`);
     }
   };
+
+  const handleImportTerraform = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.tf,.tfvars';
+    input.multiple = true;
+
+    input.onchange = (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
+
+      const readers = files.map(file => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => resolve({ name: file.name, content: ev.target.result });
+          reader.onerror = () => reject(new Error('Failed to read ' + file.name));
+          reader.readAsText(file);
+        });
+      });
+
+      Promise.all(readers).then(results => {
+        try {
+          const combined = results.map(r => '# File: ' + r.name + '\n' + r.content).join('\n\n');
+          const parsed = parseTerraform(combined);
+
+          if (parsed.items.length === 0) {
+            alert('No Azure resources found in the Terraform files.');
+            return;
+          }
+
+          let mode = 'replace';
+          if (items.length > 0) {
+            const choice = window.confirm('Canvas has existing items.\n\nOK = Replace all\nCancel = Merge');
+            mode = choice ? 'replace' : 'merge';
+          }
+
+          if (mode === 'replace') {
+            setItems(parsed.items);
+            setConnections(parsed.connections);
+          } else {
+            const offsetItems = parsed.items.map((item, idx) => ({
+              ...item,
+              id: 'tf-merge-' + Date.now() + '-' + idx,
+              x: item.x + 600,
+            }));
+            const idMap = {};
+            parsed.items.forEach((orig, idx) => { idMap[orig.id] = offsetItems[idx].id; });
+            const offsetConns = parsed.connections.map((conn, idx) => ({
+              ...conn,
+              id: 'tf-conn-merge-' + Date.now() + '-' + idx,
+              from: idMap[conn.from] || conn.from,
+              to: idMap[conn.to] || conn.to,
+            }));
+            setItems(prev => [...prev, ...offsetItems]);
+            setConnections(prev => [...prev, ...offsetConns]);
+          }
+
+          const fileNames = results.map(r => r.name).join(', ');
+          alert('Terraform imported! ' + parsed.items.length + ' resources, ' + parsed.connections.length + ' connections from ' + fileNames);
+        } catch (error) {
+          console.error('Terraform parse error:', error);
+          alert('Failed to parse Terraform: ' + error.message);
+        }
+      }).catch(error => {
+        alert('Failed to read files: ' + error.message);
+      });
+    };
+
+    input.click();
+  };
+
   return (
     <div className="app">      <ControlPanel
         onSave={handleSave}
@@ -273,6 +345,7 @@ function App() {
         onExportTerraform={handleExportTerraform}
         onExportARM={handleExportARM}
         onExportCostReport={handleExportCostReport}
+        onImportTerraform={handleImportTerraform}
       />      <HelpOverlay />
       <div className="main-content">
         <Toolbar />

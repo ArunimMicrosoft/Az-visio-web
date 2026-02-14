@@ -101,7 +101,7 @@ export const azureIconCategories = {
     { id: 'applicationgroup', name: 'Application Group', path: '/icons/compute/00329-icon-service-Application-Group.svg', category: 'compute' },
     { id: 'workspaces', name: 'Workspaces', path: '/icons/compute/00330-icon-service-Workspaces.svg', category: 'compute' },
     { id: 'diskencryptionsets', name: 'Disk Encryption Sets', path: '/icons/compute/00398-icon-service-Disk-Encryption-Sets.svg', category: 'compute' },
-    { id: 'workspaces', name: 'Workspaces', path: '/icons/compute/00400-icon-service-Workspaces.svg', category: 'compute' },
+    { id: 'workspaces2', name: 'Workspaces 2', path: '/icons/compute/00400-icon-service-Workspaces.svg', category: 'compute' },
     { id: 'automanagedvm', name: 'Automanaged Vm', path: '/icons/compute/02112-icon-service-Automanaged-VM.svg', category: 'compute' },
     { id: 'managedservicefabric', name: 'Managed Service Fabric', path: '/icons/compute/02370-icon-service-Managed-Service-Fabric.svg', category: 'compute' },
     { id: 'metricsadvisor', name: 'Metrics Advisor', path: '/icons/compute/02409-icon-service-Metrics-Advisor.svg', category: 'compute' },
