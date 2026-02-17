@@ -1,3 +1,126 @@
+/* ===== PROFESSIONAL CANVAS TOOLBAR (MATCHES CONTROL PANEL) ===== */
+.canvas-toolbar {
+  position: fixed;
+  top: 140px;  /* Below the main header buttons */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;  /* Below main header but above canvas */
+  background-color: #f8f9fa;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border: 1px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+}
+
+.canvas-toolbar.drawing-mode {
+  background-color: #e3f2fd;
+  border-color: #0078D4;
+  box-shadow: 0 2px 12px rgba(0, 120, 212, 0.25);
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+}
+
+.toolbar-section:not(:last-child) {
+  padding-right: 12px;
+  border-right: 1px solid #dee2e6;
+}
+
+.toolbar-label {
+  font-size: 11px;
+  color: #666;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 6px;
+}
+
+/* Professional Boundary Selector */
+
+/* Professional Boundary Selector */
+.boundary-type-selector-toolbar {
+  padding: 6px 12px 6px 8px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background-color: white;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  font-size: 13px;
+  font-weight: 500;
+  color: #212529;
+  cursor: pointer;
+  min-width: 180px;
+  max-width: 280px;
+  transition: all 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 32px;
+  height: 38px;
+  line-height: 1.5;
+}
+
+.boundary-type-selector-toolbar:hover {
+  border-color: #0078D4;
+  background-color: #f8f9fa;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+}
+
+.boundary-type-selector-toolbar:focus {
+  outline: none;
+  border-color: #0078D4;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.15);
+}
+
+/* Professional Control Buttons */
+.control-btn {
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  color: #212529;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.control-btn:hover {
+  background: #f8f9fa;
+  border-color: #0078D4;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.control-btn.active {
+  background: #0078D4;
+  color: white;
+  border-color: #0078D4;
+  box-shadow: 0 2px 8px rgba(0, 120, 212, 0.3);
+}
+
+.control-btn.active:hover {
+  background: #005a9e;
+}
+
+/* Toolbar icon styling */
+.control-btn .icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
 /* Scrollable container wrapper */
 .canvas-container {
   flex: 1;
@@ -499,3 +622,5 @@
     max-width: 120px;
   }
 }
+
+/* END OF FILE - No duplicate CSS below this line */

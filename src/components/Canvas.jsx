@@ -1,13 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { validateConnection, getConnectionMessage } from '../utils/connectionValidator';
+import BoundaryCanvas from './BoundaryCanvas';
 import './Canvas.css';
 
-const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => {
+const Canvas = ({ items, setItems, connections, setConnections, boundaries, setBoundaries, canvasRef }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [connectingFrom, setConnectingFrom] = useState(null);
   const [connectionMode, setConnectionMode] = useState(false);
+  const [boundaryDrawMode, setBoundaryDrawMode] = useState(false);
+  const [boundaryType, setBoundaryType] = useState('resource-group');
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const localCanvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -152,168 +155,234 @@ const Canvas = ({ items, setItems, connections, setConnections, canvasRef }) => 
     return { x: item.x + 40, y: item.y + 40 };
   };
   return (
-    <div ref={containerRef} className="canvas-container">
-      <div
-        ref={activeCanvasRef}
-        className="canvas"
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onClick={handleCanvasClick}
-      >
-        {connectionMode && (
-          <div className="connecting-status">
-            🔗 Connection Mode - Click on another service to connect (ESC to cancel)
-          </div>
-        )}
-
-      <svg className="connections-svg">
-        {connectionMode && connectingFrom && (
-          <line
-            x1={getItemCenter(connectingFrom).x}
-            y1={getItemCenter(connectingFrom).y}
-            x2={mousePos.x}
-            y2={mousePos.y}
-            stroke="#0078D4"
-            strokeWidth="2"
-            strokeDasharray="5,5"
-            opacity="0.6"
-          />
-        )}
-
-        {connections.map((conn, index) => {
-          const from = getItemCenter(conn.from);
-          const to = getItemCenter(conn.to);
-          const status = conn.status || 'valid';
-          const message = getConnectionMessage(status);
-          
-          const midX = (from.x + to.x) / 2;
-          const midY = (from.y + to.y) / 2;
-          
-          const strokeColor = message.color;
-          const markerId = `arrowhead-${status}`;
-          
-          return (
-            <g key={index}>
-              <line
-                x1={from.x}
-                y1={from.y}
-                x2={to.x}
-                y2={to.y}
-                stroke={strokeColor}
-                strokeWidth="2"
-                markerEnd={`url(#${markerId})`}
-                className={`connection-line connection-${status}`}
-              />
-              <circle
-                cx={midX}
-                cy={midY}
-                r="6"
-                fill={strokeColor}
-                stroke="white"
-                strokeWidth="2"
-                className={`connection-led led-${status}`}
-              >
-                <title>{message.text}</title>
-              </circle>
-              <circle
-                cx={midX}
-                cy={midY}
-                r="6"
-                fill="none"
-                stroke={strokeColor}
-                strokeWidth="2"
-                opacity="0.6"
-                className={`led-pulse led-pulse-${status}`}
-              />
-            </g>
-          );
-        })}
-        <defs>
-          <marker
-            id="arrowhead-valid"
-            markerWidth="10"
-            markerHeight="10"
-            refX="9"
-            refY="3"
-            orient="auto"
-          >
-            <polygon points="0 0, 10 3, 0 6" fill="#28a745" />
-          </marker>
-          <marker
-            id="arrowhead-warning"
-            markerWidth="10"
-            markerHeight="10"
-            refX="9"
-            refY="3"
-            orient="auto"
-          >
-            <polygon points="0 0, 10 3, 0 6" fill="#ffc107" />
-          </marker>
-          <marker
-            id="arrowhead-invalid"
-            markerWidth="10"
-            markerHeight="10"
-            refX="9"
-            refY="3"
-            orient="auto"
-          >
-            <polygon points="0 0, 10 3, 0 6" fill="#dc3545" />
-          </marker>
-        </defs>
-      </svg>      {items.map((item) => {
-        const itemOnMouseDown = (e) => {
-          if (e.button === 2 || e.ctrlKey) {
-            startConnection(e, item);
-          } else {
-            startDragging(e, item);
-          }
-        };
-
-        const itemOnMouseUp = (e) => completeConnection(e, item);
-
-        return (
-          <div
-            key={item.id}
-            className={`canvas-item ${selectedItem === item.id ? 'selected' : ''} ${connectingFrom === item.id ? 'connecting' : ''}`}
-            style={{
-              left: `${item.x}px`,
-              top: `${item.y}px`,
+    <>
+      {/* Professional Toolbar - Matches ControlPanel Design */}
+      <div className={`canvas-toolbar ${boundaryDrawMode ? 'drawing-mode' : ''}`}>
+        {/* Section 1: Drawing Tools */}
+        <div className="toolbar-section">
+          <span className="toolbar-label">Tools</span>
+          <button
+            className={`control-btn ${boundaryDrawMode ? 'active' : ''}`}
+            onClick={() => {
+              const newMode = !boundaryDrawMode;
+              setBoundaryDrawMode(newMode);
+              setConnectionMode(false);
             }}
-            onMouseDown={itemOnMouseDown}
-            onMouseUp={itemOnMouseUp}
-          >            <div className="item-symbol">
-              <img 
-                src={encodeURI(item.path)} 
-                alt={item.name} 
-                className="item-image"
-                onError={(e) => {
-                  console.error('Failed to load icon on canvas:', item.path);
-                  e.target.style.display = 'none';
-                }}
-              />
-            </div>
-            <span className="item-label">{item.name}</span>
-            {selectedItem === item.id && (
-              <button
-                className="delete-btn"
-                onClick={() => handleDeleteItem(item.id)}
-              >
-                ×
-              </button>
-            )}
-          </div>
-        );
-      })}      {items.length === 0 && (
-        <div className="canvas-placeholder">
-          <p>🎨 Drag and drop Azure services here</p>
-          <p className="canvas-hint">🔗 <strong>Right-click</strong> or <strong>Ctrl+Click</strong> on an item to start connection</p>
-          <p className="canvas-hint">✏️ Press DELETE to remove selected items</p>
+            title="Draw Boundary (B)"
+          >
+            <span className="icon">📐</span>
+            <span>Boundary</span>
+          </button>
         </div>
-      )}
+
+        {/* Section 2: Boundary Type Selector (only when drawing) */}
+        {boundaryDrawMode && (
+          <div className="toolbar-section">
+            <span className="toolbar-label">Type</span>
+            <select 
+              value={boundaryType} 
+              onChange={(e) => setBoundaryType(e.target.value)}
+              className="boundary-type-selector-toolbar"
+              title="Select Boundary Type"
+            >
+              <option value="resource-group">📦 Resource Group</option>
+              <option value="subscription">🎫 Subscription</option>
+              <option value="virtual-network">🔷 Virtual Network</option>
+              <option value="subnet">🔸 Subnet</option>
+              <option value="region">🌍 Region</option>
+              <option value="availability-zone">🏢 Availability Zone</option>
+              <option value="security-boundary">🔒 Security Boundary</option>
+              <option value="application">📱 Application</option>
+              <option value="management-group">🏛️ Management Group</option>
+              <option value="policy-scope">📋 Policy Scope</option>
+              <option value="network-security-group">🛡️ Network Security Group</option>
+            </select>
+          </div>
+        )}
+
+        {/* Section 3: Instructions */}
+        {boundaryDrawMode && (
+          <div className="toolbar-section">
+            <span className="toolbar-label" style={{ fontSize: '12px', color: '#0078D4', fontWeight: '600' }}>
+              💡 Click and drag to draw boundary
+            </span>
+          </div>
+        )}
       </div>
-    </div>
+
+      <div ref={containerRef} className="canvas-container">
+        {/* Boundary Layer */}
+        <BoundaryCanvas
+          boundaries={boundaries}
+          setBoundaries={setBoundaries}
+          drawMode={boundaryDrawMode}
+          boundaryType={boundaryType}
+          canvasRef={activeCanvasRef}
+          containerRef={containerRef}
+        />
+
+        <div
+          ref={activeCanvasRef}
+          className="canvas"
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onClick={handleCanvasClick}
+        >
+          {connectionMode && (
+            <div className="connecting-status">
+              🔗 Connection Mode - Click on another service to connect (ESC to cancel)
+            </div>
+          )}
+
+        <svg className="connections-svg">
+          {connectionMode && connectingFrom && (
+            <line
+              x1={getItemCenter(connectingFrom).x}
+              y1={getItemCenter(connectingFrom).y}
+              x2={mousePos.x}
+              y2={mousePos.y}
+              stroke="#0078D4"
+              strokeWidth="2"
+              strokeDasharray="5,5"
+              opacity="0.6"
+            />
+          )}
+
+          {connections.map((conn, index) => {
+            const from = getItemCenter(conn.from);
+            const to = getItemCenter(conn.to);
+            const status = conn.status || 'valid';
+            const message = getConnectionMessage(status);
+            
+            const midX = (from.x + to.x) / 2;
+            const midY = (from.y + to.y) / 2;
+            
+            const strokeColor = message.color;
+            const markerId = `arrowhead-${status}`;
+            
+            return (
+              <g key={index}>
+                <line
+                  x1={from.x}
+                  y1={from.y}
+                  x2={to.x}
+                  y2={to.y}
+                  stroke={strokeColor}
+                  strokeWidth="2"
+                  markerEnd={`url(#${markerId})`}
+                  className={`connection-line connection-${status}`}
+                />
+                <circle
+                  cx={midX}
+                  cy={midY}
+                  r="6"
+                  fill={strokeColor}
+                  stroke="white"
+                  strokeWidth="2"
+                  className={`connection-led led-${status}`}
+                >
+                  <title>{message.text}</title>
+                </circle>
+                <circle
+                  cx={midX}
+                  cy={midY}
+                  r="6"
+                  fill="none"
+                  stroke={strokeColor}
+                  strokeWidth="2"
+                  opacity="0.6"
+                  className={`led-pulse led-pulse-${status}`}
+                />
+              </g>
+            );
+          })}
+          <defs>
+            <marker
+              id="arrowhead-valid"
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3, 0 6" fill="#28a745" />
+            </marker>
+            <marker
+              id="arrowhead-warning"
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3, 0 6" fill="#ffc107" />
+            </marker>
+            <marker
+              id="arrowhead-invalid"
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3, 0 6" fill="#dc3545" />
+            </marker>
+          </defs>        </svg>
+
+        {items.map((item) => {
+          const itemOnMouseDown = (e) => {
+            if (e.button === 2 || e.ctrlKey) {
+              startConnection(e, item);
+            } else {
+              startDragging(e, item);
+            }
+          };
+
+          const itemOnMouseUp = (e) => completeConnection(e, item);
+
+          return (
+            <div
+              key={item.id}
+              className={`canvas-item ${selectedItem === item.id ? 'selected' : ''} ${connectingFrom === item.id ? 'connecting' : ''}`}
+              style={{
+                left: `${item.x}px`,
+                top: `${item.y}px`,
+              }}
+              onMouseDown={itemOnMouseDown}
+              onMouseUp={itemOnMouseUp}
+            >            <div className="item-symbol">
+                <img 
+                  src={encodeURI(item.path)} 
+                  alt={item.name} 
+                  className="item-image"
+                  onError={(e) => {
+                    console.error('Failed to load icon on canvas:', item.path);
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+              <span className="item-label">{item.name}</span>
+              {selectedItem === item.id && (
+                <button
+                  className="delete-btn"
+                  onClick={() => handleDeleteItem(item.id)}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          );
+        })}      {items.length === 0 && (
+          <div className="canvas-placeholder">
+            <p>🎨 Drag and drop Azure services here</p>
+            <p className="canvas-hint">🔗 <strong>Right-click</strong> or <strong>Ctrl+Click</strong> on an item to start connection</p>
+            <p className="canvas-hint">✏️ Press DELETE to remove selected items</p>          </div>
+        )}
+        </div>
+      </div>
+    </>
   );
 };
 

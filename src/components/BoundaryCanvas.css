@@ -1,0 +1,504 @@
+.boundary-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto; /* Allow mouse events for drawing */
+  z-index: 0; /* BELOW canvas items (z-index: 2) so items are draggable */
+}
+
+.boundary-layer.drawing-mode {
+  cursor: crosshair;
+  background: rgba(0, 120, 212, 0.02); /* Subtle hint that drawing mode is active */
+  z-index: 100; /* ABOVE items when actively drawing */
+  pointer-events: auto !important;
+}
+
+.boundary {
+  position: absolute;
+  border: 3px dashed rgba(0, 120, 212, 0.5);
+  border-radius: 12px;
+  background: rgba(0, 120, 212, 0.03);
+  pointer-events: auto; /* Allow clicking to select boundaries */
+  transition: all 0.1s ease-out; /* Smooth transitions */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  z-index: 0; /* Behind items by default */
+  will-change: transform, width, height; /* Optimize for smooth drawing */
+  cursor: pointer; /* Show it's clickable */
+}
+
+.boundary.selected {
+  border-style: solid;
+  border-width: 3px;
+  background: rgba(0, 120, 212, 0.08);
+  box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2),
+              0 4px 16px rgba(0, 0, 0, 0.15);
+  z-index: 5;
+  pointer-events: auto; /* Allow interaction when selected */
+}
+
+.boundary:hover {
+  background: rgba(0, 120, 212, 0.06);
+  border-color: rgba(0, 120, 212, 0.7); /* Highlight on hover */
+}
+
+/* Remove the rule that disabled pointer-events on non-selected boundaries */
+
+/* Boundary Header */
+.boundary-header {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  height: 36px;
+  background: rgba(0, 120, 212, 0.9);
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  cursor: move;
+  color: white;
+  font-weight: 600;
+  font-size: 13px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  user-select: none;
+  pointer-events: auto; /* Allow clicking and dragging */
+  z-index: 10; /* Above boundary body */
+}
+
+.boundary-header:active {
+  cursor: grabbing;
+}
+
+.boundary-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.boundary-label {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: text;
+}
+
+.boundary-label:focus {
+  background: rgba(255, 255, 255, 0.3);
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.boundary-item-count {
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.25);
+  padding: 3px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.boundary-delete {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  line-height: 1;
+  padding: 0;
+}
+
+.boundary-delete:hover {
+  background: rgba(255, 59, 48, 0.9);
+  transform: scale(1.1);
+}
+
+/* Resize Handles - More visible and grabbable */
+.resize-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: white;
+  border: 3px solid #0078D4;
+  border-radius: 50%;
+  z-index: 100; /* Above everything */
+  pointer-events: auto; /* Always clickable */
+  cursor: nwse-resize;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.15s ease-out;
+}
+
+.resize-handle:hover {
+  background: #0078D4;
+  transform: scale(1.4);
+  box-shadow: 0 3px 8px rgba(0, 120, 212, 0.5);
+}
+
+.resize-se {
+  bottom: -6px;
+  right: -6px;
+  cursor: se-resize;
+}
+
+.resize-sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: sw-resize;
+}
+
+.resize-ne {
+  top: -6px;
+  right: -6px;
+  cursor: ne-resize;
+}
+
+.resize-nw {
+  top: -6px;
+  left: -6px;
+  cursor: nw-resize;
+}
+
+/* Boundary Types - Color Variations */
+.boundary[style*="border-color: #5C2D91"] {
+  /* Subscription */
+  background: rgba(92, 45, 145, 0.03);
+}
+
+.boundary[style*="border-color: #008272"] {
+  /* Virtual Network */
+  background: rgba(0, 130, 114, 0.03);
+}
+
+.boundary[style*="border-color: #00BCF2"] {
+  /* Subnet */
+  background: rgba(0, 188, 242, 0.03);
+}
+
+.boundary[style*="border-color: #FF6C37"] {
+  /* Region */
+  background: rgba(255, 108, 55, 0.03);
+}
+
+.boundary[style*="border-color: #FFB900"] {
+  /* Availability Zone */
+  background: rgba(255, 185, 0, 0.03);
+}
+
+.boundary[style*="border-color: #50E6FF"] {
+  /* Availability Set */
+  background: rgba(80, 230, 255, 0.05);
+}
+
+.boundary[style*="border-color: #E81123"] {
+  /* Security Boundary */
+  background: rgba(232, 17, 35, 0.03);
+}
+
+.boundary[style*="border-color: #FF8C00"] {
+  /* NSG Boundary */
+  background: rgba(255, 140, 0, 0.05);
+  border-width: 2px;
+}
+
+.boundary[style*="border-color: #107C10"] {
+  /* Application */
+  background: rgba(16, 124, 16, 0.03);
+}
+
+.boundary[style*="border-color: #FFD700"] {
+  /* Text Annotation */
+  background: rgba(255, 215, 0, 0.08);
+  border: none !important;
+}
+
+/* Availability Set - Enterprise Style with striped pattern */
+.boundary.availability-set {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(80, 230, 255, 0.02),
+    rgba(80, 230, 255, 0.02) 10px,
+    rgba(80, 230, 255, 0.05) 10px,
+    rgba(80, 230, 255, 0.05) 20px
+  );
+  border-style: dashed !important;
+  border-width: 3px !important;
+}
+
+/* NSG Boundary - Security style with dotted pattern */
+.boundary.nsg-boundary {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 140, 0, 0.02),
+    rgba(255, 140, 0, 0.02) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+  border-style: dotted !important;
+  border-width: 3px !important;
+}
+
+/* Text Annotation - Note style */
+.boundary.text-annotation {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.1) 0%,
+    rgba(255, 215, 0, 0.05) 100%
+  );
+  border: 2px solid rgba(255, 215, 0, 0.3) !important;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.15);
+}
+
+.boundary.text-annotation .boundary-header {
+  background: transparent;
+  height: auto;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: none;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.text-annotation-header {
+  background: transparent !important;
+  color: #333 !important;
+  flex-direction: column;
+  align-items: flex-start !important;
+  gap: 4px;
+}
+
+.text-annotation-label {
+  background: transparent !important;
+  border: none !important;
+  color: #333 !important;
+  font-weight: 500 !important;
+  padding: 4px 0 !important;
+  width: 100%;
+  resize: none;
+  min-height: 24px;
+  line-height: 1.4;
+}
+
+.text-annotation-label:focus {
+  background: rgba(255, 255, 255, 0.5) !important;
+  padding: 4px 8px !important;
+  border: 1px solid rgba(255, 215, 0, 0.5) !important;
+  border-radius: 4px;
+}
+
+/* Subnet - Enterprise style with dotted border */
+.boundary.subnet {
+  border-style: dashed !important;
+  border-width: 2px !important;
+  background: rgba(0, 188, 242, 0.02);
+}
+
+/* Virtual Network - Solid professional border */
+.boundary.virtual-network {
+  border-style: solid !important;
+  border-width: 3px !important;
+}
+
+/* Region - Bold enterprise border */
+.boundary.region {
+  border-style: solid !important;
+  border-width: 4px !important;
+  border-radius: 16px;
+}
+
+/* ===== ENHANCED ENTERPRISE BOUNDARY STYLES ===== */
+
+/* Availability Set - Dashed light blue like Microsoft diagrams */
+.boundary.availability-set {
+  border-style: dashed !important;
+  border-width: 3px !important;
+  border-color: #50E6FF !important;
+  background: rgba(80, 230, 255, 0.05) !important;
+  border-radius: 8px;
+}
+
+/* NSG Boundary - Dotted orange for security visualization */
+.boundary.nsg-boundary {
+  border-style: dotted !important;
+  border-width: 4px !important;
+  border-color: #FF8C00 !important;
+  background: rgba(255, 140, 0, 0.03) !important;
+  border-radius: 8px;
+}
+
+/* Subnet - Dashed like in Microsoft diagrams */
+.boundary.subnet {
+  border-style: dashed !important;
+  border-width: 2px !important;
+  border-color: #00BCF2 !important;
+  background: rgba(0, 188, 242, 0.03) !important;
+  border-radius: 6px;
+}
+
+/* Virtual Network - Solid green */
+.boundary.virtual-network {
+  border-style: solid !important;
+  border-width: 3px !important;
+  border-color: #008272 !important;
+  background: rgba(0, 130, 114, 0.03) !important;
+  border-radius: 10px;
+}
+
+/* Resource Group - Solid purple */
+.boundary.resource-group {
+  border-style: solid !important;
+  border-width: 3px !important;
+  border-color: #0078D4 !important;
+  background: rgba(0, 120, 212, 0.03) !important;
+  border-radius: 10px;
+}
+
+/* Subscription - Solid gray/purple */
+.boundary.subscription {
+  border-style: solid !important;
+  border-width: 4px !important;
+  border-color: #5C2D91 !important;
+  background: rgba(92, 45, 145, 0.03) !important;
+  border-radius: 12px;
+}
+
+/* Region - Bold solid orange */
+.boundary.region {
+  border-style: solid !important;
+  border-width: 4px !important;
+  border-color: #FF6C37 !important;
+  background: rgba(255, 108, 55, 0.03) !important;
+  border-radius: 16px;
+}
+
+/* Availability Zone - Solid yellow/gold */
+.boundary.availability-zone {
+  border-style: solid !important;
+  border-width: 3px !important;
+  border-color: #FFB900 !important;
+  background: rgba(255, 185, 0, 0.03) !important;
+  border-radius: 10px;
+}
+
+/* Security Boundary - Solid red */
+.boundary.security-boundary {
+  border-style: solid !important;
+  border-width: 3px !important;
+  border-color: #E81123 !important;
+  background: rgba(232, 17, 35, 0.03) !important;
+  border-radius: 10px;
+}
+
+/* Application - Solid green */
+.boundary.application {
+  border-style: solid !important;
+  border-width: 3px !important;
+  border-color: #107C10 !important;
+  background: rgba(16, 124, 16, 0.03) !important;
+  border-radius: 10px;
+}
+
+/* Text Annotation - No border, yellow background */
+.boundary.text-annotation {
+  border: none !important;
+  background: rgba(255, 215, 0, 0.15) !important;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+.boundary.text-annotation .boundary-header {
+  background: transparent !important;
+  border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.text-annotation-header {
+  background: transparent !important;
+  color: #333 !important;
+}
+
+.text-annotation-label {
+  color: #333 !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  border-color: rgba(255, 215, 0, 0.4) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+/* Drawing preview - semi-transparent */
+/* Drawing preview - super smooth and responsive */
+.boundary.drawing {
+  opacity: 0.7 !important;
+  pointer-events: none !important;
+  animation: drawingPulse 1.5s ease-in-out infinite;
+  transition: none !important; /* Remove transition for instant updates */
+  will-change: width, height; /* Optimize for smooth drawing */
+  z-index: 1000 !important; /* Above everything while drawing */
+}
+
+@keyframes drawingPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.8; }
+}
+
+/* Animations */
+@keyframes boundaryPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.3);
+  }
+}
+
+.boundary.selected {
+  animation: boundaryPulse 2s infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .boundary-header {
+    height: 32px;
+    font-size: 12px;
+    padding: 0 10px;
+  }
+
+  .boundary-icon {
+    font-size: 16px;
+  }
+
+  .boundary-label {
+    font-size: 12px;
+    padding: 3px 6px;
+  }
+
+  .boundary-item-count {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .resize-handle {
+    width: 14px;
+    height: 14px;
+  }
+
+  .boundary-delete {
+    width: 22px;
+    height: 22px;
+    font-size: 18px;
+  }
+}

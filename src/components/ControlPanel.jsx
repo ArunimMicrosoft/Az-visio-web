@@ -20,9 +20,11 @@ const ControlPanel = ({
       <div className="control-buttons">        
         <button className="control-btn save-btn" onClick={onSave} title="Save diagram to local file">
           💾 Save
-        </button>
-        <button className="control-btn load-btn" onClick={onLoad} title="Load diagram from file">
+        </button>        <button className="control-btn load-btn" onClick={onLoad} title="Load diagram from file">
           📂 Load
+        </button>
+        <button className="control-btn terraform-import-btn" onClick={onImportTerraform} title="Import Terraform file (.tf or .tf.json)">
+          🏗️ Import TF
         </button>
         <button className="control-btn validate-btn" onClick={onValidate} title="Validate architecture for deployment">
           ✅ Validate
@@ -38,9 +40,6 @@ const ControlPanel = ({
         </button>
         <button className="control-btn terraform-btn" onClick={onExportTerraform} title="Export Terraform configuration">
           🏗️ Terraform
-        </button>
-        <button className="control-btn import-tf-btn" onClick={onImportTerraform} title="Import Terraform .tf file to canvas">
-          📥 Import TF
         </button>
         <button className="control-btn arm-btn" onClick={onExportARM} title="Export ARM Template">
           📋 ARM

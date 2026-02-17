@@ -217,3 +217,5 @@
     font-size: 15px;
   }
 }
+
+.terraform-import-btn { background: linear-gradient(135deg, #7B68EE 0%, #6A5ACD 100%); }

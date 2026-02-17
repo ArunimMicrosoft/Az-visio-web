@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import Toolbar from './components/Toolbar';
-import CanvasComponent from './components/Canvas-new.jsx';
+import CanvasComponent from './components/Canvas.jsx';
 import ControlPanel from './components/ControlPanel';
 import HelpOverlay from './components/HelpOverlay';
 import Footer from './components/Footer';
@@ -14,15 +14,17 @@ import {
   exportARMTemplate,
   exportCostReport 
 } from './utils/enterpriseExporter';
-import { parseTerraform } from './utils/terraformParser';
+import { parseTerraformFile, validateTerraformFile } from './utils/terraformParser';
 import './App.css';
 
 console.log('=== APP.JSX LOADING ===');
 console.log('Imports loaded successfully');
 
 function App() {
-  console.log('=== APP FUNCTION EXECUTING ===');  const [items, setItems] = useState([]);
+  console.log('=== APP FUNCTION EXECUTING ===');
+  const [items, setItems] = useState([]);
   const [connections, setConnections] = useState([]);
+  const [boundaries, setBoundaries] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState('eastus');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [isValidationOpen, setIsValidationOpen] = useState(false);
@@ -34,22 +36,20 @@ function App() {
       return;
     }
     setIsValidationOpen(true);
-  };
-  const handleSave = () => {
+  };  const handleSave = () => {
     if (items.length === 0) {
       alert('⚠️ Canvas is empty! Add some Azure services before saving.');
       return;
-    }
-
-    try {
-      const diagram = {
+    }    try {      const diagram = {
         items,
         connections,
+        boundaries,
         metadata: {
           version: '1.0',
           savedAt: new Date().toISOString(),
           itemCount: items.length,
           connectionCount: connections.length,
+          boundaryCount: boundaries.length,
           appName: 'Azure Architecture Designer'
         }
       };
@@ -106,19 +106,18 @@ function App() {
           // Validate the loaded data
           if (!diagram.items || !Array.isArray(diagram.items)) {
             throw new Error('Invalid diagram file: missing or invalid items array');
-          }
-          
-          // Load the diagram
-          setItems(diagram.items || []);
+          }          // Load the diagram          setItems(diagram.items || []);
           setConnections(diagram.connections || []);
-          
+          setBoundaries(diagram.boundaries || []);
+
           const itemCount = diagram.items.length;
           const connCount = (diagram.connections || []).length;
+          const boundaryCount = (diagram.boundaries || []).length;
           const savedDate = diagram.metadata?.savedAt 
             ? new Date(diagram.metadata.savedAt).toLocaleString()
             : 'Unknown';
           
-          alert(`✅ Diagram loaded successfully!\n\n📁 File: ${file.name}\n📊 ${itemCount} services, ${connCount} connections\n📅 Saved: ${savedDate}`);
+          alert(`✅ Diagram loaded successfully!\n\n📁 File: ${file.name}\n📊 ${itemCount} services, ${connCount} connections, ${boundaryCount} boundaries\n📅 Saved: ${savedDate}`);
         } catch (error) {
           console.error('Error loading diagram:', error);
           alert(`❌ Failed to load diagram!\n\n${error.message}\n\nPlease ensure the file is a valid Azure Architecture Designer JSON file.`);
@@ -133,15 +132,47 @@ function App() {
     };
     
     // Trigger file picker
-    input.click();
-  };
-
-  const handleClear = () => {
+    input.click();  };  const handleClear = () => {
     if (window.confirm('Are you sure you want to clear the canvas?')) {
       setItems([]);
       setConnections([]);
+      setBoundaries([]);
     }
   };
+
+  const handleImportTerraform = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.tf,.tf.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const content = event.target.result;
+          const validation = validateTerraformFile(content, file.name);
+          if (!validation.valid) {
+            alert(`❌ Invalid Terraform file!\n\n${validation.errors.join('\n')}`);
+            return;
+          }
+          const result = parseTerraformFile(content, file.name);
+          if (result.items.length === 0) {
+            alert('⚠️ No Azure resources found!');
+            return;
+          }
+          setItems(prev => [...prev, ...result.items]);
+          setConnections(prev => [...prev, ...result.connections]);
+          alert(`✅ Imported ${result.items.length} Azure resources from Terraform!\n\n💰 Costs calculated from actual Azure pricing.`);
+        } catch (error) {
+          alert(`❌ Error: ${error.message}`);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
   const handleExport = async () => {
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
@@ -262,77 +293,6 @@ function App() {
       alert(`❌ Failed to export cost report!\n\n${error.message}`);
     }
   };
-
-  const handleImportTerraform = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.tf,.tfvars';
-    input.multiple = true;
-
-    input.onchange = (e) => {
-      const files = Array.from(e.target.files);
-      if (files.length === 0) return;
-
-      const readers = files.map(file => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (ev) => resolve({ name: file.name, content: ev.target.result });
-          reader.onerror = () => reject(new Error('Failed to read ' + file.name));
-          reader.readAsText(file);
-        });
-      });
-
-      Promise.all(readers).then(results => {
-        try {
-          const combined = results.map(r => '# File: ' + r.name + '\n' + r.content).join('\n\n');
-          const parsed = parseTerraform(combined);
-
-          if (parsed.items.length === 0) {
-            alert('No Azure resources found in the Terraform files.');
-            return;
-          }
-
-          let mode = 'replace';
-          if (items.length > 0) {
-            const choice = window.confirm('Canvas has existing items.\n\nOK = Replace all\nCancel = Merge');
-            mode = choice ? 'replace' : 'merge';
-          }
-
-          if (mode === 'replace') {
-            setItems(parsed.items);
-            setConnections(parsed.connections);
-          } else {
-            const offsetItems = parsed.items.map((item, idx) => ({
-              ...item,
-              id: 'tf-merge-' + Date.now() + '-' + idx,
-              x: item.x + 600,
-            }));
-            const idMap = {};
-            parsed.items.forEach((orig, idx) => { idMap[orig.id] = offsetItems[idx].id; });
-            const offsetConns = parsed.connections.map((conn, idx) => ({
-              ...conn,
-              id: 'tf-conn-merge-' + Date.now() + '-' + idx,
-              from: idMap[conn.from] || conn.from,
-              to: idMap[conn.to] || conn.to,
-            }));
-            setItems(prev => [...prev, ...offsetItems]);
-            setConnections(prev => [...prev, ...offsetConns]);
-          }
-
-          const fileNames = results.map(r => r.name).join(', ');
-          alert('Terraform imported! ' + parsed.items.length + ' resources, ' + parsed.connections.length + ' connections from ' + fileNames);
-        } catch (error) {
-          console.error('Terraform parse error:', error);
-          alert('Failed to parse Terraform: ' + error.message);
-        }
-      }).catch(error => {
-        alert('Failed to read files: ' + error.message);
-      });
-    };
-
-    input.click();
-  };
-
   return (
     <div className="app">      <ControlPanel
         onSave={handleSave}
@@ -345,20 +305,22 @@ function App() {
         onExportTerraform={handleExportTerraform}
         onExportARM={handleExportARM}
         onExportCostReport={handleExportCostReport}
-        onImportTerraform={handleImportTerraform}
-      />      <HelpOverlay />
+        onImportTerraform={handleImportTerraform}      />      <HelpOverlay />
       <div className="main-content">
         <Toolbar />
         <CanvasComponent
           items={items}
           setItems={setItems}
-          connections={connections}          setConnections={setConnections}
+          connections={connections}
+          setConnections={setConnections}
+          boundaries={boundaries}
+          setBoundaries={setBoundaries}
           canvasRef={canvasRef}
-        />
-        <CostSummary 
+        />        <CostSummary 
           items={items} 
           onRegionChange={setSelectedRegion}
           onCurrencyChange={setSelectedCurrency}
+          useRealTimeAPI={true}
         />
       </div>
       <Footer />
