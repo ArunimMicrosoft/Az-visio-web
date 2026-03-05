@@ -1,11 +1,14 @@
 name: Deploy to Azure App Service
 
+# Disabled: Using Azure Static Web Apps instead (azure-static-web-apps.yml)
+# To re-enable: uncomment the triggers below and add AZURE_WEBAPP_PUBLISH_PROFILE secret
+# Steps to get publish profile:
+#   1. Go to Azure Portal → App Service → "azure-architecture-designer"
+#   2. Click "Download publish profile" 
+#   3. Go to GitHub → Settings → Secrets → Actions → New secret
+#   4. Name: AZURE_WEBAPP_PUBLISH_PROFILE, Value: paste the XML content
 on:
-  push:
-    branches:
-      - main
-      - master
-  workflow_dispatch:
+  workflow_dispatch:  # Manual trigger only — won't auto-run on push
 
 permissions:
   contents: read
