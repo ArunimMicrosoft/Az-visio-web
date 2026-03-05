@@ -4,8 +4,8 @@
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: auto; /* Allow mouse events for drawing */
-  z-index: 0; /* BELOW canvas items (z-index: 2) so items are draggable */
+  pointer-events: none; /* Transparent by default — let clicks pass through to canvas items */
+  z-index: 1; /* Between canvas background (0) and canvas items (2) */
 }
 
 .boundary-layer.drawing-mode {

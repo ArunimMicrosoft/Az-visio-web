@@ -296,14 +296,16 @@ const BoundaryCanvas = ({ boundaries, setBoundaries, items, boundaryDrawMode, dr
     <div
       className={`boundary-layer ${boundaryDrawMode ? 'drawing-mode' : ''}`}
       onMouseDown={boundaryDrawMode ? handleDrawStart : undefined}
-      onMouseMove={boundaryDrawMode ? handleDrawMove : (!boundaryDrawMode ? handleMouseMove : undefined)}
-      onMouseUp={boundaryDrawMode ? handleDrawEnd : (!boundaryDrawMode ? handleMouseUp : undefined)}
+      onMouseMove={boundaryDrawMode ? handleDrawMove : handleMouseMove}
+      onMouseUp={boundaryDrawMode ? handleDrawEnd : handleMouseUp}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleBoundaryDrop}
       style={{ 
-        cursor: boundaryDrawMode ? 'crosshair' : 'default',
-        pointerEvents: boundaryDrawMode ? 'auto' : 'none', // CRITICAL: Only capture events when drawing
-        zIndex: boundaryDrawMode ? 100 : 0 // Above items when drawing, below when not
+        cursor: boundaryDrawMode ? 'crosshair' : 'default'
+        // pointer-events controlled by CSS:
+        //   .boundary-layer = none (transparent, clicks pass to canvas items)
+        //   .boundary-layer.drawing-mode = auto (captures draw events)
+        //   .boundary elements themselves always have pointer-events: auto
       }}
     >
       {/* Drawing boundary preview */}

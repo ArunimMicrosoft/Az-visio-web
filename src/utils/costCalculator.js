@@ -599,51 +599,276 @@ export const getCostCategory = (monthlyCost) => {
 
 /**
  * Get cost optimization suggestions
+ * Provides industry-grade recommendations based on Azure Well-Architected Framework
  */
 export const getCostOptimizations = (items) => {
   const suggestions = [];
   
-  // Check for expensive services
-  items.forEach(item => {
-    const pricing = azurePricing[item.serviceType];
-    if (!pricing) return;
-    
-    if (item.serviceType === 'firewall' && pricing.baseCost > 500) {
-      suggestions.push({
-        service: item.name,
-        suggestion: 'Consider using Network Security Groups instead of Azure Firewall for basic filtering',
-        potentialSavings: '$900/month'
-      });
-    }
-    
-    if (item.serviceType === 'sqlmi' && pricing.baseCost > 500) {
-      suggestions.push({
-        service: item.name,
-        suggestion: 'Consider Azure SQL Database instead of Managed Instance if you don\'t need full SQL Server compatibility',
-        potentialSavings: '$600/month'
-      });
-    }
-    
-    if (item.serviceType === 'appgw' && pricing.baseCost > 100) {
-      suggestions.push({
-        service: item.name,
-        suggestion: 'Consider using Azure Front Door or basic Load Balancer if WAF is not required',
-        potentialSavings: '$160/month'
-      });
-    }
-  });
-  
-  // Check for missing cost-saving opportunities
-  const hasVMs = items.some(i => i.serviceType === 'vm');
-  const hasReservedInstances = false; // Could check metadata
-  if (hasVMs && !hasReservedInstances) {
+  const serviceTypes = items.map(i => (i.type || i.serviceType || '').toLowerCase());
+  const hasVMs = serviceTypes.some(t => t === 'vm' || t === 'virtualmachine');
+  const hasVMSS = serviceTypes.some(t => t === 'vmss');
+  const hasAKS = serviceTypes.some(t => t === 'aks' || t === 'kubernetes');
+  const hasSQL = serviceTypes.some(t => ['sqldb', 'sql', 'sqldatabase'].includes(t));
+  const hasCosmos = serviceTypes.some(t => t === 'cosmosdb');
+  const hasStorage = serviceTypes.some(t => t === 'storage' || t === 'storageaccount');
+  const hasFirewall = serviceTypes.some(t => t === 'firewall');
+  const hasAppGW = serviceTypes.some(t => t === 'appgw' || t === 'applicationgateway');
+  const hasSQLMI = serviceTypes.some(t => t === 'sqlmi');
+  const hasRedis = serviceTypes.some(t => t === 'redis');
+  const hasAppService = serviceTypes.some(t => t === 'appservice');
+  const hasFunctions = serviceTypes.some(t => t === 'function' || t === 'functionapp');
+  const hasDataFactory = serviceTypes.some(t => t === 'datafactory');
+  const hasSynapse = serviceTypes.some(t => t === 'synapse');
+  const hasLoadBalancer = serviceTypes.some(t => t === 'loadbalancer' || t === 'lb');
+  const hasFrontDoor = serviceTypes.some(t => t === 'frontdoor');
+  const hasContainerInstances = serviceTypes.some(t => t === 'containerinstances' || t === 'aci');
+
+  // --- Compute Optimizations ---
+  if (hasVMs) {
     suggestions.push({
+      category: '💻 Compute',
       service: 'Virtual Machines',
-      suggestion: 'Use Reserved Instances for up to 72% savings on long-running VMs',
-      potentialSavings: 'Up to 72% on VM costs'
+      suggestion: 'Use Azure Reserved Instances (1-year or 3-year) for predictable workloads to save up to 72% compared to pay-as-you-go pricing.',
+      potentialSavings: 'Up to 72%',
+      priority: 'high'
+    });
+    suggestions.push({
+      category: '💻 Compute',
+      service: 'Virtual Machines',
+      suggestion: 'Enable Azure Spot VMs for fault-tolerant or batch workloads to save up to 90% on compute costs.',
+      potentialSavings: 'Up to 90%',
+      priority: 'medium'
+    });
+    suggestions.push({
+      category: '💻 Compute',
+      service: 'Virtual Machines',
+      suggestion: 'Right-size VMs using Azure Advisor recommendations. Over-provisioned VMs are the #1 cloud waste factor.',
+      potentialSavings: '20-40%',
+      priority: 'high'
+    });
+    suggestions.push({
+      category: '💻 Compute',
+      service: 'Virtual Machines',
+      suggestion: 'Configure auto-shutdown for dev/test VMs during non-business hours to eliminate idle costs.',
+      potentialSavings: '60-70% on dev/test',
+      priority: 'medium'
     });
   }
-  
+
+  if (hasVMSS) {
+    suggestions.push({
+      category: '💻 Compute',
+      service: 'VM Scale Sets',
+      suggestion: 'Configure autoscaling policies to scale in during low-demand periods. Combine with Spot instances for non-critical nodes.',
+      potentialSavings: '30-50%',
+      priority: 'high'
+    });
+  }
+
+  if (hasAKS) {
+    suggestions.push({
+      category: '📦 Containers',
+      service: 'AKS',
+      suggestion: 'Enable cluster autoscaler and use Spot node pools for non-critical workloads. Consider Azure CNI Overlay to reduce IP usage.',
+      potentialSavings: '30-60%',
+      priority: 'high'
+    });
+    suggestions.push({
+      category: '📦 Containers',
+      service: 'AKS',
+      suggestion: 'Use Kubernetes VPA (Vertical Pod Autoscaler) and HPA (Horizontal Pod Autoscaler) to right-size pod requests.',
+      potentialSavings: '15-30%',
+      priority: 'medium'
+    });
+  }
+
+  if (hasContainerInstances) {
+    suggestions.push({
+      category: '📦 Containers',
+      service: 'Container Instances',
+      suggestion: 'Consider migrating long-running containers to AKS for better cost efficiency at scale. ACI is ideal for burst/short-lived tasks.',
+      potentialSavings: '20-40% at scale',
+      priority: 'low'
+    });
+  }
+
+  // --- Database Optimizations ---
+  if (hasSQL) {
+    suggestions.push({
+      category: '🗄️ Database',
+      service: 'SQL Database',
+      suggestion: 'Use Elastic Pools to share resources across multiple databases. Enable auto-pause for serverless tier on dev/test databases.',
+      potentialSavings: '30-50%',
+      priority: 'high'
+    });
+    suggestions.push({
+      category: '🗄️ Database',
+      service: 'SQL Database',
+      suggestion: 'Use Azure Hybrid Benefit if you have existing SQL Server licenses to save up to 55% on vCore-based pricing.',
+      potentialSavings: 'Up to 55%',
+      priority: 'high'
+    });
+  }
+
+  if (hasSQLMI) {
+    suggestions.push({
+      category: '🗄️ Database',
+      service: 'SQL Managed Instance',
+      suggestion: 'Consider Azure SQL Database if full SQL Server compatibility is not required. MI is significantly more expensive.',
+      potentialSavings: '$600+/month',
+      priority: 'high'
+    });
+  }
+
+  if (hasCosmos) {
+    suggestions.push({
+      category: '🗄️ Database',
+      service: 'Cosmos DB',
+      suggestion: 'Use autoscale throughput instead of manual provisioning to avoid paying for unused RU/s. Consider serverless for intermittent workloads.',
+      potentialSavings: '30-60%',
+      priority: 'high'
+    });
+    suggestions.push({
+      category: '🗄️ Database',
+      service: 'Cosmos DB',
+      suggestion: 'Enable TTL (Time-to-Live) to auto-delete old data and reduce storage costs. Review partition key strategy for efficiency.',
+      potentialSavings: '10-25%',
+      priority: 'medium'
+    });
+  }
+
+  if (hasRedis) {
+    suggestions.push({
+      category: '🗄️ Database',
+      service: 'Azure Cache for Redis',
+      suggestion: 'Use the Basic tier for dev/test and Standard for production. Premium tier is only needed for clustering and geo-replication.',
+      potentialSavings: '40-60%',
+      priority: 'medium'
+    });
+  }
+
+  // --- Storage Optimizations ---
+  if (hasStorage) {
+    suggestions.push({
+      category: '💾 Storage',
+      service: 'Storage Account',
+      suggestion: 'Implement lifecycle management policies to auto-tier data from Hot → Cool → Archive. Cool tier is 50% cheaper, Archive is 90% cheaper.',
+      potentialSavings: '50-90%',
+      priority: 'high'
+    });
+    suggestions.push({
+      category: '💾 Storage',
+      service: 'Storage Account',
+      suggestion: 'Use LRS (Locally Redundant Storage) for non-critical data instead of GRS/RA-GRS. Consider ZRS for zone-redundancy at lower cost than GRS.',
+      potentialSavings: '30-50%',
+      priority: 'medium'
+    });
+  }
+
+  // --- Networking Optimizations ---
+  if (hasFirewall) {
+    suggestions.push({
+      category: '🌐 Networking',
+      service: 'Azure Firewall',
+      suggestion: 'Use Azure Firewall Basic SKU ($276/month) instead of Standard ($912/month) for smaller workloads. Consider NSGs for basic traffic filtering.',
+      potentialSavings: '$600+/month',
+      priority: 'high'
+    });
+  }
+
+  if (hasAppGW) {
+    suggestions.push({
+      category: '🌐 Networking',
+      service: 'Application Gateway',
+      suggestion: 'Use Azure Front Door if you only need global load balancing without WAF. For simple L4 balancing, use Azure Load Balancer (much cheaper).',
+      potentialSavings: '$160+/month',
+      priority: 'medium'
+    });
+  }
+
+  if (hasLoadBalancer && hasFrontDoor) {
+    suggestions.push({
+      category: '🌐 Networking',
+      service: 'Load Balancer + Front Door',
+      suggestion: 'Review if both Load Balancer and Front Door are needed. Front Door includes L7 load balancing — the internal LB may be redundant.',
+      potentialSavings: '$18+/month',
+      priority: 'low'
+    });
+  }
+
+  // --- App Platform Optimizations ---
+  if (hasAppService) {
+    suggestions.push({
+      category: '🚀 App Platform',
+      service: 'App Service',
+      suggestion: 'Use Free/Shared tiers for dev/test. For production, consider B1 Basic tier unless you need scaling/slots (Standard S1+). Use Reserved Instances for 1-3 year savings.',
+      potentialSavings: '30-55%',
+      priority: 'medium'
+    });
+  }
+
+  if (hasFunctions) {
+    suggestions.push({
+      category: '🚀 App Platform',
+      service: 'Functions',
+      suggestion: 'Stay on Consumption plan for intermittent workloads (1M executions/month free). Only use Premium plan if you need VNet integration or always-warm instances.',
+      potentialSavings: 'Varies',
+      priority: 'low'
+    });
+  }
+
+  // --- Analytics Optimizations ---
+  if (hasDataFactory) {
+    suggestions.push({
+      category: '📊 Analytics',
+      service: 'Data Factory',
+      suggestion: 'Optimize pipeline runs by batching activities. Use self-hosted integration runtime for on-premises data to avoid data movement charges.',
+      potentialSavings: '20-40%',
+      priority: 'medium'
+    });
+  }
+
+  if (hasSynapse) {
+    suggestions.push({
+      category: '📊 Analytics',
+      service: 'Synapse Analytics',
+      suggestion: 'Use serverless SQL pools for ad-hoc queries instead of dedicated pools. Pause dedicated pools when not in use.',
+      potentialSavings: '50-80%',
+      priority: 'high'
+    });
+  }
+
+  // --- General Cross-Cutting Recommendations ---
+  suggestions.push({
+    category: '🏗️ Architecture',
+    service: 'General',
+    suggestion: 'Set up Azure Cost Management + Budgets with alerts at 50%, 75%, and 90% thresholds to prevent bill shock.',
+    potentialSavings: 'Prevention',
+    priority: 'high'
+  });
+
+  if (items.length > 5) {
+    suggestions.push({
+      category: '🏗️ Architecture',
+      service: 'General',
+      suggestion: 'Apply Azure resource tags (CostCenter, Owner, Environment) consistently to enable chargeback and cost attribution reporting.',
+      potentialSavings: 'Governance',
+      priority: 'medium'
+    });
+  }
+
+  suggestions.push({
+    category: '🏗️ Architecture',
+    service: 'General',
+    suggestion: 'Use Azure Advisor cost recommendations regularly. Advisor identifies idle resources, right-sizing opportunities, and reserved instance savings.',
+    potentialSavings: '10-30%',
+    priority: 'high'
+  });
+
+  // Sort by priority (high > medium > low)
+  const priorityOrder = { high: 0, medium: 1, low: 2 };
+  suggestions.sort((a, b) => (priorityOrder[a.priority] || 2) - (priorityOrder[b.priority] || 2));
+
   return suggestions;
 };
 

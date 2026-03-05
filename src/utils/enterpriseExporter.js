@@ -6,6 +6,7 @@ import { generateTerraform } from './terraformGenerator-enterprise';
 import { generateARMTemplate } from './armTemplateGenerator';
 import { generateCostPDF } from './costPDFGenerator';
 import { renderDiagramToCanvas } from './canvasRenderer';
+import { formatTerraformFiles } from './terraformFormatter';
 
 /**
  * Enterprise Export Configuration
@@ -273,8 +274,9 @@ export const exportJSON = async (items, connections, options = {}) => {
 };
 
 /**
- * Export as high-quality PNG with metadata
+ * Export as high-quality PNG with metadata and DPI selection
  * Uses custom canvas renderer instead of html2canvas for reliability
+ * DPI Options: 72 (screen), 96 (web), 150 (draft print), 300 (high-quality print)
  */
 export const exportPNG = async (canvasElement, items, connections, options = {}) => {
   try {
@@ -285,14 +287,30 @@ export const exportPNG = async (canvasElement, items, connections, options = {})
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
-      // Render diagram to canvas using custom renderer
+
+    // DPI Configuration (industry-standard values)
+    const dpiOptions = {
+      'screen': 72,      // Screen display
+      'web': 96,         // Web standard (default)
+      'draft': 150,      // Draft printing
+      'print': 300,      // High-quality printing
+      'poster': 600      // Large format printing
+    };
+    
+    const selectedDPI = options.dpi || 'web';
+    const dpiValue = dpiOptions[selectedDPI] || 96;
+    const scaleFactor = dpiValue / 96; // Scale relative to web standard
+    
+    console.log(`📐 Export DPI: ${dpiValue} (${selectedDPI} quality) - Scale: ${scaleFactor}×`);
+      
+    // Render diagram to canvas using custom renderer
     const { canvas } = await renderDiagramToCanvas(items, connections, {
       padding: 80,
-      scale: options.quality === 'high' ? 3 : 2,
+      scale: scaleFactor * (options.quality === 'high' ? 1.5 : 1), // Additional quality multiplier
       showGrid: false
     });
     
-    console.log('✅ Canvas rendered:', canvas.width, 'x', canvas.height);
+    console.log('✅ Canvas rendered:', canvas.width, 'x', canvas.height, `at ${dpiValue} DPI`);
     
     return new Promise((resolve, reject) => {
       canvas.toBlob(async (blob) => {
@@ -314,8 +332,7 @@ export const exportPNG = async (canvasElement, items, connections, options = {})
           await downloadBlob(blob, filename);
           
           console.log('✅ PNG exported successfully:', filename);
-          
-          resolve({
+            resolve({
             success: true,
             filename,
             size: blob.size,
@@ -323,6 +340,8 @@ export const exportPNG = async (canvasElement, items, connections, options = {})
               width: canvas.width,
               height: canvas.height
             },
+            dpi: dpiValue,
+            dpiSetting: selectedDPI,
             quality: options.quality || 'standard'
           });
         } catch (error) {
@@ -516,9 +535,12 @@ export const exportTerraform = async (items, connections, options = {}) => {
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
+      // Generate enterprise-grade Terraform configuration
+    const rawTerraformFiles = generateTerraform(items, connections);
     
-    // Generate enterprise-grade Terraform configuration
-    const terraformFiles = generateTerraform(items, connections);
+    // Apply terraform fmt formatting (HCL canonical style)
+    const terraformFiles = formatTerraformFiles(rawTerraformFiles);
+    console.log('✅ Terraform files formatted with terraform fmt conventions');
     
     // Download all files with delays to prevent browser lag
     const fileNames = [];

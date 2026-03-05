@@ -11,6 +11,7 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
   const [connectionMode, setConnectionMode] = useState(false);
   const [boundaryDrawMode, setBoundaryDrawMode] = useState(false);
   const [boundaryType, setBoundaryType] = useState('resource-group');
+  const [drawingBoundary, setDrawingBoundary] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const localCanvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -20,7 +21,9 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
 
   const handleDragOver = (e) => {
     e.preventDefault();
-  };  const handleDrop = (e) => {
+  };
+
+  const handleDrop = (e) => {
     e.preventDefault();
     const iconData = e.dataTransfer.getData('azureIcon');
     
@@ -36,14 +39,117 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
       const y = e.clientY - rect.top + scrollTop;
 
       const newItem = {
-        id: Date.now(),
         ...icon,
+        // Preserve icon's original id as serviceType for connection validation
+        serviceType: icon.id,
+        // Generate unique numeric id for canvas item tracking
+        id: Date.now(),
         x: x - 40,
         y: y - 40,
       };
 
       setItems([...items, newItem]);
     }
+  };
+
+  /**
+   * Get the connection validation status between the connecting-from item
+   * and a potential target item. Used for visual highlighting.
+   */
+  const getTargetValidationStatus = (targetItem) => {
+    if (!connectionMode || !connectingFrom) return null;
+    const fromItem = items.find(i => i.id === connectingFrom);
+    if (!fromItem || fromItem.id === targetItem.id) return null;
+    
+    const fromType = (fromItem.serviceType || fromItem.id || '').toString().toLowerCase();
+    const toType = (targetItem.serviceType || targetItem.id || '').toString().toLowerCase();
+    return validateConnection(fromType, toType);
+  };
+
+  /**
+   * Calculate the estimated monthly cost impact of a connection
+   * Based on Azure networking/integration costs (data transfer, private endpoints, etc.)
+   */
+  const calculateConnectionCost = (fromItem, toItem) => {
+    const fromType = (fromItem.serviceType || '').toLowerCase();
+    const toType = (toItem.serviceType || '').toLowerCase();
+    
+    // Connection cost rules based on Azure pricing (USD/month estimates)
+    const connectionCosts = {
+      // VNet Peering
+      'vnet-vnet': { cost: 10.00, label: 'VNet Peering (~$0.01/GB)', unit: '/month (est. 1TB)' },
+      'virtualnetworks-virtualnetworks': { cost: 10.00, label: 'VNet Peering', unit: '/month' },
+      // Private Endpoints
+      'privatelink': { cost: 7.30, label: 'Private Endpoint', unit: '/month' },
+      // VPN Gateway connections
+      'vpngateway-vnet': { cost: 127.75, label: 'VPN Gateway', unit: '/month' },
+      'vpngateway-virtualnetworks': { cost: 127.75, label: 'VPN Gateway', unit: '/month' },
+      // ExpressRoute
+      'expressroute-vnet': { cost: 51.00, label: 'ExpressRoute Circuit', unit: '/month' },
+      'expressroute-virtualnetworks': { cost: 51.00, label: 'ExpressRoute', unit: '/month' },
+      // Load Balancer data processing
+      'loadbalancer-vm': { cost: 7.30, label: 'LB Data Processing', unit: '/month (est.)' },
+      'loadbalancers-virtualmachine': { cost: 7.30, label: 'LB Processing', unit: '/month' },
+      // App Gateway → backend
+      'appgw-appservice': { cost: 18.00, label: 'App GW + WAF data', unit: '/month (est.)' },
+      'appgw-vm': { cost: 18.00, label: 'App GW data processing', unit: '/month (est.)' },
+      'applicationgateway-appservices': { cost: 18.00, label: 'App GW data', unit: '/month' },
+      // Front Door
+      'frontdoor-appservice': { cost: 35.00, label: 'Front Door routing', unit: '/month' },
+      'frontdoor-appservices': { cost: 35.00, label: 'Front Door routing', unit: '/month' },
+      // Service Bus / Event Hub integration
+      'servicebus-function': { cost: 9.81, label: 'Service Bus messaging', unit: '/month (est.)' },
+      'servicebus-functionapps': { cost: 9.81, label: 'Service Bus', unit: '/month' },
+      'eventhubs-function': { cost: 11.23, label: 'Event Hub ingestion', unit: '/month' },
+      'eventhubs-functionapps': { cost: 11.23, label: 'Event Hub', unit: '/month' },
+      // Database connections (Private Link typically)
+      'appservice-sqldb': { cost: 7.30, label: 'Private Endpoint to SQL', unit: '/month' },
+      'appservices-sqldatabase': { cost: 7.30, label: 'Private Endpoint', unit: '/month' },
+      'function-sqldb': { cost: 7.30, label: 'Private Endpoint to SQL', unit: '/month' },
+      'functionapps-sqldatabase': { cost: 7.30, label: 'Private Endpoint', unit: '/month' },
+      'appservice-cosmosdb': { cost: 7.30, label: 'Private Endpoint to Cosmos', unit: '/month' },
+      'appservices-azurecosmosdb': { cost: 7.30, label: 'Private Endpoint', unit: '/month' },
+      'aks-sqldb': { cost: 7.30, label: 'Private Endpoint to SQL', unit: '/month' },
+      'kubernetesservices-sqldatabase': { cost: 7.30, label: 'Private Endpoint', unit: '/month' },
+      // Storage connections
+      'vm-storage': { cost: 0.00, label: 'No extra cost (same region)', unit: '' },
+      'virtualmachine-storageaccounts': { cost: 0.00, label: 'Free (same region)', unit: '' },
+      'function-storage': { cost: 0.00, label: 'Included with Function App', unit: '' },
+      'functionapps-storageaccounts': { cost: 0.00, label: 'Included', unit: '' },
+      // Monitoring
+      'monitor-vm': { cost: 2.76, label: 'Log ingestion (~5GB)', unit: '/month' },
+      'monitor-appservice': { cost: 2.76, label: 'Log ingestion (~5GB)', unit: '/month' },
+      'appinsights-appservice': { cost: 2.88, label: 'App Insights data', unit: '/month' },
+      'appinsights-function': { cost: 2.88, label: 'App Insights data', unit: '/month' },
+      'applicationinsights-appservices': { cost: 2.88, label: 'App Insights', unit: '/month' },
+      'applicationinsights-functionapps': { cost: 2.88, label: 'App Insights', unit: '/month' },
+    };
+
+    // Try both directions
+    const key1 = `${fromType}-${toType}`;
+    const key2 = `${toType}-${fromType}`;
+    
+    if (connectionCosts[key1]) return connectionCosts[key1];
+    if (connectionCosts[key2]) return connectionCosts[key2];
+    
+    // Default: estimate based on whether a Private Endpoint is typically used
+    const privateEndpointServices = ['sqldb', 'sqldatabase', 'cosmosdb', 'azurecosmosdb', 
+      'storage', 'storageaccounts', 'keyvault', 'redis', 'mysql', 'mysqlserver', 
+      'postgres', 'postgresqlserver', 'datalake', 'datalakestorage'];
+    
+    if (privateEndpointServices.includes(fromType) || privateEndpointServices.includes(toType)) {
+      return { cost: 7.30, label: 'Private Endpoint (recommended)', unit: '/month' };
+    }
+    
+    // Free intra-VNet or NSG/subnet connections
+    const freeServices = ['vnet', 'virtualnetworks', 'subnet', 'subnets', 'nsg', 
+      'networksecuritygroups', 'keyvault'];
+    if (freeServices.includes(fromType) || freeServices.includes(toType)) {
+      return { cost: 0.00, label: 'No additional cost', unit: '' };
+    }
+    
+    // Generic data transfer estimate
+    return { cost: 0.87, label: 'Data transfer (est. 100GB)', unit: '/month' };
   };
 
   const startConnection = (e, item) => {
@@ -55,21 +161,42 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
 
   const completeConnection = (e, item) => {
     if (connectionMode && connectingFrom && connectingFrom !== item.id) {
+      e.stopPropagation(); // Prevent handleCanvasClick from cancelling the connection
       const fromItem = items.find(i => i.id === connectingFrom);
-      const toItem = item;
+      if (!fromItem) return;
       
-      const validationStatus = validateConnection(fromItem.id, toItem.id);
+      // Use serviceType for validation (the original icon id, e.g. 'virtualmachines', 'storageaccounts')
+      const fromType = (fromItem.serviceType || '').toString().toLowerCase();
+      const toType = (item.serviceType || '').toString().toLowerCase();
+      
+      const validationStatus = validateConnection(fromType, toType);
+      const message = getConnectionMessage(validationStatus, fromItem.name, item.name);
+      
+      // Calculate connection cost
+      const costInfo = calculateConnectionCost(fromItem, item);
       
       setConnections([...connections, { 
         from: connectingFrom, 
         to: item.id,
-        status: validationStatus 
+        status: validationStatus,
+        fromType: fromType,
+        toType: toType,
+        fromName: fromItem.name,
+        toName: item.name,
+        cost: costInfo
       }]);
       
       setConnectionMode(false);
       setConnectingFrom(null);
+      
+      // Show connection result with cost
+      const costText = costInfo.cost > 0 
+        ? `\n💰 Est. Cost: $${costInfo.cost.toFixed(2)}${costInfo.unit} (${costInfo.label})`
+        : `\n💰 ${costInfo.label}`;
+      console.log(`${message.text}${costText}`);
     }
   };
+
   const startDragging = (e, item) => {
     e.stopPropagation();
     setSelectedItem(item.id);
@@ -83,6 +210,7 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
       y: e.clientY - rect.top + scrollTop - item.y,
     });
   };
+
   const handleMouseMove = (e) => {
     const rect = activeCanvasRef.current.getBoundingClientRect();
     const scrollLeft = containerRef.current.scrollLeft;
@@ -121,6 +249,7 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
     setConnections(connections.filter(conn => conn.from !== itemId && conn.to !== itemId));
     setSelectedItem(null);
   };
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Delete' && selectedItem) {
@@ -154,10 +283,29 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
     if (!item) return { x: 0, y: 0 };
     return { x: item.x + 40, y: item.y + 40 };
   };
+
   return (
     <>
       {/* Professional Toolbar - Matches ControlPanel Design */}
-      <div className={`canvas-toolbar ${boundaryDrawMode ? 'drawing-mode' : ''}`}>
+      <div 
+        className={`canvas-toolbar ${boundaryDrawMode ? 'drawing-mode' : ''}`}
+        style={{
+          position: 'fixed',
+          top: '140px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1000,
+          backgroundColor: '#f8f9fa',
+          padding: '12px 20px',
+          borderRadius: '8px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
+          border: '1px solid #dee2e6',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          minHeight: '48px'
+        }}
+      >
         {/* Section 1: Drawing Tools */}
         <div className="toolbar-section">
           <span className="toolbar-label">Tools</span>
@@ -211,16 +359,6 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
       </div>
 
       <div ref={containerRef} className="canvas-container">
-        {/* Boundary Layer */}
-        <BoundaryCanvas
-          boundaries={boundaries}
-          setBoundaries={setBoundaries}
-          drawMode={boundaryDrawMode}
-          boundaryType={boundaryType}
-          canvasRef={activeCanvasRef}
-          containerRef={containerRef}
-        />
-
         <div
           ref={activeCanvasRef}
           className="canvas"
@@ -230,9 +368,24 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
           onMouseUp={handleMouseUp}
           onClick={handleCanvasClick}
         >
+          {/* Boundary Layer - INSIDE canvas so it shares coordinate system */}
+          <BoundaryCanvas
+            boundaries={boundaries}
+            setBoundaries={setBoundaries}
+            items={items}
+            boundaryDrawMode={boundaryDrawMode}
+            drawingBoundary={drawingBoundary}
+            setDrawingBoundary={setDrawingBoundary}
+            boundaryType={boundaryType}
+          />
+
           {connectionMode && (
             <div className="connecting-status">
-              🔗 Connection Mode - Click on another service to connect (ESC to cancel)
+              🔗 Connection Mode — <strong>Double-click</strong> on a target service to connect
+              {' '}| <span className="valid-hint">🟢 Valid</span>{' '}
+              <span className="warning-hint">🟡 Uncommon</span>{' '}
+              <span className="invalid-hint">🔴 Invalid</span>{' '}
+              | Press <strong>ESC</strong> to cancel
             </div>
           )}
 
@@ -254,13 +407,21 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
             const from = getItemCenter(conn.from);
             const to = getItemCenter(conn.to);
             const status = conn.status || 'valid';
-            const message = getConnectionMessage(status);
+            const message = getConnectionMessage(status, conn.fromName, conn.toName);
             
             const midX = (from.x + to.x) / 2;
             const midY = (from.y + to.y) / 2;
             
             const strokeColor = message.color;
             const markerId = `arrowhead-${status}`;
+            
+            // Build tooltip with cost info
+            const costText = conn.cost 
+              ? (conn.cost.cost > 0 
+                ? `\n💰 $${conn.cost.cost.toFixed(2)}${conn.cost.unit} — ${conn.cost.label}`
+                : `\n💰 ${conn.cost.label}`)
+              : '';
+            const tooltip = `${message.text}${costText}`;
             
             return (
               <g key={index}>
@@ -274,6 +435,20 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
                   markerEnd={`url(#${markerId})`}
                   className={`connection-line connection-${status}`}
                 />
+                {/* Connection cost label (shown near midpoint) */}
+                {conn.cost && conn.cost.cost > 0 && (
+                  <text
+                    x={midX}
+                    y={midY - 12}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fontWeight="600"
+                    fill={strokeColor}
+                    className="connection-cost-label"
+                  >
+                    ${conn.cost.cost.toFixed(2)}/mo
+                  </text>
+                )}
                 <circle
                   cx={midX}
                   cy={midY}
@@ -283,7 +458,7 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
                   strokeWidth="2"
                   className={`connection-led led-${status}`}
                 >
-                  <title>{message.text}</title>
+                  <title>{tooltip}</title>
                 </circle>
                 <circle
                   cx={midX}
@@ -299,60 +474,87 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
             );
           })}
           <defs>
-            <marker
-              id="arrowhead-valid"
-              markerWidth="10"
-              markerHeight="10"
-              refX="9"
-              refY="3"
-              orient="auto"
-            >
+            <marker id="arrowhead-valid" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
               <polygon points="0 0, 10 3, 0 6" fill="#28a745" />
             </marker>
-            <marker
-              id="arrowhead-warning"
-              markerWidth="10"
-              markerHeight="10"
-              refX="9"
-              refY="3"
-              orient="auto"
-            >
+            <marker id="arrowhead-warning" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
               <polygon points="0 0, 10 3, 0 6" fill="#ffc107" />
             </marker>
-            <marker
-              id="arrowhead-invalid"
-              markerWidth="10"
-              markerHeight="10"
-              refX="9"
-              refY="3"
-              orient="auto"
-            >
+            <marker id="arrowhead-invalid" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
               <polygon points="0 0, 10 3, 0 6" fill="#dc3545" />
             </marker>
-          </defs>        </svg>
+          </defs>
+        </svg>
 
         {items.map((item) => {
+          // Determine visual connection validation status for this target
+          const targetStatus = getTargetValidationStatus(item);
+          const isSource = connectingFrom === item.id;
+          
           const itemOnMouseDown = (e) => {
-            if (e.button === 2 || e.ctrlKey) {
+            if (connectionMode && connectingFrom) {
+              // In connection mode — do nothing on single click (use double-click)
+              e.stopPropagation();
+              return;
+            } else if (e.ctrlKey || e.shiftKey) {
+              // Ctrl+Click or Shift+Click — start a new connection
               startConnection(e, item);
-            } else {
+            } else if (e.button === 0) {
+              // Normal left-click — drag the item
               startDragging(e, item);
             }
           };
 
-          const itemOnMouseUp = (e) => completeConnection(e, item);
+          const itemOnContextMenu = (e) => {
+            // Right-click — start a new connection
+            e.preventDefault();
+            e.stopPropagation();
+            startConnection(e, item);
+          };
+
+          const itemOnDoubleClick = (e) => {
+            if (connectionMode && connectingFrom && connectingFrom !== item.id) {
+              // Double-click in connection mode — complete the connection
+              e.stopPropagation();
+              completeConnection(e, item);
+            }
+          };
+
+          const itemOnMouseUp = (e) => {
+            if (connectionMode && connectingFrom && connectingFrom !== item.id) {
+              completeConnection(e, item);
+            }
+          };
+
+          // Build CSS class for connection-mode visual feedback
+          let connectionClass = '';
+          if (isSource) {
+            connectionClass = 'connecting';
+          } else if (targetStatus === 'valid') {
+            connectionClass = 'connection-target-valid';
+          } else if (targetStatus === 'warning') {
+            connectionClass = 'connection-target-warning';
+          } else if (targetStatus === 'invalid') {
+            connectionClass = 'connection-target-invalid';
+          } else if (connectionMode && !isSource) {
+            connectionClass = 'connection-target-warning'; // Unknown defaults to warning
+          }
 
           return (
             <div
               key={item.id}
-              className={`canvas-item ${selectedItem === item.id ? 'selected' : ''} ${connectingFrom === item.id ? 'connecting' : ''}`}
+              className={`canvas-item ${selectedItem === item.id ? 'selected' : ''} ${connectionClass}`}
               style={{
                 left: `${item.x}px`,
                 top: `${item.y}px`,
+                cursor: connectionMode && !isSource ? 'crosshair' : 'grab',
               }}
               onMouseDown={itemOnMouseDown}
+              onContextMenu={itemOnContextMenu}
+              onDoubleClick={itemOnDoubleClick}
               onMouseUp={itemOnMouseUp}
-            >            <div className="item-symbol">
+            >
+              <div className="item-symbol">
                 <img 
                   src={encodeURI(item.path)} 
                   alt={item.name} 
@@ -364,7 +566,13 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
                 />
               </div>
               <span className="item-label">{item.name}</span>
-              {selectedItem === item.id && (
+              {/* Show validation badge on targets during connection mode */}
+              {connectionMode && !isSource && targetStatus && (
+                <span className={`connection-badge badge-${targetStatus}`}>
+                  {targetStatus === 'valid' ? '✓' : targetStatus === 'warning' ? '⚠' : '✗'}
+                </span>
+              )}
+              {selectedItem === item.id && !connectionMode && (
                 <button
                   className="delete-btn"
                   onClick={() => handleDeleteItem(item.id)}
@@ -374,11 +582,15 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
               )}
             </div>
           );
-        })}      {items.length === 0 && (
+        })}
+
+        {items.length === 0 && (
           <div className="canvas-placeholder">
             <p>🎨 Drag and drop Azure services here</p>
-            <p className="canvas-hint">🔗 <strong>Right-click</strong> or <strong>Ctrl+Click</strong> on an item to start connection</p>
-            <p className="canvas-hint">✏️ Press DELETE to remove selected items</p>          </div>
+            <p className="canvas-hint">🔗 <strong>Right-click</strong> on a service to start a connection</p>
+            <p className="canvas-hint">🔗 <strong>Double-click</strong> the target service to complete the connection</p>
+            <p className="canvas-hint">✏️ Press <strong>DELETE</strong> to remove selected items</p>
+          </div>
         )}
         </div>
       </div>

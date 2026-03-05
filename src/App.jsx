@@ -190,12 +190,29 @@ function App() {
       alert(`❌ Failed to export JSON!\n\n${error.message}`);
     }
   };
-
   const handleExportPNG = async () => {
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
       return;
     }
+
+    // DPI selector dialog
+    const dpiChoice = prompt(
+      '📐 Select PNG Export Quality:\n\n' +
+      '1 — Screen (72 DPI) — Smallest file, good for presentations\n' +
+      '2 — Web (96 DPI) — Standard web quality (default)\n' +
+      '3 — Draft Print (150 DPI) — Draft-quality print\n' +
+      '4 — High-Quality Print (300 DPI) — Professional printing\n' +
+      '5 — Poster (600 DPI) — Large-format printing\n\n' +
+      'Enter 1-5 (or press Enter for Web 96 DPI):',
+      '2'
+    );
+
+    if (dpiChoice === null) return; // User cancelled
+
+    const dpiMap = { '1': 'screen', '2': 'web', '3': 'draft', '4': 'print', '5': 'poster' };
+    const selectedDPI = dpiMap[dpiChoice.trim()] || 'web';
+
     try {
       const canvasElement = canvasRef.current;
       if (!canvasElement) {
@@ -205,10 +222,11 @@ function App() {
 
       const result = await exportPNG(canvasElement, items, connections, {
         quality: 'high',
-        environment: 'production'
+        environment: 'production',
+        dpi: selectedDPI
       });
       
-      alert(`✅ PNG exported successfully!\n\n📁 ${result.filename}\n📐 ${result.dimensions.width}x${result.dimensions.height}px\n📊 ${result.size} bytes`);
+      alert(`✅ PNG exported successfully!\n\n📁 ${result.filename}\n📐 ${result.dimensions.width}×${result.dimensions.height}px\n🔬 ${result.dpi} DPI (${result.dpiSetting})\n📊 ${(result.size / 1024).toFixed(1)} KB`);
     } catch (error) {
       console.error('Error exporting PNG:', error);
       alert(`❌ Failed to export PNG!\n\n${error.message}`);

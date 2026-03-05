@@ -50,11 +50,11 @@ const ControlPanel = ({
         <button className="control-btn clear-btn" onClick={onClear} title="Clear canvas">
           🗑️ Clear
         </button>      
-      </div>      
-      <div className="help-text">
+      </div>        <div className="help-text">
         <p>📋 Drag Azure services from the left panel to the canvas</p>
         <p>✏️ Double-click service names to edit them (e.g., VM1, VM2)</p>
-        <p>🔗 Right-click, Ctrl+Click, or Shift+Click to connect services</p>
+        <p>🔗 Right-click a service to start connection → targets glow green/yellow/red</p>
+        <p>🔗 Double-click a highlighted target to complete the connection (with live cost)</p>
         <p>🟢 Green = Valid | 🟡 Yellow = Warning | 🔴 Red = Invalid (Hover LED for details)</p>
       </div>
     </div>

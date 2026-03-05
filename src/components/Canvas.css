@@ -229,7 +229,102 @@
 
 .canvas-item.connecting {
   border-color: #7FBA00;
-  animation: pulse 1s infinite;
+  animation: pulse-source 1s infinite;
+  z-index: 10;
+}
+
+/* Connection target highlighting — Valid (green glow) */
+.canvas-item.connection-target-valid {
+  border-color: #28a745;
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.35), 0 0 12px rgba(40, 167, 69, 0.25);
+  animation: pulse-valid 1.2s infinite;
+  cursor: crosshair !important;
+}
+
+/* Connection target highlighting — Warning (yellow glow) */
+.canvas-item.connection-target-warning {
+  border-color: #ffc107;
+  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.35), 0 0 12px rgba(255, 193, 7, 0.25);
+  animation: pulse-warning 1.2s infinite;
+  cursor: crosshair !important;
+}
+
+/* Connection target highlighting — Invalid (red glow) */
+.canvas-item.connection-target-invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.35), 0 0 12px rgba(220, 53, 69, 0.25);
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+/* Connection badge on target icons */
+.connection-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+  color: white;
+  z-index: 5;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.connection-badge.badge-valid {
+  background-color: #28a745;
+}
+
+.connection-badge.badge-warning {
+  background-color: #ffc107;
+  color: #333;
+}
+
+.connection-badge.badge-invalid {
+  background-color: #dc3545;
+}
+
+/* Connection cost label on SVG lines */
+.connection-cost-label {
+  paint-order: stroke;
+  stroke: white;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  font-family: 'Segoe UI', sans-serif;
+  pointer-events: none;
+}
+
+@keyframes pulse-source {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(127, 186, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(127, 186, 0, 0);
+  }
+}
+
+@keyframes pulse-valid {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(40, 167, 69, 0);
+  }
+}
+
+@keyframes pulse-warning {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
+  }
 }
 
 @keyframes pulse {
@@ -375,7 +470,12 @@
   box-shadow: 0 4px 12px rgba(127, 186, 0, 0.4);
   z-index: 100;
   animation: pulse 1.5s infinite;
+  white-space: nowrap;
 }
+
+.connecting-status .valid-hint { color: #a5ffa5; }
+.connecting-status .warning-hint { color: #fff3cd; }
+.connecting-status .invalid-hint { color: #ffb3b8; }
 
 /* Connection validation styles */
 .connection-line {

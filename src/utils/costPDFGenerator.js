@@ -2,7 +2,7 @@
 // Simple PDF generator for cost reports
 
 import jsPDF from 'jspdf';
-import { calculateCost, formatCost, azureRegions, currencies } from './costCalculator';
+import { calculateCost, formatCost, azureRegions, currencies, getCostOptimizations } from './costCalculator';
 
 /**
  * Generate and download a professional PDF cost report
@@ -97,10 +97,114 @@ export const generateCostPDF = (items, regionKey = 'eastus', currencyKey = 'USD'
         doc.text(`${item.serviceType}`, margin + 80, y);
         doc.text(formatCost(item.cost, currencyKey), pageWidth - margin - 10, y, { align: 'right' });
         y += 6;
-      });
-    }
+      });    }
     
     y += 10;
+
+    // COST OPTIMIZATION TIPS
+    const optimizations = getCostOptimizations(items);
+    if (optimizations.length > 0) {
+      // Check if we need a new page
+      if (y > 200) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 120, 212);
+      doc.text('💡 Cost Optimization Recommendations', margin, y);
+      y += 3;
+
+      // Thin blue line under header
+      doc.setDrawColor(0, 120, 212);
+      doc.setLineWidth(0.5);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 7;
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(8);
+
+      // Group by priority
+      const highPriority = optimizations.filter(o => o.priority === 'high');
+      const medPriority = optimizations.filter(o => o.priority === 'medium');
+      const lowPriority = optimizations.filter(o => o.priority === 'low');
+
+      const renderOptGroup = (title, opts, color) => {
+        if (opts.length === 0) return;
+
+        if (y > 265) {
+          doc.addPage();
+          y = 20;
+        }
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(color[0], color[1], color[2]);
+        doc.text(title, margin + 2, y);
+        y += 6;
+
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(40, 40, 40);
+
+        opts.forEach((opt, idx) => {
+          if (y > 270) {
+            doc.addPage();
+            y = 20;
+          }
+
+          // Category + Service label
+          const label = `${opt.category || ''} ${opt.service}`;
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${idx + 1}. ${label}`, margin + 4, y);
+          
+          // Potential savings badge on the right
+          doc.setFont('helvetica', 'italic');
+          doc.setTextColor(0, 120, 212);
+          doc.text(`Savings: ${opt.potentialSavings}`, pageWidth - margin - 5, y, { align: 'right' });
+          y += 5;
+
+          // Recommendation text (wrap long text)
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(60, 60, 60);
+          const maxWidth = pageWidth - 2 * margin - 10;
+          const splitText = doc.splitTextToSize(opt.suggestion, maxWidth);
+          splitText.forEach(line => {
+            if (y > 275) {
+              doc.addPage();
+              y = 20;
+            }
+            doc.text(line, margin + 8, y);
+            y += 4;
+          });
+          y += 2;
+        });
+        y += 3;
+      };
+
+      renderOptGroup('🔴 High Priority', highPriority, [220, 53, 69]);
+      renderOptGroup('🟡 Medium Priority', medPriority, [255, 193, 7]);
+      renderOptGroup('🟢 Low Priority', lowPriority, [40, 167, 69]);
+
+      // Summary box
+      if (y > 255) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setDrawColor(0, 120, 212);
+      doc.setFillColor(240, 248, 255);
+      doc.setLineWidth(0.5);
+      doc.rect(margin, y, pageWidth - 2 * margin, 14, 'FD');
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 90, 170);
+      doc.text(`📋 ${optimizations.length} optimization tips identified (${highPriority.length} high, ${medPriority.length} medium, ${lowPriority.length} low priority)`, margin + 5, y + 6);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Run Azure Advisor in the Azure Portal for real-time, personalized recommendations.', margin + 5, y + 11);
+      y += 20;
+    }
 
     // TOTAL
     doc.setDrawColor(0, 120, 212);
