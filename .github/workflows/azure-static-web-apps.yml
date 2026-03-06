@@ -53,22 +53,11 @@ jobs:
           echo "✅ Build output verified"
           echo "📊 Build size: $(du -sh build/ | awk '{print $1}')"
 
-      - name: Debug - Verify API Token
-        run: |
-          if [ -z "${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_BLUE_WAVE_09EE22700 }}" ]; then
-            echo "❌ ERROR: AZURE_STATIC_WEB_APPS_API_TOKEN_BLUE_WAVE_09EE22700 is EMPTY!"
-            echo "Please set it in GitHub → Settings → Secrets → Actions"
-            exit 1
-          else
-            TOKEN="${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_BLUE_WAVE_09EE22700 }}"
-            echo "✅ API token is set (length: ${#TOKEN} chars, starts with: ${TOKEN:0:4}...)"
-          fi
-
       - name: Deploy to Azure Static Web Apps
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_BLUE_WAVE_09EE22700 }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           skip_app_build: true
@@ -81,7 +70,7 @@ jobs:
         if: success()
         run: |
           echo "✅ Deployment successful!"
-          echo "🌐 Your app is live at: https://blue-wave-09ee22700.azurestaticapps.net"
+          echo "🌐 Your app is live at: https://red-rock-0d4adbb00.1.azurestaticapps.net"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -92,5 +81,5 @@ jobs:
         id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_BLUE_WAVE_09EE22700 }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: "close"
