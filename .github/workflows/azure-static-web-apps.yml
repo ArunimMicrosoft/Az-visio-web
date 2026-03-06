@@ -70,7 +70,7 @@ jobs:
         if: success()
         run: |
           echo "✅ Deployment successful!"
-          echo "🌐 Your app is live at: https://red-rock-0d4adbb00.1.azurestaticapps.net"
+          echo "🌐 Your app is live at: https://purple-pebble-081ef0400.4.azurestaticapps.net"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
