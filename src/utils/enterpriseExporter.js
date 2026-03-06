@@ -608,10 +608,27 @@ export const exportARMTemplate = async (items, connections, options = {}) => {
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
-    
-    // Generate ARM template
-    const armTemplate = generateARMTemplate(items, connections);
-    
+
+    // Compose compliance/branding info
+    const complianceSummary = options.complianceSummary || validation.complianceSummary || { status: 'Compliant', score: 100 };
+    const branding = options.branding || "Arunim's IT Caffe";
+    const author = options.author || 'Arunim Pandey';
+    const version = options.version || EXPORT_VERSION;
+    const timestamp = options.timestamp || new Date().toISOString();
+    let complianceBadge = '🟢';
+    if (complianceSummary.score < 90) complianceBadge = '🟡';
+    if (complianceSummary.score < 70) complianceBadge = '🔴';
+
+    // Generate ARM template with full metadata
+    const armTemplate = generateARMTemplate(items, connections, {
+      complianceSummary,
+      branding,
+      author,
+      version,
+      timestamp,
+      complianceBadge
+    });
+
     // Enhance with enterprise metadata
     armTemplate.metadata = {
       ...armTemplate.metadata,

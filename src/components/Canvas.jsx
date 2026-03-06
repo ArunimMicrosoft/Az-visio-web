@@ -231,16 +231,30 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
     }
   };
 
-  const handleMouseUp = () => {
-    if (!connectionMode) {
+  const handleMouseUp = (e) => {
+    if (connectionMode && connectingFrom) {
+      const targetItem = items.find(item => item.id === connectingFrom);
+      if (targetItem) {
+        completeConnection(e, targetItem);
+      }
+    } else {
       setIsDragging(false);
     }
   };
 
-  const handleCanvasClick = () => {
+  const handleCanvasClick = (e) => {
+    // Only cancel connection mode if the click was directly on the canvas background,
+    // NOT on a canvas item (items stop propagation in their own handlers)
     if (connectionMode) {
-      setConnectionMode(false);
-      setConnectingFrom(null);
+      // Check if click target is the canvas itself (not an item or child)
+      const isCanvasBackground = e.target === activeCanvasRef.current || 
+        e.target.classList.contains('canvas') ||
+        e.target.classList.contains('boundary-layer') ||
+        e.target.closest('.connections-svg');
+      if (isCanvasBackground) {
+        setConnectionMode(false);
+        setConnectingFrom(null);
+      }
     }
   };
 
@@ -263,18 +277,12 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
       }
     };
 
-    const handleContextMenu = (e) => {
-      e.preventDefault();
-    };
-
     const currentRef = activeCanvasRef.current;
 
     window.addEventListener('keydown', handleKeyDown);
-    currentRef?.addEventListener('contextmenu', handleContextMenu);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      currentRef?.removeEventListener('contextmenu', handleContextMenu);
     };
   }, [selectedItem, setItems, setConnections, connectionMode, activeCanvasRef]);
 
@@ -490,7 +498,6 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
           // Determine visual connection validation status for this target
           const targetStatus = getTargetValidationStatus(item);
           const isSource = connectingFrom === item.id;
-          
           const itemOnMouseDown = (e) => {
             if (connectionMode && connectingFrom) {
               // In connection mode — do nothing on single click (use double-click)
@@ -506,15 +513,13 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
           };
 
           const itemOnContextMenu = (e) => {
-            // Right-click — start a new connection
-            e.preventDefault();
-            e.stopPropagation();
+            e.preventDefault(); // Prevent browser context menu
+            e.stopPropagation(); // Prevent bubbling
             startConnection(e, item);
           };
 
           const itemOnDoubleClick = (e) => {
             if (connectionMode && connectingFrom && connectingFrom !== item.id) {
-              // Double-click in connection mode — complete the connection
               e.stopPropagation();
               completeConnection(e, item);
             }
@@ -522,7 +527,15 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
 
           const itemOnMouseUp = (e) => {
             if (connectionMode && connectingFrom && connectingFrom !== item.id) {
+              e.stopPropagation();
               completeConnection(e, item);
+            }
+          };
+
+          // Prevent canvas click from cancelling connection mode during double-click
+          const itemOnClick = (e) => {
+            if (connectionMode) {
+              e.stopPropagation();
             }
           };
 
@@ -553,6 +566,7 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
               onContextMenu={itemOnContextMenu}
               onDoubleClick={itemOnDoubleClick}
               onMouseUp={itemOnMouseUp}
+              onClick={itemOnClick}
             >
               <div className="item-symbol">
                 <img 

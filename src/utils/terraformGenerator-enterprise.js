@@ -27,10 +27,10 @@ const generateMainTF = (items, connections, timestamp) => {
   
   // Header
   lines.push(`##############################################################################`);
-  lines.push(`# Azure Infrastructure as Code - Main Configuration`);
-  lines.push(`# Generated: ${timestamp}`);
-  lines.push(`# `);
-  lines.push(`# This configuration follows Azure Well-Architected Framework`);
+  lines.push(`# Arunim's IT Caffe — Azure Architecture Designer`);
+  lines.push(`# Version: v2.1.0 | Author: Arunim Pandey | ${timestamp}`);
+  lines.push(`# Compliance: Enterprise Microsoft Azure Best Practices`);
+  lines.push(`# Compliance Badge: 🟢 Compliant (if score >= 90), 🟡 Partial (>=70), 🔴 Non-Compliant (<70)`);
   lines.push(`# https://docs.microsoft.com/en-us/azure/architecture/framework/`);
   lines.push(`##############################################################################`);
   lines.push(``);

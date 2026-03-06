@@ -15,6 +15,7 @@ import {
   exportCostReport 
 } from './utils/enterpriseExporter';
 import { parseTerraformFile, validateTerraformFile } from './utils/terraformParser';
+import { validateArchitecture } from './utils/azureArchitectureValidator';
 import './App.css';
 
 console.log('=== APP.JSX LOADING ===');
@@ -36,11 +37,15 @@ function App() {
       return;
     }
     setIsValidationOpen(true);
-  };  const handleSave = () => {
+  };
+
+  const handleSave = () => {
     if (items.length === 0) {
       alert('⚠️ Canvas is empty! Add some Azure services before saving.');
       return;
-    }    try {      const diagram = {
+    }
+    try {
+      const diagram = {
         items,
         connections,
         boundaries,
@@ -106,7 +111,10 @@ function App() {
           // Validate the loaded data
           if (!diagram.items || !Array.isArray(diagram.items)) {
             throw new Error('Invalid diagram file: missing or invalid items array');
-          }          // Load the diagram          setItems(diagram.items || []);
+          }
+          
+          // Load the diagram
+          setItems(diagram.items || []);
           setConnections(diagram.connections || []);
           setBoundaries(diagram.boundaries || []);
 
@@ -132,7 +140,10 @@ function App() {
     };
     
     // Trigger file picker
-    input.click();  };  const handleClear = () => {
+    input.click();
+  };
+
+  const handleClear = () => {
     if (window.confirm('Are you sure you want to clear the canvas?')) {
       setItems([]);
       setConnections([]);
@@ -173,6 +184,24 @@ function App() {
     input.click();
   };
 
+  // Helper: Run architecture validation and return result
+  const getValidationResult = () => {
+    try {
+      return validateArchitecture(items, connections);
+    } catch (e) {
+      return { isValid: false, errors: ['Validation failed: ' + e.message], score: 0, summary: { errors: 1, warnings: 0 } };
+    }
+  };
+
+  // Helper: Show modal or alert for compliance issues
+  const showComplianceBlock = (validation, exportType) => {
+    if (!validation.isValid) {
+      alert(`❌ Export blocked: Critical architecture errors detected.\n\nPlease fix all errors before exporting ${exportType}.\n\nErrors:\n- ` + (validation.errors || []).join('\n- '));
+      return true;
+    }
+    return false;
+  };
+
   const handleExport = async () => {
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
@@ -190,7 +219,11 @@ function App() {
       alert(`❌ Failed to export JSON!\n\n${error.message}`);
     }
   };
+
   const handleExportPNG = async () => {
+    const validation = getValidationResult();
+    if (showComplianceBlock(validation, 'PNG')) return;
+
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
       return;
@@ -223,7 +256,11 @@ function App() {
       const result = await exportPNG(canvasElement, items, connections, {
         quality: 'high',
         environment: 'production',
-        dpi: selectedDPI
+        dpi: selectedDPI,
+        validationSummary: validation,
+        author: 'Arunim Pandey',
+        version: '2.0.0',
+        timestamp: new Date().toISOString(),
       });
       
       alert(`✅ PNG exported successfully!\n\n📁 ${result.filename}\n📐 ${result.dimensions.width}×${result.dimensions.height}px\n🔬 ${result.dpi} DPI (${result.dpiSetting})\n📊 ${(result.size / 1024).toFixed(1)} KB`);
@@ -234,6 +271,9 @@ function App() {
   };
   
   const handleExportPDF = async () => {
+    const validation = getValidationResult();
+    if (showComplianceBlock(validation, 'PDF')) return;
+
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
       return;
@@ -249,7 +289,11 @@ function App() {
         title: 'Azure Architecture Diagram',
         author: 'Architecture Team',
         environment: 'production',
-        region: selectedRegion
+        region: selectedRegion,
+        validationSummary: validation,
+        author: 'Arunim Pandey',
+        version: '2.0.0',
+        timestamp: new Date().toISOString(),
       });
       
       alert(`✅ PDF exported successfully!\n\n📁 ${result.filename}\n📄 ${result.pages} pages\n📊 ${result.itemCount} services, ${result.connectionCount} connections`);
@@ -260,6 +304,9 @@ function App() {
   };
 
   const handleExportTerraform = async () => {
+    const validation = getValidationResult();
+    if (showComplianceBlock(validation, 'Terraform')) return;
+
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
       return;
@@ -267,7 +314,11 @@ function App() {
     try {
       const result = await exportTerraform(items, connections, {
         environment: 'production',
-        region: selectedRegion
+        region: selectedRegion,
+        validationSummary: validation,
+        author: 'Arunim Pandey',
+        version: '2.0.0',
+        timestamp: new Date().toISOString(),
       });
       
       alert(`✅ Terraform configuration exported successfully!\n\n📦 Files generated:\n${result.files.map(f => `  • ${f}`).join('\n')}\n\n📊 ${result.itemCount} services, ${result.connectionCount} connections`);
@@ -278,6 +329,9 @@ function App() {
   };
 
   const handleExportARM = async () => {
+    const validation = getValidationResult();
+    if (showComplianceBlock(validation, 'ARM Template')) return;
+
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
       return;
@@ -285,7 +339,11 @@ function App() {
     try {
       const result = await exportARMTemplate(items, connections, {
         environment: 'production',
-        region: selectedRegion
+        region: selectedRegion,
+        validationSummary: validation,
+        author: 'Arunim Pandey',
+        version: '2.0.0',
+        timestamp: new Date().toISOString(),
       });
       
       alert(`✅ ARM Template exported successfully!\n\n📦 Files generated:\n${result.files.map(f => `  • ${f}`).join('\n')}\n\n📊 ${result.itemCount} services, ${result.connectionCount} connections`);
@@ -311,8 +369,10 @@ function App() {
       alert(`❌ Failed to export cost report!\n\n${error.message}`);
     }
   };
+
   return (
-    <div className="app">      <ControlPanel
+    <div className="app">
+      <ControlPanel
         onSave={handleSave}
         onLoad={handleLoad}
         onClear={handleClear}
@@ -323,7 +383,9 @@ function App() {
         onExportTerraform={handleExportTerraform}
         onExportARM={handleExportARM}
         onExportCostReport={handleExportCostReport}
-        onImportTerraform={handleImportTerraform}      />      <HelpOverlay />
+        onImportTerraform={handleImportTerraform}
+      />
+      <HelpOverlay />
       <div className="main-content">
         <Toolbar />
         <CanvasComponent
@@ -334,7 +396,8 @@ function App() {
           boundaries={boundaries}
           setBoundaries={setBoundaries}
           canvasRef={canvasRef}
-        />        <CostSummary 
+        />
+        <CostSummary 
           items={items} 
           onRegionChange={setSelectedRegion}
           onCurrencyChange={setSelectedCurrency}
