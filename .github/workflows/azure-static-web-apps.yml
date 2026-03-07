@@ -34,15 +34,15 @@ jobs:
         run: |
           echo "📦 Installing dependencies..."
           npm ci
-          echo "✅ Dependencies installed successfully"
-
-      - name: Build Application
+          echo "✅ Dependencies installed successfully"      - name: Build Application
         run: |
           echo "🏗️ Building application..."
           npm run build
           echo "✅ Build completed successfully"
           echo "📂 Build output:"
-          ls -la build/      - name: Verify Build Output
+          ls -la build/
+
+      - name: Verify Build Output
         run: |
           if [ ! -f "build/index.html" ]; then
             echo "❌ Error: build/index.html not found!"
