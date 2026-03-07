@@ -71,9 +71,9 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           skip_app_build: true
-          app_location: "build"
+          app_location: "/"
           api_location: ""
-          output_location: ""
+          output_location: "build"
           production_branch: "main"
 
       - name: Deployment Summary
