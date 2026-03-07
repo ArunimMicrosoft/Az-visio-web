@@ -208,15 +208,32 @@ class UserStore {
 
     // Update last login
     user.lastLogin = new Date().toISOString();
-    this.saveUsers(users);
-
-    return this.sanitizeUser(user);
+    this.saveUsers(users);    return this.sanitizeUser(user);
   }
 
   getAllUsers() {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
+      let users = stored ? JSON.parse(stored) : [];
+      
+      // Add demo account if it doesn't exist
+      if (!users.find(u => u.email === 'demo@azuredesigner.com')) {
+        // Demo account with password: Demo@123
+        const demoUser = {
+          id: 'user_demo_001',
+          email: 'demo@azuredesigner.com',
+          name: 'Demo User',
+          passwordHash: 'b2fdba2bd6db23d6d5145a0bcb4f9a94236a42fafeac4e79e8fc0fe7a9d26cdc', // Correct hash of Demo@123
+          role: 'architect',
+          createdAt: new Date().toISOString(),
+          lastLogin: null,
+          isActive: true
+        };
+        users.push(demoUser);
+        this.saveUsers(users);
+      }
+      
+      return users;
     } catch (e) {
       console.error('Failed to load users:', e);
       return [];

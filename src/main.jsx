@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import './responsive.css'
 import AppWithAuth from './AppWithAuth.jsx'
 
 console.log('=== MAIN.JSX LOADING ===');

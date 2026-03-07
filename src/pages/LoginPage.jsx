@@ -47,14 +47,16 @@ const LoginPage = () => {
       setError(result.error || 'Login failed. Please try again.');
     }
   };
-
   const handleDemoLogin = async () => {
     setIsLoading(true);
-    const result = await login('demo@azuredesigner.com', 'demo123');
+    setError('');
+    const result = await login('demo@azuredesigner.com', 'Demo@123');
     setIsLoading(false);
     
     if (result.success) {
       navigate('/app');
+    } else {
+      setError(result.error || 'Demo login failed');
     }
   };
 
@@ -121,9 +123,7 @@ const LoginPage = () => {
               >
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </button>
-            </form>
-            
-            <div className="auth-divider">
+            </form>            <div className="auth-divider">
               <span>or</span>
             </div>
             

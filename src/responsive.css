@@ -1,0 +1,153 @@
+/* Global Responsive Styles for All Pages */
+
+/* Ensure viewport meta is set */
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+/* Base responsive container */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Mobile-first responsive utilities */
+@media (max-width: 768px) {
+  /* Typography adjustments */
+  h1 {
+    font-size: 1.75rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+  }
+
+  /* Button adjustments */
+  button,
+  .button,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px !important; /* Touch-friendly */
+    font-size: 1rem !important;
+  }
+
+  /* Form input adjustments */
+  input,
+  select,
+  textarea {
+    min-height: 44px !important;
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
+
+  /* Padding adjustments */
+  .content,
+  .section {
+    padding: 1rem !important;
+  }
+
+  /* Modal/Dialog adjustments */
+  .modal,
+  .dialog {
+    width: 95% !important;
+    max-width: 95% !important;
+    margin: 1rem !important;
+  }
+
+  /* Table adjustments */
+  table {
+    font-size: 0.875rem !important;
+  }
+
+  /* Image responsiveness */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Flex adjustments */
+  .flex {
+    flex-direction: column !important;
+  }
+
+  /* Grid adjustments */
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Tablet specific */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .container {
+    padding: 0 1.5rem;
+  }
+
+  /* 2 column grid for tablets */
+  .grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1025px) {
+  .container {
+    padding: 0 2rem;
+  }
+}
+
+/* Touch-friendly spacing */
+@media (hover: none) and (pointer: coarse) {
+  /* Mobile/touch devices */
+  button,
+  a,
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Accessibility - reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  nav,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}
+
+/* Orientation specific */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Landscape mobile optimization */
+  .hero,
+  .header {
+    padding: 1rem !important;
+  }
+}
