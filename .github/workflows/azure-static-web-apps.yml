@@ -42,16 +42,16 @@ jobs:
           npm run build
           echo "✅ Build completed successfully"
           echo "📂 Build output:"
-          ls -la build/
-
-      - name: Verify Build Output
+          ls -la build/      - name: Verify Build Output
         run: |
           if [ ! -f "build/index.html" ]; then
             echo "❌ Error: build/index.html not found!"
             exit 1
           fi
           echo "✅ Build output verified"
-          echo "📊 Build size: $(du -sh build/ | awk '{print $1}')"      - name: Deploy to Azure Static Web Apps
+          echo "📊 Build size: $(du -sh build/ | awk '{print $1}')"
+
+      - name: Deploy to Azure Static Web Apps
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
