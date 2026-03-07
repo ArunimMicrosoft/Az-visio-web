@@ -360,16 +360,18 @@
 }
 
 .info-card h3 {
-  font-size: 20px;
+  font-size: 22px;
   margin: 0 0 12px 0;
   font-weight: 700;
+  color: white;
 }
 
 .info-card p {
   margin: 0;
-  font-size: 14px;
-  opacity: 0.9;
+  font-size: 15px;
+  color: white;
   line-height: 1.6;
+  font-weight: 500;
 }
 
 .feature-list {
@@ -378,15 +380,16 @@
   margin: 16px 0 0 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .feature-list li {
-  font-size: 14px;
-  opacity: 0.95;
+  font-size: 15px;
+  color: white;
   display: flex;
   align-items: center;
   gap: 8px;
+  font-weight: 500;
 }
 
 .testimonial {
@@ -399,11 +402,12 @@
 }
 
 .quote {
-  font-size: 16px;
+  font-size: 17px;
   font-style: italic;
-  line-height: 1.6;
+  line-height: 1.7;
   margin: 0 0 16px 0;
-  opacity: 0.95;
+  color: white;
+  font-weight: 500;
 }
 
 .author {
@@ -413,12 +417,15 @@
 }
 
 .author strong {
-  font-size: 14px;
+  font-size: 15px;
+  color: white;
+  font-weight: 600;
 }
 
 .author span {
-  font-size: 13px;
-  opacity: 0.8;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
 }
 
 .auth-branding {

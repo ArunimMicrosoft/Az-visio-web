@@ -363,21 +363,21 @@
 .help-text {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  font-size: 13px;
+  gap: 4px;
+  font-size: 11px;
   color: #586069;
   background: linear-gradient(135deg, #f6f8fa 0%, #ffffff 100%);
-  padding: 14px 18px;
-  border-radius: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
   border: 1px solid #e1e4e8;
-  line-height: 1.6;
+  line-height: 1.4;
 }
 
 .help-text p {
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .help-text p::before {

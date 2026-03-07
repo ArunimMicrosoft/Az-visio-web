@@ -4,6 +4,12 @@
   width: 100%;
   min-height: 100vh;
   overflow-x: hidden;
+  overflow-y: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 /* Navigation */
@@ -913,7 +919,7 @@
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   flex-wrap: wrap;
   gap: 1.5rem;
@@ -930,6 +936,18 @@
   font-size: 0.938rem;
   color: rgba(255,255,255,0.8);
   margin: 0;
+  text-align: center;
+}
+
+.footer-copyright a {
+  color: #00BCF2;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-copyright a:hover {
+  color: #00d4ff;
+  text-decoration: underline;
 }
 
 .footer-copyright strong {

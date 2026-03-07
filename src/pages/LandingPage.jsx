@@ -296,21 +296,18 @@ const LandingPage = () => {
 
           <div className="footer-section">
             <h4 className="footer-heading">Contact</h4>
-            <div className="footer-contact">
-              <a href="mailto:support@arunimsitcafe.com" className="footer-email">
+            <div className="footer-contact">              <a href="mailto:arunimpandey2903@hotmail.com" className="footer-email">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M3 8L10.89 13.26C11.24 13.47 11.66 13.47 12.01 13.26L20 8M5 19H19C20.1 19 21 18.1 21 17V7C21 5.9 20.1 5 19 5H5C3.9 5 3 5.9 3 7V17C3 18.1 3.9 19 5 19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                support@arunimsitcafe.com
+                arunimpandey2903@hotmail.com
               </a>
             </div>
           </div>
-        </div>
-
-        <div className="footer-bottom">
+        </div>        <div className="footer-bottom">
           <div className="footer-bottom-content">
             <p className="footer-copyright">
-              © {new Date().getFullYear()} Azure Architecture Designer. All rights reserved.
+              © 2026 Azure Architecture Designer. All rights reserved. | Built By: <a href="https://arunimitcaffe.gumroad.com/" target="_blank" rel="noopener noreferrer" style={{color: '#00BCF2', textDecoration: 'none'}}>Arunim's IT Café</a>
             </p>
           </div>
         </div>
