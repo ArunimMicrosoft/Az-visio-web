@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { validateArchitecture } from '../utils/azureArchitectureValidator';
 import './ValidationPanel.css';
 
-const ValidationPanel = ({ items, connections, isOpen, onClose }) => {
+const ValidationPanel = ({ items, connections, boundaries, isOpen, onClose }) => {
   const [validation, setValidation] = useState(null);
   const [activeTab, setActiveTab] = useState('summary');
 
@@ -10,7 +10,7 @@ const ValidationPanel = ({ items, connections, isOpen, onClose }) => {
     // Run validation when panel opens or data changes
     const runValidation = () => {
       if (items.length > 0) {
-        const result = validateArchitecture(items, connections);
+        const result = validateArchitecture(items, connections, boundaries);
         setValidation(result);
       } else {
         setValidation(null);
@@ -20,7 +20,7 @@ const ValidationPanel = ({ items, connections, isOpen, onClose }) => {
     if (isOpen) {
       runValidation();
     }
-  }, [items, connections, isOpen]);
+  }, [items, connections, boundaries, isOpen]);
 
   if (!isOpen || !validation) return null;
 

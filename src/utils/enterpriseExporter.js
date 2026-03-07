@@ -278,9 +278,9 @@ export const exportJSON = async (items, connections, options = {}) => {
  * Uses custom canvas renderer instead of html2canvas for reliability
  * DPI Options: 72 (screen), 96 (web), 150 (draft print), 300 (high-quality print)
  */
-export const exportPNG = async (canvasElement, items, connections, options = {}) => {
+export const exportPNG = async (canvasElement, items, connections, boundaries = [], options = {}) => {
   try {
-    console.log('🎨 Starting PNG export with', items.length, 'items and', connections.length, 'connections');
+    console.log('🎨 Starting PNG export with', items.length, 'items,', connections.length, 'connections, and', boundaries.length, 'boundaries');
     
     // Validate data
     const validation = validateExportData(items, connections);
@@ -303,8 +303,8 @@ export const exportPNG = async (canvasElement, items, connections, options = {})
     
     console.log(`📐 Export DPI: ${dpiValue} (${selectedDPI} quality) - Scale: ${scaleFactor}×`);
       
-    // Render diagram to canvas using custom renderer
-    const { canvas } = await renderDiagramToCanvas(items, connections, {
+    // Render diagram to canvas using custom renderer (NOW WITH BOUNDARIES)
+    const { canvas } = await renderDiagramToCanvas(items, connections, boundaries, {
       padding: 80,
       scale: scaleFactor * (options.quality === 'high' ? 1.5 : 1), // Additional quality multiplier
       showGrid: false
@@ -359,10 +359,11 @@ export const exportPNG = async (canvasElement, items, connections, options = {})
 /**
  * Export as professional PDF with metadata and documentation
  * Uses custom canvas renderer instead of html2canvas for reliability
+ * ENTERPRISE STANDARD: Includes boundaries, items, and connections
  */
-export const exportPDF = async (canvasElement, items, connections, options = {}) => {
+export const exportPDF = async (canvasElement, items, connections, boundaries = [], options = {}) => {
   try {
-    console.log('📄 Starting PDF export with', items.length, 'items and', connections.length, 'connections');
+    console.log('📄 Starting PDF export with', items.length, 'items,', connections.length, 'connections, and', boundaries.length, 'boundaries');
     
     // Validate data
     const validation = validateExportData(items, connections);
@@ -370,8 +371,8 @@ export const exportPDF = async (canvasElement, items, connections, options = {})
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
     
-    // Render diagram to canvas using custom renderer
-    const { canvas, bounds } = await renderDiagramToCanvas(items, connections, {
+    // Render diagram to canvas using custom renderer (NOW WITH BOUNDARIES)
+    const { canvas, bounds } = await renderDiagramToCanvas(items, connections, boundaries, {
       padding: 80,
       scale: 2,
       showGrid: false
@@ -528,7 +529,7 @@ export const exportPDF = async (canvasElement, items, connections, options = {})
 /**
  * Export Terraform with enterprise best practices
  */
-export const exportTerraform = async (items, connections, options = {}) => {
+export const exportTerraform = async (items, connections, boundaries = [], options = {}) => {
   try {
     // Validate data
     const validation = validateExportData(items, connections);
@@ -536,11 +537,13 @@ export const exportTerraform = async (items, connections, options = {}) => {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
       // Generate enterprise-grade Terraform configuration
-    const rawTerraformFiles = generateTerraform(items, connections);
+    // Pass boundaries for metadata/comments
+    const rawTerraformFiles = generateTerraform(items, connections, boundaries);
     
     // Apply terraform fmt formatting (HCL canonical style)
     const terraformFiles = formatTerraformFiles(rawTerraformFiles);
     console.log('✅ Terraform files formatted with terraform fmt conventions');
+    console.log(`📐 Architecture includes ${boundaries.length} boundaries for organization`);
     
     // Download all files with delays to prevent browser lag
     const fileNames = [];
@@ -601,13 +604,15 @@ export const exportTerraform = async (items, connections, options = {}) => {
 /**
  * Export ARM Template with enterprise standards
  */
-export const exportARMTemplate = async (items, connections, options = {}) => {
+export const exportARMTemplate = async (items, connections, boundaries = [], options = {}) => {
   try {
     // Validate data
     const validation = validateExportData(items, connections);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
+
+    console.log(`📄 Exporting ARM Template with ${boundaries.length} boundaries for organization`);
 
     // Compose compliance/branding info
     const complianceSummary = options.complianceSummary || validation.complianceSummary || { status: 'Compliant', score: 100 };
@@ -619,8 +624,9 @@ export const exportARMTemplate = async (items, connections, options = {}) => {
     if (complianceSummary.score < 90) complianceBadge = '🟡';
     if (complianceSummary.score < 70) complianceBadge = '🔴';
 
-    // Generate ARM template with full metadata
+    // Generate ARM template with full metadata (pass boundaries)
     const armTemplate = generateARMTemplate(items, connections, {
+      boundaries,
       complianceSummary,
       branding,
       author,

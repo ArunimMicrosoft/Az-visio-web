@@ -21,6 +21,50 @@ const BoundaryCanvas = ({ boundaries, setBoundaries, items, boundaryDrawMode, dr
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [resizingBoundary, setResizingBoundary] = useState(null);
   const [resizeStart, setResizeStart] = useState(null);
+  const [editingBoundaryId, setEditingBoundaryId] = useState(null);
+  const [editingLabel, setEditingLabel] = useState('');
+  const inputRef = React.useRef(null);
+  
+  // Start editing boundary name
+  const startEditingBoundaryName = (boundaryId, currentLabel) => {
+    setEditingBoundaryId(boundaryId);
+    setEditingLabel(currentLabel);
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.select();
+      }
+    }, 0);
+  };
+
+  // Save edited boundary name
+  const saveBoundaryName = () => {
+    if (editingBoundaryId && editingLabel.trim()) {
+      setBoundaries(boundaries.map(b =>
+        b.id === editingBoundaryId ? { ...b, label: editingLabel.trim() } : b
+      ));
+    }
+    setEditingBoundaryId(null);
+    setEditingLabel('');
+  };
+
+  // Cancel editing
+  const cancelEditingBoundaryName = () => {
+    setEditingBoundaryId(null);
+    setEditingLabel('');
+  };
+
+  // Handle keyboard events for boundary name editing
+  const handleBoundaryNameKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveBoundaryName();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEditingBoundaryName();
+    }
+  };
+  
   // Start drawing boundary
   const handleDrawStart = (e) => {
     if (!boundaryDrawMode) return;
@@ -270,18 +314,10 @@ const BoundaryCanvas = ({ boundaries, setBoundaries, items, boundaryDrawMode, dr
     setResizingBoundary(null);
     setResizeStart(null);
   };
-
   // Delete boundary
   const handleDeleteBoundary = (boundaryId) => {
     setBoundaries(boundaries.filter(b => b.id !== boundaryId));
     setSelectedBoundary(null);
-  };
-
-  // Edit boundary label
-  const handleLabelChange = (boundaryId, newLabel) => {
-    setBoundaries(boundaries.map(b =>
-      b.id === boundaryId ? { ...b, label: newLabel } : b
-    ));
   };
 
   // Count items inside boundary
@@ -292,7 +328,7 @@ const BoundaryCanvas = ({ boundaries, setBoundaries, items, boundaryDrawMode, dr
       item.y >= boundary.y &&
       item.y <= boundary.y + boundary.height
     ).length;
-  };  return (
+  };return (
     <div
       className={`boundary-layer ${boundaryDrawMode ? 'drawing-mode' : ''}`}
       onMouseDown={boundaryDrawMode ? handleDrawStart : undefined}
@@ -334,10 +370,9 @@ const BoundaryCanvas = ({ boundaries, setBoundaries, items, boundaryDrawMode, dr
         const borderStyle = config.style || 'solid';
         const isTextAnnotation = boundary.type === 'text-annotation';
         
-        return (
-          <div
+        return (          <div
             key={boundary.id}
-            className={`boundary ${selectedBoundary === boundary.id ? 'selected' : ''} ${boundary.type}`}
+            className={`boundary ${selectedBoundary === boundary.id ? 'selected' : ''} ${editingBoundaryId === boundary.id ? 'editing' : ''} ${boundary.type}`}
             style={{
               left: `${boundary.x}px`,
               top: `${boundary.y}px`,
@@ -347,29 +382,65 @@ const BoundaryCanvas = ({ boundaries, setBoundaries, items, boundaryDrawMode, dr
               borderStyle: borderStyle,
               borderWidth: isTextAnnotation ? '0' : '2px',
               backgroundColor: isTextAnnotation ? boundary.color + '22' : 'transparent',
-              pointerEvents: 'auto'
+              pointerEvents: 'auto',
+              zIndex: editingBoundaryId === boundary.id ? 999 : 'auto'
             }}
             onClick={() => setSelectedBoundary(boundary.id)}
           >
-            {/* Header */}
-            <div
-              className={`boundary-header ${isTextAnnotation ? 'text-annotation-header' : ''}`}
+            {/* Header */}            <div
+              className={`boundary-header ${isTextAnnotation ? 'text-annotation-header' : ''} ${editingBoundaryId === boundary.id ? 'editing' : ''}`}
               style={{ backgroundColor: isTextAnnotation ? 'transparent' : boundary.color }}
-              onMouseDown={(e) => handleBoundaryMouseDown(e, boundary)}
+              onMouseDown={(e) => {
+                // Don't start dragging when clicking on the label for editing
+                if (!e.target.classList.contains('boundary-label')) {
+                  handleBoundaryMouseDown(e, boundary);
+                }
+              }}
             >
-              <span className="boundary-icon">{boundary.icon}</span>
-              <input
-                type="text"
-                className={`boundary-label ${isTextAnnotation ? 'text-annotation-label' : ''}`}
-                value={boundary.label}
-                onChange={(e) => handleLabelChange(boundary.id, e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  color: isTextAnnotation ? '#333' : 'white',
-                  fontSize: isTextAnnotation ? '16px' : '14px',
-                  fontWeight: isTextAnnotation ? '500' : 'bold'
-                }}
-              />
+              <span className="boundary-icon">{boundary.icon}</span>              {editingBoundaryId === boundary.id ? (
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className={`boundary-label boundary-label-input ${isTextAnnotation ? 'text-annotation-label' : ''}`}
+                  value={editingLabel}
+                  onChange={(e) => setEditingLabel(e.target.value)}
+                  onKeyDown={handleBoundaryNameKeyDown}
+                  onBlur={saveBoundaryName}
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onFocus={(e) => e.stopPropagation()}
+                  style={{
+                    color: isTextAnnotation ? '#333' : '#333',
+                    fontSize: isTextAnnotation ? '16px' : '13px',
+                    fontWeight: isTextAnnotation ? '500' : '600',
+                    backgroundColor: 'white',
+                    cursor: 'text'
+                  }}
+                />
+              ) : (
+                <input
+                  type="text"
+                  className={`boundary-label ${isTextAnnotation ? 'text-annotation-label' : ''}`}
+                  value={boundary.label}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    startEditingBoundaryName(boundary.id, boundary.label);
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                  readOnly
+                  style={{
+                    color: isTextAnnotation ? '#333' : 'white',
+                    fontSize: isTextAnnotation ? '16px' : '13px',
+                    fontWeight: isTextAnnotation ? '500' : '600',
+                    cursor: 'text',
+                    pointerEvents: 'auto'
+                  }}
+                />
+              )}
               {!isTextAnnotation && (
                 <span className="boundary-item-count">
                   {itemCount} {itemCount === 1 ? 'service' : 'services'}

@@ -183,11 +183,10 @@ function App() {
     };
     input.click();
   };
-
   // Helper: Run architecture validation and return result
   const getValidationResult = () => {
     try {
-      return validateArchitecture(items, connections);
+      return validateArchitecture(items, connections, boundaries);
     } catch (e) {
       return { isValid: false, errors: ['Validation failed: ' + e.message], score: 0, summary: { errors: 1, warnings: 0 } };
     }
@@ -251,9 +250,7 @@ function App() {
       if (!canvasElement) {
         alert('Canvas not found! ❌');
         return;
-      }
-
-      const result = await exportPNG(canvasElement, items, connections, {
+      }      const result = await exportPNG(canvasElement, items, connections, boundaries, {
         quality: 'high',
         environment: 'production',
         dpi: selectedDPI,
@@ -282,16 +279,12 @@ function App() {
       const canvasElement = canvasRef.current;
       if (!canvasElement) {
         alert('Canvas not found! ❌');
-        return;
-      }
-
-      const result = await exportPDF(canvasElement, items, connections, {
+        return;      }      const result = await exportPDF(canvasElement, items, connections, boundaries, {
         title: 'Azure Architecture Diagram',
-        author: 'Architecture Team',
+        author: 'Arunim Pandey',
         environment: 'production',
         region: selectedRegion,
         validationSummary: validation,
-        author: 'Arunim Pandey',
         version: '2.0.0',
         timestamp: new Date().toISOString(),
       });
@@ -310,9 +303,8 @@ function App() {
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
       return;
-    }
-    try {
-      const result = await exportTerraform(items, connections, {
+    }    try {
+      const result = await exportTerraform(items, connections, boundaries, {
         environment: 'production',
         region: selectedRegion,
         validationSummary: validation,
@@ -335,9 +327,8 @@ function App() {
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
       return;
-    }
-    try {
-      const result = await exportARMTemplate(items, connections, {
+    }    try {
+      const result = await exportARMTemplate(items, connections, boundaries, {
         environment: 'production',
         region: selectedRegion,
         validationSummary: validation,
@@ -404,10 +395,10 @@ function App() {
           useRealTimeAPI={true}
         />
       </div>
-      <Footer />
-      <ValidationPanel 
+      <Footer />      <ValidationPanel 
         items={items}
         connections={connections}
+        boundaries={boundaries}
         isOpen={isValidationOpen}
         onClose={() => setIsValidationOpen(false)}
       />

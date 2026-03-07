@@ -554,6 +554,63 @@
   }
 }
 
+/* ===== NAME EDITING INPUT ===== */
+.item-name-input {
+  width: 100%;
+  max-width: 150px;
+  padding: 4px 8px;
+  border: 2px solid #0078D4;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  background-color: white;
+  color: #333;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.15);
+  transition: all 0.2s;
+  z-index: 10;
+  position: relative;
+}
+
+.item-name-input:focus {
+  border-color: #005a9e;
+  box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.25);
+}
+
+.canvas-item.editing {
+  z-index: 1001 !important;
+  pointer-events: auto;
+}
+
+.canvas-item.editing .item-symbol {
+  opacity: 0.7;
+}
+
+/* Boundary name editing input */
+.boundary-label-input {
+  padding: 4px 8px;
+  border: 2px solid #0078D4;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  background-color: white !important;
+  color: #333 !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.15);
+  min-width: 120px;
+  text-align: center;
+  cursor: text !important;
+  pointer-events: auto !important;
+  z-index: 1002 !important; /* Above everything when editing */
+  position: relative;
+}
+
+.boundary-label-input:focus {
+  border-color: #005a9e;
+  box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.25);
+}
+
 /* ===== RESPONSIVE DESIGN ===== */
 
 /* Tablet (Portrait) - 768px and below */

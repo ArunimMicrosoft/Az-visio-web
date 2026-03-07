@@ -4,19 +4,20 @@
 // WITHOUT affecting the main application
 
 /**
- * Render items and connections to a canvas element for export
+ * Render items, connections, and boundaries to a canvas element for export
  * This is a pure rendering function that doesn't use html2canvas
+ * Enterprise-standard: Includes all architectural elements (boundaries, items, connections)
  */
-export const renderDiagramToCanvas = async (items, connections, options = {}) => {
+export const renderDiagramToCanvas = async (items, connections, boundaries = [], options = {}) => {
   const padding = options.padding || 50;
   // Increase scale for better resolution (default 3x)
   const scale = options.scale || 3; 
   
-  console.log('🎨 Starting diagram render with', items.length, 'items and', connections.length, 'connections');
+  console.log('🎨 Starting diagram render with', items.length, 'items,', connections.length, 'connections, and', boundaries.length, 'boundaries');
   
   // Calculate bounds
-  if (items.length === 0) {
-    throw new Error('No items to render');
+  if (items.length === 0 && boundaries.length === 0) {
+    throw new Error('No items or boundaries to render');
   }
   
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -36,6 +37,16 @@ export const renderDiagramToCanvas = async (items, connections, options = {}) =>
     minY = Math.min(minY, y);
     maxX = Math.max(maxX, x + width);
     maxY = Math.max(maxY, y + height);
+  });
+  
+  // Also include boundaries in bounds calculation
+  boundaries.forEach(boundary => {
+    if (boundary.x !== undefined && boundary.y !== undefined) {
+      minX = Math.min(minX, boundary.x);
+      minY = Math.min(minY, boundary.y);
+      maxX = Math.max(maxX, boundary.x + (boundary.width || 0));
+      maxY = Math.max(maxY, boundary.y + (boundary.height || 0));
+    }
   });
   
   // Also check connection endpoints (if using drag format)
@@ -122,6 +133,69 @@ export const renderDiagramToCanvas = async (items, connections, options = {}) =>
     }
     ctx.stroke();
   }
+  
+  // 4.5 Draw Boundaries (ENTERPRISE STANDARD - RENDER FIRST, UNDERNEATH ITEMS)
+  boundaries.forEach(boundary => {
+    const x = (boundary.x || 0) - minX;
+    const y = (boundary.y || 0) - minY + contentOffsetY;
+    const width = boundary.width || 200;
+    const height = boundary.height || 150;
+    
+    // Boundary color mapping (matches UI)
+    const boundaryColors = {
+      'resource-group': '#0078D4',
+      'subscription': '#5C2D91',
+      'virtual-network': '#008272',
+      'subnet': '#00BCF2',
+      'region': '#FF6C37',
+      'availability-zone': '#FFB900',
+      'availability-set': '#50E6FF',
+      'security-boundary': '#E81123',
+      'nsg-boundary': '#FF8C00',
+      'application': '#107C10',
+    };
+    
+    const boundaryType = boundary.type || 'resource-group';
+    const borderColor = boundaryColors[boundaryType] || '#0078D4';
+    const bgColor = borderColor + '15'; // 15 = 8% opacity in hex
+    
+    // Draw boundary background
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(x, y, width, height);
+    
+    // Draw boundary border with style
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 2;
+    
+    // Apply line style (solid, dashed, dotted)
+    if (boundary.style === 'dashed' || boundaryType === 'subnet') {
+      ctx.setLineDash([10, 5]);
+    } else if (boundary.style === 'dotted') {
+      ctx.setLineDash([2, 3]);
+    } else {
+      ctx.setLineDash([]);
+    }
+    
+    ctx.strokeRect(x, y, width, height);
+    ctx.setLineDash([]); // Reset
+    
+    // Draw boundary label/header
+    const labelHeight = 30;
+    ctx.fillStyle = borderColor + '40'; // 40 = 25% opacity
+    ctx.fillRect(x, y, width, labelHeight);
+    
+    // Draw boundary icon and label text
+    ctx.fillStyle = borderColor;
+    ctx.font = 'bold 14px "Segoe UI", Arial, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    
+    const icon = boundary.icon || '📦';
+    const label = boundary.label || boundaryType;
+    ctx.fillText(`${icon} ${label}`, x + 10, y + labelHeight / 2);
+  });
+  
+  console.log(`✅ Rendered ${boundaries.length} boundaries`);
   
   // Helper to map item ID to coordinates (center point)
   const getItemCenter = (id) => {

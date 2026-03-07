@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { isAdmin } from '../utils/adminCheck';
 import './ControlPanel.css';
 
 const ControlPanel = ({ 
@@ -14,10 +17,66 @@ const ControlPanel = ({
   onExportCostReport,
   onImportTerraform
 }) => {
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to logout?')) {
+      logout();
+      navigate('/login');
+    }
+  };
+
+  const handleAdminDashboard = () => {
+    navigate('/admin');
+  };
+
+  const userIsAdmin = isAdmin(user);
+
   return (
     <div className="control-panel">
-      <h2 className="app-title">Azure Architecture Designer</h2>
-      <div className="control-buttons">        
+      <div className="control-panel-header">
+        <h2 className="app-title">Azure Architecture Designer</h2>
+        
+        <div className="user-menu-container">
+          <button 
+            className="user-menu-btn" 
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            title={`Logged in as ${user?.email || 'User'}`}
+          >
+            <span className="user-icon">👤</span>
+            <span className="user-name">{user?.name || 'User'}</span>
+            <span className="dropdown-icon">▼</span>
+          </button>
+          
+          {showUserMenu && (
+            <div className="user-menu-dropdown">
+              <div className="user-menu-header">
+                <div className="user-avatar">👤</div>
+                <div className="user-info">
+                  <div className="user-display-name">{user?.name || 'User'}</div>
+                  <div className="user-email">{user?.email || ''}</div>
+                </div>              </div>
+              <div className="user-menu-divider"></div>
+              {userIsAdmin && (
+                <>
+                  <button className="user-menu-item admin-item" onClick={handleAdminDashboard}>
+                    <span className="menu-icon">🔐</span>
+                    Admin Dashboard
+                  </button>
+                  <div className="user-menu-divider"></div>
+                </>
+              )}
+              <button className="user-menu-item" onClick={handleLogout}>
+                <span className="menu-icon">🚪</span>
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <div className="control-buttons">
         <button className="control-btn save-btn" onClick={onSave} title="Save diagram to local file">
           💾 Save
         </button>        <button className="control-btn load-btn" onClick={onLoad} title="Load diagram from file">

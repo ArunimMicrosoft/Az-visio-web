@@ -2,23 +2,24 @@
   position: fixed;
   top: 70px;
   right: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  padding: 20px;
-  max-width: 400px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 120, 212, 0.15);
+  padding: 24px;
+  max-width: 420px;
   z-index: 1000;
-  animation: slideIn 0.3s ease-out;
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 2px solid rgba(0, 120, 212, 0.2);
 }
 
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateX(50px);
+    transform: translateX(60px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateX(0) scale(1);
   }
 }
 
@@ -26,21 +27,23 @@
   position: fixed;
   top: 70px;
   right: 20px;
-  background: #0078D4;
+  background: linear-gradient(135deg, #0078D4 0%, #005a9e 100%);
   color: white;
   border: none;
   border-radius: 8px;
-  padding: 10px 20px;
+  padding: 12px 22px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 120, 212, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3), 0 2px 6px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  transition: background 0.2s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .help-button:hover {
-  background: #005a9e;
+  background: linear-gradient(135deg, #005a9e 0%, #004578 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 120, 212, 0.4), 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .help-content {
@@ -49,30 +52,37 @@
 
 .close-help {
   position: absolute;
-  top: -10px;
-  right: -10px;
-  background: #e74c3c;
+  top: -12px;
+  right: -12px;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
   color: white;
-  border: none;
+  border: 2px solid white;
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   cursor: pointer;
   font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
 }
 
 .close-help:hover {
-  background: #c0392b;
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.5);
 }
 
 .help-content h3 {
   margin: 0 0 20px 0;
   color: #0078D4;
-  font-size: 18px;
+  font-size: 20px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border-bottom: 3px solid #0078D4;
+  padding-bottom: 10px;
 }
 
 .help-section {

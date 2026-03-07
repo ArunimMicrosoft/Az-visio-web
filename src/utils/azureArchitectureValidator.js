@@ -279,12 +279,38 @@ export const azureDeploymentRules = {
 };
 
 /**
+ * Check if a point is inside a boundary
+ */
+function isPointInsideBoundary(x, y, boundary) {
+  return x >= boundary.x && 
+         x <= boundary.x + boundary.width && 
+         y >= boundary.y && 
+         y <= boundary.y + boundary.height;
+}
+
+/**
+ * Get all boundaries that contain an item (from innermost to outermost)
+ */
+function getBoundariesContainingItem(item, boundaries) {
+  if (!boundaries || !item.x || !item.y) return [];
+  
+  const itemCenterX = item.x + (item.width || 60) / 2;
+  const itemCenterY = item.y + (item.height || 60) / 2;
+  
+  return boundaries
+    .filter(boundary => isPointInsideBoundary(itemCenterX, itemCenterY, boundary))
+    .sort((a, b) => (a.width * a.height) - (b.width * b.height)); // Innermost first
+}
+
+/**
  * Validate entire architecture
  */
-export function validateArchitecture(items, connections) {
+export function validateArchitecture(items, connections, boundaries = []) {
   const errors = [];
   const warnings = [];
   const recommendations = [];
+
+  console.log(`[Validator] Starting validation with ${items.length} items, ${connections.length} connections, ${boundaries.length} boundaries`);
 
   // Build connection map
   const serviceMap = new Map();
@@ -300,12 +326,21 @@ export function validateArchitecture(items, connections) {
     
     console.log(`[Validator] Item ${item.id}: serviceType=${serviceType}, name=${item.name}`);
     
+    // Get boundaries containing this item
+    const containingBoundaries = getBoundariesContainingItem(item, boundaries);
+    
     serviceMap.set(item.id, {
       ...item,
       serviceType,
       connectedTo: [],
-      connectedToIds: []
+      connectedToIds: [],
+      allReachable: [], // Track all reachable services (direct + indirect)
+      containingBoundaries // NEW: Track which boundaries contain this item
     });
+    
+    if (containingBoundaries.length > 0) {
+      console.log(`[Validator] ${serviceType} is inside boundaries:`, containingBoundaries.map(b => b.type || b.label).join(' > '));
+    }
   });
 
   // Map connections with detailed logging
@@ -321,14 +356,81 @@ export function validateArchitecture(items, connections) {
       console.log(`[Validator] Connection: ${source.serviceType} → ${target.serviceType}`);
     }
   });
+  // NEW: Build reachability map (includes indirect connections + boundary-based connections)
+  serviceMap.forEach((service, id) => {
+    const visited = new Set();
+    const reachable = [];
+    
+    const traverse = (currentId) => {
+      if (visited.has(currentId)) return;
+      visited.add(currentId);
+      
+      const current = serviceMap.get(currentId);
+      if (!current) return;
+      
+      // Add all direct connections
+      current.connectedToIds.forEach(connectedId => {
+        const connected = serviceMap.get(connectedId);
+        if (connected && !reachable.includes(connected.serviceType)) {
+          reachable.push(connected.serviceType);
+        }
+        traverse(connectedId);
+      });
+    };
+    
+    traverse(id);
+    
+    // NEW: Add implicit connections from containing boundaries
+    if (service.containingBoundaries && service.containingBoundaries.length > 0) {
+      service.containingBoundaries.forEach(boundary => {
+        const boundaryType = boundary.type || boundary.label || '';
+        
+        // Map boundary types to service types they provide
+        if (boundaryType.includes('virtual-network') || boundaryType.includes('vnet')) {
+          if (!reachable.includes('vnet')) reachable.push('vnet');
+          if (!reachable.includes('virtualnetworks')) reachable.push('virtualnetworks');
+          console.log(`[Validator] ${service.serviceType} inherits VNet from boundary`);
+        }
+        
+        if (boundaryType.includes('subnet')) {
+          if (!reachable.includes('subnet')) reachable.push('subnet');
+          if (!reachable.includes('subnets')) reachable.push('subnets');
+          // Subnets imply VNet access
+          if (!reachable.includes('vnet')) reachable.push('vnet');
+          if (!reachable.includes('virtualnetworks')) reachable.push('virtualnetworks');
+          console.log(`[Validator] ${service.serviceType} inherits Subnet+VNet from boundary`);
+        }
+        
+        if (boundaryType.includes('nsg') || boundaryType.includes('security')) {
+          if (!reachable.includes('nsg')) reachable.push('nsg');
+          if (!reachable.includes('networksecuritygroups')) reachable.push('networksecuritygroups');
+          console.log(`[Validator] ${service.serviceType} inherits NSG from boundary`);
+        }
+        
+        if (boundaryType.includes('resource-group')) {
+          if (!reachable.includes('resourcegroup')) reachable.push('resourcegroup');
+          console.log(`[Validator] ${service.serviceType} is in Resource Group boundary`);
+        }
+        
+        if (boundaryType.includes('subscription')) {
+          if (!reachable.includes('subscription')) reachable.push('subscription');
+          console.log(`[Validator] ${service.serviceType} is in Subscription boundary`);
+        }
+      });
+    }
+    
+    service.allReachable = reachable;
+    console.log(`[Validator] ${service.serviceType} can reach: ${reachable.join(', ')}`);
+  });
 
   // Validate each service
   serviceMap.forEach((service, id) => {
     // Check required dependencies
     const requiredDeps = azureDeploymentRules.requiredDependencies[service.serviceType];
     if (requiredDeps) {
+      // FIXED: Check both direct AND indirect connections (via subnet, etc.)
       const missingRequired = requiredDeps.required.filter(dep => 
-        !service.connectedTo.some(conn => matchesServiceType(conn, dep))
+        !service.allReachable.some(conn => matchesServiceType(conn, dep))
       );
       
       if (missingRequired.length > 0) {
@@ -344,7 +446,7 @@ export function validateArchitecture(items, connections) {
 
       // Check recommended dependencies
       const missingRecommended = requiredDeps.recommended.filter(dep =>
-        !service.connectedTo.some(conn => matchesServiceType(conn, dep))
+        !service.allReachable.some(conn => matchesServiceType(conn, dep))
       );
       
       if (missingRecommended.length > 0) {
@@ -357,7 +459,8 @@ export function validateArchitecture(items, connections) {
           recommendedServices: missingRecommended
         });
       }
-    }    // Check invalid connections (CRITICAL FOR DEPLOYMENT)
+    }
+    // Check invalid connections (CRITICAL FOR DEPLOYMENT)
     const invalidConns = azureDeploymentRules.invalidConnections[service.serviceType];
     if (invalidConns) {
       service.connectedTo.forEach((connectedType, index) => {

@@ -2,35 +2,76 @@
 // Generates production-ready, deployable Terraform code following Azure best practices
 
 /**
+ * Analyze boundaries to extract organizational structure
+ * @param {Array} boundaries - Boundary elements
+ * @param {Array} items - Service items
+ * @returns {Object} - Organizational structure
+ */
+const analyzeBoundaries = (boundaries = [], items = []) => {
+  const structure = {
+    subscriptions: [],
+    resourceGroups: [],
+    vnets: [],
+    subnets: [],
+    nsgs: []
+  };
+  
+  boundaries.forEach(boundary => {
+    const type = (boundary.type || '').toLowerCase();
+    const label = boundary.label || 'Unnamed';
+    
+    if (type.includes('subscription')) {
+      structure.subscriptions.push({ label, boundary });
+    } else if (type.includes('resource-group')) {
+      structure.resourceGroups.push({ label, boundary });
+    } else if (type.includes('virtual-network') || type.includes('vnet')) {
+      structure.vnets.push({ label, boundary });
+    } else if (type.includes('subnet')) {
+      structure.subnets.push({ label, boundary });
+    } else if (type.includes('nsg')) {
+      structure.nsgs.push({ label, boundary });
+    }
+  });
+  
+  return structure;
+};
+
+/**
  * Generate complete enterprise Terraform configuration
  * @param {Array} items - Azure service items
  * @param {Array} connections - Service connections
+ * @param {Array} boundaries - Boundary/grouping elements (optional)
  * @returns {Object} - Object with main.tf, variables.tf, outputs.tf content
  */
-export const generateTerraform = (items, connections) => {
+export const generateTerraform = (items, connections, boundaries = []) => {
   const timestamp = new Date().toISOString();
   
+  // Extract organizational structure from boundaries
+  const orgStructure = analyzeBoundaries(boundaries, items);
+  
+  console.log(`🏗️ Generating enterprise Terraform with ${items.length} services, ${connections.length} connections, ${boundaries.length} boundaries`);
+  
   return {
-    main: generateMainTF(items, connections, timestamp),
+    main: generateMainTF(items, connections, orgStructure, timestamp),
     variables: generateVariablesTF(items, timestamp),
     outputs: generateOutputsTF(items, timestamp),
     tfvars: generateTFVars(items, timestamp),
-    readme: generateReadme(items, connections, timestamp)
+    readme: generateReadme(items, connections, boundaries, timestamp)
   };
 };
 
 /**
  * Generate main.tf with provider, resources, and dependencies
  */
-const generateMainTF = (items, connections, timestamp) => {
+const generateMainTF = (items, connections, orgStructure, timestamp) => {
   const lines = [];
   
-  // Header
+  // Header with enterprise branding
   lines.push(`##############################################################################`);
   lines.push(`# Arunim's IT Caffe — Azure Architecture Designer`);
   lines.push(`# Version: v2.1.0 | Author: Arunim Pandey | ${timestamp}`);
   lines.push(`# Compliance: Enterprise Microsoft Azure Best Practices`);
-  lines.push(`# Compliance Badge: 🟢 Compliant (if score >= 90), 🟡 Partial (>=70), 🔴 Non-Compliant (<70)`);
+  lines.push(`# Architecture: ${orgStructure.resourceGroups.length} Resource Groups, ${orgStructure.vnets.length} VNets`);
   lines.push(`# https://docs.microsoft.com/en-us/azure/architecture/framework/`);
   lines.push(`##############################################################################`);
   lines.push(``);
@@ -1084,7 +1125,7 @@ const generateTFVars = (items, timestamp) => {
 /**
  * Generate README.md
  */
-const generateReadme = (items, connections, timestamp) => {
+const generateReadme = (items, connections, boundaries, timestamp) => {
   const lines = [];
   
   lines.push(`# Azure Infrastructure - Terraform Configuration`);

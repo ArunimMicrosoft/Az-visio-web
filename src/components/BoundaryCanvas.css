@@ -23,7 +23,7 @@
   pointer-events: auto; /* Allow clicking to select boundaries */
   transition: all 0.1s ease-out; /* Smooth transitions */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  z-index: 0; /* Behind items by default */
+  z-index: auto; /* Allow natural stacking - later in DOM = higher z-index */
   will-change: transform, width, height; /* Optimize for smooth drawing */
   cursor: pointer; /* Show it's clickable */
 }
@@ -34,8 +34,12 @@
   background: rgba(0, 120, 212, 0.08);
   box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2),
               0 4px 16px rgba(0, 0, 0, 0.15);
-  z-index: 5;
+  z-index: 50; /* Much higher to ensure selected boundaries are always on top */
   pointer-events: auto; /* Allow interaction when selected */
+}
+
+.boundary.editing {
+  z-index: 999 !important; /* Highest priority when editing to ensure nested labels are clickable */
 }
 
 .boundary:hover {
@@ -65,11 +69,21 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   user-select: none;
   pointer-events: auto; /* Allow clicking and dragging */
-  z-index: 10; /* Above boundary body */
+  z-index: 100; /* High z-index to stay above all other boundary elements */
+  position: relative; /* Create new stacking context */
+}
+
+.boundary-header.editing {
+  z-index: 1000 !important; /* Highest priority when editing */
+  cursor: default; /* Don't show move cursor when editing */
 }
 
 .boundary-header:active {
   cursor: grabbing;
+}
+
+.boundary-header.editing:active {
+  cursor: default; /* Don't show grabbing cursor when editing */
 }
 
 .boundary-icon {
@@ -87,6 +101,9 @@
   font-weight: 600;
   font-size: 13px;
   cursor: text;
+  pointer-events: auto; /* Ensure label is always clickable */
+  z-index: 1001; /* Above header */
+  position: relative;
 }
 
 .boundary-label:focus {

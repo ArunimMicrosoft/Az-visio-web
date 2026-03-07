@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD (Purple Pebble)
+name: Azure Static Web Apps CI/CD - AzureArchitectureDesignerWeb
 
 on:
   push:
@@ -12,11 +12,19 @@ on:
       - master
   workflow_dispatch:
 
+env:
+  AZURE_STATIC_WEB_APP_NAME: azurearchitecturedesignerweb
+  RESOURCE_GROUP: Application-website
+  NODE_VERSION: '18'
+
 jobs:
   build_and_deploy_job:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     name: Build and Deploy Job
+    environment:
+      name: production
+      url: https://purple-pebble-081ef0400.4.azurestaticapps.net
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -27,18 +35,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
       - name: Install Dependencies
         run: |
-          echo "📦 Installing dependencies..."
+          echo "📦 Installing dependencies for ${{ env.AZURE_STATIC_WEB_APP_NAME }}..."
           npm ci
           echo "✅ Dependencies installed successfully"
 
       - name: Build Application
         run: |
-          echo "🏗️ Building application..."
+          echo "🏗️ Building Azure Architecture Designer Web..."
           npm run build
           echo "✅ Build completed successfully"
           echo "📂 Build output:"
@@ -52,6 +60,8 @@ jobs:
           fi
           echo "✅ Build output verified"
           echo "📊 Build size: $(du -sh build/ | awk '{print $1}')"
+          echo "📁 Resource Group: ${{ env.RESOURCE_GROUP }}"
+          echo "🌐 Static Web App: ${{ env.AZURE_STATIC_WEB_APP_NAME }}"
 
       - name: Deploy to Azure Static Web Apps
         id: builddeploy
@@ -70,7 +80,10 @@ jobs:
         if: success()
         run: |
           echo "✅ Deployment successful!"
-          echo "🌐 Your app is live at: https://purple-pebble-081ef0400.4.azurestaticapps.net"
+          echo "🌐 Static Web App: ${{ env.AZURE_STATIC_WEB_APP_NAME }}"
+          echo "📦 Resource Group: ${{ env.RESOURCE_GROUP }}"
+          echo "🔗 Live URL: https://purple-pebble-081ef0400.4.azurestaticapps.net"
+          echo "📅 Deployed: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'

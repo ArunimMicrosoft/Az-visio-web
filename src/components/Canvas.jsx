@@ -13,8 +13,11 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
   const [boundaryType, setBoundaryType] = useState('resource-group');
   const [drawingBoundary, setDrawingBoundary] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [editingName, setEditingName] = useState('');
   const localCanvasRef = useRef(null);
   const containerRef = useRef(null);
+  const inputRef = useRef(null);
   
   // Use passed ref or local ref
   const activeCanvasRef = canvasRef || localCanvasRef;
@@ -264,9 +267,59 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
     setSelectedItem(null);
   };
 
+  // Start editing item name
+  const startEditingItemName = (itemId, currentName) => {
+    setEditingItemId(itemId);
+    setEditingName(currentName);
+    // Focus the input after render
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.select();
+      }
+    }, 0);
+  };
+
+  // Save edited item name
+  const saveItemName = () => {
+    if (editingItemId && editingName.trim()) {
+      setItems(items.map(item =>
+        item.id === editingItemId ? { ...item, name: editingName.trim() } : item
+      ));
+      // Update connection labels
+      setConnections(connections.map(conn => {
+        if (conn.from === editingItemId) {
+          return { ...conn, fromName: editingName.trim() };
+        }
+        if (conn.to === editingItemId) {
+          return { ...conn, toName: editingName.trim() };
+        }
+        return conn;
+      }));
+    }
+    setEditingItemId(null);
+    setEditingName('');
+  };
+
+  // Cancel editing
+  const cancelEditingName = () => {
+    setEditingItemId(null);
+    setEditingName('');
+  };
+
+  // Handle keyboard events for name editing
+  const handleNameInputKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveItemName();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEditingName();
+    }
+  };
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Delete' && selectedItem) {
+      if (e.key === 'Delete' && selectedItem && !editingItemId) {
         setItems(prevItems => prevItems.filter(item => item.id !== selectedItem));
         setConnections(prevConns => prevConns.filter(conn => conn.from !== selectedItem && conn.to !== selectedItem));
         setSelectedItem(null);
@@ -277,14 +330,12 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
       }
     };
 
-    const currentRef = activeCanvasRef.current;
-
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedItem, setItems, setConnections, connectionMode, activeCanvasRef]);
+  }, [selectedItem, setItems, setConnections, connectionMode, activeCanvasRef, editingItemId]);
 
   const getItemCenter = (itemId) => {
     const item = items.find(i => i.id === itemId);
@@ -516,12 +567,14 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
             e.preventDefault(); // Prevent browser context menu
             e.stopPropagation(); // Prevent bubbling
             startConnection(e, item);
-          };
-
-          const itemOnDoubleClick = (e) => {
+          };          const itemOnDoubleClick = (e) => {
             if (connectionMode && connectingFrom && connectingFrom !== item.id) {
               e.stopPropagation();
               completeConnection(e, item);
+            } else if (!connectionMode) {
+              // Double-click to edit name when NOT in connection mode
+              e.stopPropagation();
+              startEditingItemName(item.id, item.name);
             }
           };
 
@@ -579,7 +632,21 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
                   }}
                 />
               </div>
-              <span className="item-label">{item.name}</span>
+              {editingItemId === item.id ? (
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onKeyDown={handleNameInputKeyDown}
+                  onBlur={saveItemName}
+                  className="item-name-input"
+                />
+              ) : (
+                <span className="item-label" onDoubleClick={() => startEditingItemName(item.id, item.name)}>
+                  {item.name}
+                </span>
+              )}
               {/* Show validation badge on targets during connection mode */}
               {connectionMode && !isSource && targetStatus && (
                 <span className={`connection-badge badge-${targetStatus}`}>
