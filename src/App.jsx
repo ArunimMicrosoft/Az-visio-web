@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useAuth } from './contexts/AuthContext';
 import Toolbar from './components/Toolbar';
 import CanvasComponent from './components/Canvas.jsx';
 import ControlPanel from './components/ControlPanel';
@@ -6,6 +7,8 @@ import HelpOverlay from './components/HelpOverlay';
 import Footer from './components/Footer';
 import CostSummary from './components/CostSummary';
 import ValidationPanel from './components/ValidationPanel';
+import TrialBanner from './components/TrialBanner';
+import UpgradeModal from './components/UpgradeModal';
 import { 
   exportJSON, 
   exportPNG, 
@@ -14,6 +17,12 @@ import {
   exportARMTemplate,
   exportCostReport 
 } from './utils/enterpriseExporter';
+import { 
+  canExportPNG, 
+  canCreateDiagram, 
+  recordPNGExport, 
+  recordDiagramCreation
+} from './utils/authSecurity';
 import { parseTerraformFile, validateTerraformFile } from './utils/terraformParser';
 import { validateArchitecture } from './utils/azureArchitectureValidator';
 import './App.css';
@@ -23,13 +32,53 @@ console.log('Imports loaded successfully');
 
 function App() {
   console.log('=== APP FUNCTION EXECUTING ===');
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [connections, setConnections] = useState([]);
   const [boundaries, setBoundaries] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState('eastus');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [isValidationOpen, setIsValidationOpen] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState('');
+  const [upgradeFeature, setUpgradeFeature] = useState('');
   const canvasRef = useRef(null);
+
+  // Helper function to check diagram creation limit
+  const checkDiagramLimit = () => {
+    const diagramCheck = canCreateDiagram(user);
+    if (!diagramCheck.allowed) {
+      setUpgradeReason(diagramCheck.reason);
+      setUpgradeFeature('Unlimited Diagrams');
+      setUpgradeModalOpen(true);
+      return false;
+    }
+    return true;
+  };
+
+  // Wrapper for setItems to enforce diagram limits
+  const handleSetItems = (itemsOrUpdater) => {
+    // Check if this is adding new items
+    if (typeof itemsOrUpdater === 'function') {
+      setItems(prev => {
+        const newItems = itemsOrUpdater(prev);
+        // If items increased, check limit
+        if (newItems.length > prev.length && user?.subscriptionTier === 'trial') {
+          // Count unique diagrams (simplified - checking total items)
+          if (prev.length === 0 && newItems.length > 0) {
+            // New diagram started
+            if (!checkDiagramLimit()) {
+              return prev; // Don't add items
+            }
+            recordDiagramCreation(user.id);
+          }
+        }
+        return newItems;
+      });
+    } else {
+      setItems(itemsOrUpdater);
+    }
+  };
 
   const handleValidate = () => {
     if (items.length === 0) {
@@ -114,7 +163,7 @@ function App() {
           }
           
           // Load the diagram
-          setItems(diagram.items || []);
+          handleSetItems(diagram.items || []);
           setConnections(diagram.connections || []);
           setBoundaries(diagram.boundaries || []);
 
@@ -145,7 +194,7 @@ function App() {
 
   const handleClear = () => {
     if (window.confirm('Are you sure you want to clear the canvas?')) {
-      setItems([]);
+      handleSetItems([]);
       setConnections([]);
       setBoundaries([]);
     }
@@ -172,7 +221,7 @@ function App() {
             alert('⚠️ No Azure resources found!');
             return;
           }
-          setItems(prev => [...prev, ...result.items]);
+          handleSetItems(prev => [...prev, ...result.items]);
           setConnections(prev => [...prev, ...result.connections]);
           alert(`✅ Imported ${result.items.length} Azure resources from Terraform!\n\n💰 Costs calculated from actual Azure pricing.`);
         } catch (error) {
@@ -218,14 +267,36 @@ function App() {
       alert(`❌ Failed to export JSON!\n\n${error.message}`);
     }
   };
-
   const handleExportPNG = async () => {
+    // Trial Check
+    const exportCheck = canExportPNG(user);
+    if (!exportCheck.allowed) {
+      setUpgradeReason(exportCheck.reason);
+      setUpgradeFeature('PNG Export');
+      setUpgradeModalOpen(true);
+      return;
+    }
+
     const validation = getValidationResult();
     if (showComplianceBlock(validation, 'PNG')) return;
 
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
       return;
+    }
+
+    // Show remaining exports for trial users
+    if (exportCheck.remaining !== undefined) {
+      const proceed = window.confirm(
+        `PNG Export (${exportCheck.remaining - 1} exports remaining after this)\n\n` +
+        `Click OK to continue or Cancel to upgrade.`
+      );
+      if (!proceed) {
+        setUpgradeReason('Upgrade for unlimited PNG exports');
+        setUpgradeFeature('Unlimited PNG Export');
+        setUpgradeModalOpen(true);
+        return;
+      }
     }
 
     // DPI selector dialog
@@ -257,8 +328,10 @@ function App() {
         validationSummary: validation,
         author: 'Arunim Pandey',
         version: '2.0.0',
-        timestamp: new Date().toISOString(),
-      });
+        timestamp: new Date().toISOString(),      });
+      
+      // Record export for trial users
+      recordPNGExport(user.id);
       
       alert(`✅ PNG exported successfully!\n\n📁 ${result.filename}\n📐 ${result.dimensions.width}×${result.dimensions.height}px\n🔬 ${result.dpi} DPI (${result.dpiSetting})\n📊 ${(result.size / 1024).toFixed(1)} KB`);
     } catch (error) {
@@ -268,6 +341,14 @@ function App() {
   };
   
   const handleExportPDF = async () => {
+    // Trial users cannot export PDF
+    if (user?.subscriptionTier === 'trial') {
+      setUpgradeReason('PDF export is not available in trial version. Upgrade to Professional or Enterprise plan.');
+      setUpgradeFeature('PDF Export');
+      setUpgradeModalOpen(true);
+      return;
+    }
+
     const validation = getValidationResult();
     if (showComplianceBlock(validation, 'PDF')) return;
 
@@ -295,15 +376,22 @@ function App() {
       alert(`❌ Failed to export PDF!\n\n${error.message}`);
     }
   };
-
   const handleExportTerraform = async () => {
+    // Trial users cannot export Terraform
+    if (user?.subscriptionTier === 'trial') {
+      setUpgradeReason('Terraform export is not available in trial version. Upgrade to Professional or Enterprise plan.');
+      setUpgradeFeature('Terraform Export');
+      setUpgradeModalOpen(true);
+      return;
+    }
+
     const validation = getValidationResult();
     if (showComplianceBlock(validation, 'Terraform')) return;
 
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
       return;
-    }    try {
+    }try {
       const result = await exportTerraform(items, connections, boundaries, {
         environment: 'production',
         region: selectedRegion,
@@ -319,15 +407,22 @@ function App() {
       alert(`❌ Failed to export Terraform!\n\n${error.message}`);
     }
   };
-
   const handleExportARM = async () => {
+    // Trial users cannot export ARM
+    if (user?.subscriptionTier === 'trial') {
+      setUpgradeReason('ARM Template export is not available in trial version. Upgrade to Professional or Enterprise plan.');
+      setUpgradeFeature('ARM Template Export');
+      setUpgradeModalOpen(true);
+      return;
+    }
+
     const validation = getValidationResult();
     if (showComplianceBlock(validation, 'ARM Template')) return;
 
     if (items.length === 0) {
       alert('No items on canvas to export! Please add Azure services first. ❌');
       return;
-    }    try {
+    }try {
       const result = await exportARMTemplate(items, connections, boundaries, {
         environment: 'production',
         region: selectedRegion,
@@ -341,10 +436,17 @@ function App() {
     } catch (error) {
       console.error('Error exporting ARM Template:', error);
       alert(`❌ Failed to export ARM Template!\n\n${error.message}`);
-    }
-  };
+    }  };
   
   const handleExportCostReport = async () => {
+    // Trial users cannot export Cost Report
+    if (user?.subscriptionTier === 'trial') {
+      setUpgradeReason('Cost Report export is not available in trial version. Upgrade to Professional or Enterprise plan.');
+      setUpgradeFeature('Cost Report Export');
+      setUpgradeModalOpen(true);
+      return;
+    }
+
     if (items.length === 0) {
       alert('No items on canvas! Please add Azure services first. ❌');
       return;
@@ -360,9 +462,9 @@ function App() {
       alert(`❌ Failed to export cost report!\n\n${error.message}`);
     }
   };
-
   return (
     <div className="app">
+      <TrialBanner user={user} />
       <ControlPanel
         onSave={handleSave}
         onLoad={handleLoad}
@@ -376,12 +478,18 @@ function App() {
         onExportCostReport={handleExportCostReport}
         onImportTerraform={handleImportTerraform}
       />
+      <UpgradeModal 
+        isOpen={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        reason={upgradeReason}
+        feature={upgradeFeature}
+      />
       <HelpOverlay />
       <div className="main-content">
         <Toolbar />
         <CanvasComponent
           items={items}
-          setItems={setItems}
+          setItems={handleSetItems}
           connections={connections}
           setConnections={setConnections}
           boundaries={boundaries}

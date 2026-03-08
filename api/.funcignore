@@ -1,0 +1,12 @@
+node_modules
+.vscode
+.funcignore
+.git
+.gitignore
+.DS_Store
+*.js.map
+*.ts.map
+tsconfig.json
+.env
+local.settings.json
+test

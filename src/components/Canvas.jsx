@@ -342,29 +342,10 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
     if (!item) return { x: 0, y: 0 };
     return { x: item.x + 40, y: item.y + 40 };
   };
-
   return (
     <>
       {/* Professional Toolbar - Matches ControlPanel Design */}
-      <div 
-        className={`canvas-toolbar ${boundaryDrawMode ? 'drawing-mode' : ''}`}
-        style={{
-          position: 'fixed',
-          top: '140px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1000,
-          backgroundColor: '#f8f9fa',
-          padding: '12px 20px',
-          borderRadius: '8px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
-          border: '1px solid #dee2e6',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          minHeight: '48px'
-        }}
-      >
+      <div className={`canvas-toolbar ${boundaryDrawMode ? 'drawing-mode' : ''}`}>
         {/* Section 1: Drawing Tools */}
         <div className="toolbar-section">
           <span className="toolbar-label">Tools</span>
@@ -576,18 +557,20 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
               e.stopPropagation();
               startEditingItemName(item.id, item.name);
             }
-          };
-
-          const itemOnMouseUp = (e) => {
+          };          const itemOnMouseUp = (e) => {
             if (connectionMode && connectingFrom && connectingFrom !== item.id) {
               e.stopPropagation();
               completeConnection(e, item);
             }
           };
 
-          // Prevent canvas click from cancelling connection mode during double-click
+          // Complete connection on click as well (for left-click after right-click)
           const itemOnClick = (e) => {
-            if (connectionMode) {
+            if (connectionMode && connectingFrom && connectingFrom !== item.id) {
+              e.stopPropagation();
+              e.preventDefault();
+              completeConnection(e, item);
+            } else if (connectionMode) {
               e.stopPropagation();
             }
           };

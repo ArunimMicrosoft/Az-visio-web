@@ -4,7 +4,8 @@ import {
   secureLogin, 
   secureSignup, 
   validateSession, 
-  secureLogout 
+  secureLogout,
+  getUserById
 } from '../utils/authSecurity';
 
 const AuthContext = createContext(null);
@@ -31,21 +32,56 @@ export const AuthProvider = ({ children }) => {
           try {
             const userData = JSON.parse(storedUser);
             setUser(userData);
+            console.log('✅ Session restored for user:', userData.email);
           } catch (error) {
-            console.error('Error parsing stored user:', error);
+            console.error('⚠️ Error parsing stored user, attempting recovery:', error);
+            // Try to recover from user database
+            if (session.userId) {
+              const recoveredUser = getUserById(session.userId);
+              if (recoveredUser) {
+                setUser(recoveredUser);
+                localStorage.setItem('azureDesigner_user', JSON.stringify(recoveredUser));
+                console.log('✅ User data recovered from database:', recoveredUser.email);
+              } else {
+                console.error('❌ Could not recover user data');
+                secureLogout();
+              }
+            } else {
+              secureLogout();
+            }
+          }
+        } else if (session.userId) {
+          // Session exists but user data is missing - recover from database
+          console.warn('⚠️ Session found but user data missing - recovering from database');
+          const recoveredUser = getUserById(session.userId);
+          if (recoveredUser) {
+            setUser(recoveredUser);
+            localStorage.setItem('azureDesigner_user', JSON.stringify(recoveredUser));
+            console.log('✅ User data fully restored:', recoveredUser.email);
+          } else {
+            console.error('❌ User not found in database, logging out');
             secureLogout();
           }
+        } else {
+          // No user data and no userId in session
+          secureLogout();
         }
       } else {
-        // Session invalid or expired
-        secureLogout();
+        // Session invalid or expired - only clear if there's actually session data
+        const hasSessionData = localStorage.getItem('azureDesigner_session');
+        if (hasSessionData) {
+          console.log('🔒 Session expired or invalid - logging out');
+          secureLogout();
+        } else {
+          console.log('ℹ️ No existing session found');
+        }
       }
       
       setIsLoading(false);
     };
     
     checkExistingSession();
-  }, []);  const login = async (email, password) => {
+  }, []);const login = async (email, password) => {
     try {
       // Use enterprise-grade authentication
       const result = await secureLogin(email, password);

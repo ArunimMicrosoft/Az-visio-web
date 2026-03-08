@@ -1,0 +1,219 @@
+/* Upgrade Modal Styles */
+.upgrade-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.upgrade-modal {
+  background: white;
+  border-radius: 16px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: slideUp 0.3s ease;
+  position: relative;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.upgrade-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: #f3f4f6;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #6b7280;
+}
+
+.upgrade-modal-close:hover {
+  background: #e5e7eb;
+  transform: rotate(90deg);
+}
+
+.upgrade-modal-header {
+  text-align: center;
+  padding: 2rem 2rem 1rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.upgrade-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.upgrade-modal-header h2 {
+  font-size: 1.875rem;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.upgrade-reason {
+  color: #6b7280;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.upgrade-modal-body {
+  padding: 2rem;
+}
+
+.upgrade-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.upgrade-column {
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+}
+
+.upgrade-trial {
+  background: #f9fafb;
+}
+
+.upgrade-pro {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  position: relative;
+  border-color: #667eea;
+}
+
+.upgrade-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fbbf24;
+  color: #78350f;
+  padding: 0.25rem 1rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.upgrade-column h3 {
+  font-size: 1.25rem;
+  margin: 0 0 1rem 0;
+}
+
+.upgrade-price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.price-main {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.price-sub {
+  font-size: 1rem;
+  margin-left: 0.25rem;
+  opacity: 0.9;
+}
+
+.upgrade-price-inr {
+  text-align: center;
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-bottom: 1.5rem;
+}
+
+.upgrade-column ul {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.upgrade-column li {
+  padding: 0.5rem 0;
+  font-size: 0.938rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.upgrade-trial li {
+  color: #4b5563;
+}
+
+.upgrade-btn-pro {
+  width: 100%;
+  background: white;
+  color: #667eea;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.upgrade-btn-pro:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.upgrade-modal-footer {
+  text-align: center;
+  padding: 1rem 2rem 2rem 2rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .upgrade-comparison {
+    grid-template-columns: 1fr;
+  }
+  
+  .upgrade-modal {
+    width: 95%;
+  }
+  
+  .upgrade-modal-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .price-main {
+    font-size: 2rem;
+  }
+}

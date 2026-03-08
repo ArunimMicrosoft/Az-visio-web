@@ -8,7 +8,7 @@ const SECURITY_CONFIG = {
   PASSWORD_MAX_LENGTH: 128,
   RATE_LIMIT_WINDOW: 60 * 1000, // 1 minute
   MAX_REQUESTS_PER_WINDOW: 5,
-  SESSION_TIMEOUT: 24 * 60 * 60 * 1000, // 24 hours
+  SESSION_TIMEOUT: 30 * 24 * 60 * 60 * 1000, // 30 days (extended for better UX)
   SALT_ROUNDS: 10
 };
 
@@ -174,16 +174,22 @@ class UserStore {
     // Check if user exists
     if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
       throw new Error('User with this email already exists');
-    }
-
-    const hashedPassword = await hashPassword(password);
+    }    const hashedPassword = await hashPassword(password);
+    const now = new Date().toISOString();
+    const trialExpiresAt = new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)).toISOString(); // 7 days
+    
     const user = {
       id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       email: email.toLowerCase(),
       name: name || email.split('@')[0],
       passwordHash: hashedPassword,
       role: email.toLowerCase() === 'admin@azuredesigner.com' ? 'admin' : 'architect',
-      createdAt: new Date().toISOString(),
+      subscriptionTier: 'trial', // Auto-start trial
+      trialStartDate: now,
+      trialExpiresAt: trialExpiresAt,
+      trialExportsUsed: 0,
+      diagramsCreated: 0,
+      createdAt: now,
       lastLogin: null,
       isActive: true
     };
@@ -215,21 +221,48 @@ class UserStore {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       let users = stored ? JSON.parse(stored) : [];
-      
-      // Add demo account if it doesn't exist
+        // Add demo account if it doesn't exist
       if (!users.find(u => u.email === 'demo@azuredesigner.com')) {
         // Demo account with password: Demo@123
+        const now = new Date().toISOString();
         const demoUser = {
           id: 'user_demo_001',
           email: 'demo@azuredesigner.com',
           name: 'Demo User',
-          passwordHash: 'b2fdba2bd6db23d6d5145a0bcb4f9a94236a42fafeac4e79e8fc0fe7a9d26cdc', // Correct hash of Demo@123
+          passwordHash: 'b2fdba2bd6db23d6d5145a0bcb4f9a94236a42fafeac4e79e8fc0fe7a9d26cdc',
           role: 'architect',
-          createdAt: new Date().toISOString(),
+          subscriptionTier: 'trial',
+          trialStartDate: now,
+          trialExpiresAt: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)).toISOString(),
+          trialExportsUsed: 0,
+          diagramsCreated: 0,
+          createdAt: now,
           lastLogin: null,
           isActive: true
         };
         users.push(demoUser);
+        this.saveUsers(users);
+      }
+      
+      // Migrate existing users to trial system
+      let needsSave = false;
+      users = users.map(user => {
+        if (!user.subscriptionTier) {
+          needsSave = true;
+          const now = new Date().toISOString();
+          return {
+            ...user,
+            subscriptionTier: 'trial',
+            trialStartDate: now,
+            trialExpiresAt: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)).toISOString(),
+            trialExportsUsed: 0,
+            diagramsCreated: 0
+          };
+        }
+        return user;
+      });
+      
+      if (needsSave) {
         this.saveUsers(users);
       }
       
@@ -247,11 +280,18 @@ class UserStore {
       console.error('Failed to save users:', e);
     }
   }
+
   sanitizeUser(user) {
     // Remove sensitive data before returning
     // eslint-disable-next-line no-unused-vars
     const { passwordHash, ...sanitized } = user;
     return sanitized;
+  }
+
+  getUserById(userId) {
+    const users = this.getAllUsers();
+    const user = users.find(u => u.id === userId);
+    return user ? this.sanitizeUser(user) : null;
   }
 }
 
@@ -277,7 +317,6 @@ class SessionManager {
 
     return session;
   }
-
   validateSession() {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
@@ -286,15 +325,41 @@ class SessionManager {
       const session = JSON.parse(stored);
       const now = Date.now();
 
+      // Check if session has expired
       if (now > session.expiresAt) {
         this.destroySession();
         return null;
       }
 
-      // Check user agent to prevent session hijacking
-      if (session.userAgent !== navigator.userAgent) {
+      // Soft check: Only verify basic user agent info (browser name) to prevent unnecessary logouts
+      // This allows for minor browser updates without logging users out
+      const currentUA = navigator.userAgent;
+      const sessionUA = session.userAgent || '';
+      
+      // Extract browser name from user agent
+      const getBrowserName = (ua) => {
+        if (ua.includes('Chrome')) return 'Chrome';
+        if (ua.includes('Firefox')) return 'Firefox';
+        if (ua.includes('Safari')) return 'Safari';
+        if (ua.includes('Edge')) return 'Edge';
+        return 'Unknown';
+      };
+      
+      // Only log out if browser has completely changed
+      if (getBrowserName(currentUA) !== getBrowserName(sessionUA)) {
+        console.warn('Browser changed - logging out for security');
         this.destroySession();
         return null;
+      }
+
+      // Session is valid - extend expiration on activity
+      const timeRemaining = session.expiresAt - now;
+      const halfSessionTime = SECURITY_CONFIG.SESSION_TIMEOUT / 2;
+      
+      // If more than half the session time has passed, extend it
+      if (timeRemaining < halfSessionTime) {
+        session.expiresAt = now + SECURITY_CONFIG.SESSION_TIMEOUT;
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(session));
       }
 
       return session;
@@ -441,4 +506,155 @@ export function getSecurityStatus(email) {
     remainingAttempts,
     lockDuration: lockStatus.locked ? lockStatus.remainingMinutes : 0
   };
+}
+
+// Trial Management Functions
+export function getTrialStatus(user) {
+  if (!user || user.subscriptionTier !== 'trial') {
+    return { isTrial: false };
+  }
+
+  const now = Date.now();
+  const expiresAt = new Date(user.trialExpiresAt).getTime();
+  const gracePeriodEnd = expiresAt + (2 * 24 * 60 * 60 * 1000); // 2 days grace
+  
+  const daysRemaining = Math.ceil((expiresAt - now) / (24 * 60 * 60 * 1000));
+  const isExpired = now > expiresAt;
+  const isGracePeriod = isExpired && now <= gracePeriodEnd;
+  const isHardExpired = now > gracePeriodEnd;
+
+  return {
+    isTrial: true,
+    isActive: !isHardExpired,
+    isExpired,
+    isGracePeriod,
+    isHardExpired,
+    daysRemaining: Math.max(0, daysRemaining),
+    exportsRemaining: Math.max(0, 5 - (user.trialExportsUsed || 0)),
+    diagramsRemaining: Math.max(0, 3 - (user.diagramsCreated || 0)),
+    expiresAt: user.trialExpiresAt
+  };
+}
+
+export function canExportPNG(user) {
+  const trialStatus = getTrialStatus(user);
+  
+  if (!trialStatus.isTrial) {
+    return { allowed: true, unlimited: true };
+  }
+
+  if (trialStatus.isHardExpired) {
+    return { 
+      allowed: false, 
+      reason: 'Trial expired. Please upgrade to continue.',
+      requiresUpgrade: true 
+    };
+  }
+
+  if (trialStatus.exportsRemaining <= 0) {
+    return { 
+      allowed: false, 
+      reason: 'PNG export limit reached (5/5). Upgrade for unlimited exports.',
+      requiresUpgrade: true 
+    };
+  }
+
+  return { 
+    allowed: true, 
+    remaining: trialStatus.exportsRemaining,
+    isGracePeriod: trialStatus.isGracePeriod
+  };
+}
+
+export function canCreateDiagram(user) {
+  const trialStatus = getTrialStatus(user);
+  
+  if (!trialStatus.isTrial) {
+    return { allowed: true, unlimited: true };
+  }
+
+  if (trialStatus.isHardExpired) {
+    return { 
+      allowed: false, 
+      reason: 'Trial expired. Please upgrade to continue.',
+      requiresUpgrade: true 
+    };
+  }
+
+  if (trialStatus.diagramsRemaining <= 0) {
+    return { 
+      allowed: false, 
+      reason: 'Diagram limit reached (3/3). Upgrade for unlimited diagrams.',
+      requiresUpgrade: true 
+    };
+  }
+
+  return { 
+    allowed: true, 
+    remaining: trialStatus.diagramsRemaining,
+    isGracePeriod: trialStatus.isGracePeriod
+  };
+}
+
+export function recordPNGExport(userId) {
+  const users = userStore.getAllUsers();
+  const user = users.find(u => u.id === userId);
+  
+  if (user && user.subscriptionTier === 'trial') {
+    user.trialExportsUsed = (user.trialExportsUsed || 0) + 1;
+    userStore.saveUsers(users);
+    
+    // Update session storage
+    const storedUser = localStorage.getItem('azureDesigner_user');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      userData.trialExportsUsed = user.trialExportsUsed;
+      localStorage.setItem('azureDesigner_user', JSON.stringify(userData));
+    }
+  }
+}
+
+export function recordDiagramCreation(userId) {
+  const users = userStore.getAllUsers();
+  const user = users.find(u => u.id === userId);
+  
+  if (user && user.subscriptionTier === 'trial') {
+    user.diagramsCreated = (user.diagramsCreated || 0) + 1;
+    userStore.saveUsers(users);
+    
+    // Update session storage
+    const storedUser = localStorage.getItem('azureDesigner_user');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      userData.diagramsCreated = user.diagramsCreated;
+      localStorage.setItem('azureDesigner_user', JSON.stringify(userData));
+    }
+  }
+}
+
+export function upgradeToPaid(userId, tier) {
+  const users = userStore.getAllUsers();
+  const user = users.find(u => u.id === userId);
+  
+  if (user) {
+    user.subscriptionTier = tier; // 'professional' or 'enterprise'
+    user.upgradedAt = new Date().toISOString();
+    userStore.saveUsers(users);
+    
+    // Update session storage
+    const storedUser = localStorage.getItem('azureDesigner_user');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      userData.subscriptionTier = tier;
+      userData.upgradedAt = user.upgradedAt;
+      localStorage.setItem('azureDesigner_user', JSON.stringify(userData));
+    }
+    
+    return true;
+  }
+  return false;
+}
+
+export function getUserById(userId) {
+  return userStore.getUserById(userId);
 }

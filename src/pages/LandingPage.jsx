@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import './LandingPage.css';
 
 const LandingPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <div className="landing-page">      {/* Hero Section */}
@@ -20,12 +20,22 @@ const LandingPage = () => {
               <span className="brand-tagline">Powered by Arunim's IT Café</span>
             </div>
           </div>          <div className="landing-nav-actions">
-            {isAuthenticated ? (
-              <Link to="/app" className="btn-primary">Go to App</Link>
+            {isLoading ? (
+              <div className="btn-secondary" style={{ opacity: 0.6, cursor: 'wait' }}>Loading...</div>
             ) : (
               <>
-                <Link to="/login" className="btn-secondary">Sign In</Link>
-                <Link to="/signup" className="btn-primary">Get Started</Link>
+                {isAuthenticated && (
+                  <div className="auth-status-indicator">
+                    <span className="status-dot"></span>
+                    <span className="status-text">Signed In</span>
+                  </div>
+                )}
+                <Link to="/login" className="btn-secondary">
+                  {isAuthenticated ? 'Dashboard' : 'Sign In'}
+                </Link>
+                {!isAuthenticated && (
+                  <Link to="/signup" className="btn-primary">Get Started</Link>
+                )}
               </>
             )}
           </div>
@@ -260,7 +270,105 @@ const LandingPage = () => {
             </div>
           </div>
         </div>
-      </section>      {/* CTA Section */}
+      </section>
+
+      {/* Pricing Section */}
+      <section className="pricing-section">
+        <div className="section-container">
+          <div className="section-header">
+            <span className="section-badge">Pricing Plans</span>
+            <h2 className="section-title">Choose the plan that fits your needs</h2>
+            <p className="section-subtitle">Transparent pricing with no hidden fees</p>
+          </div>
+
+          <div className="pricing-grid">
+            {/* Starter Plan */}
+            <div className="pricing-card">              <div className="pricing-header">
+                <h3 className="pricing-title">Starter</h3>
+                <div className="pricing-price">
+                  <span className="price-amount">$0</span>
+                  <span className="price-period">/mo</span>
+                </div>
+                <div className="pricing-price-inr">
+                  <span className="price-amount-small">₹0</span>
+                  <span className="price-period-small">/mo</span>
+                </div>
+                <p className="pricing-description">Perfect for testing and small projects</p>
+              </div>
+              <ul className="pricing-features">
+                <li className="feature-item">✓ Up to 100 licenses</li>
+                <li className="feature-item">✓ 1 workspace</li>
+                <li className="feature-item">✓ Basic analytics</li>
+                <li className="feature-item">✓ Email support</li>
+                <li className="feature-item">✓ REST API access</li>
+              </ul>
+              <Link to="/signup" className="btn-pricing btn-pricing-outline">Get Started</Link>
+            </div>
+
+            {/* Professional Plan - Most Popular */}
+            <div className="pricing-card pricing-card-popular">
+              <div className="popular-badge">Most Popular</div>              <div className="pricing-header">
+                <h3 className="pricing-title">Professional</h3>
+                <div className="pricing-price">
+                  <span className="price-amount">$49</span>
+                  <span className="price-period">/mo</span>
+                </div>
+                <div className="pricing-price-inr">
+                  <span className="price-amount-small">₹4,099</span>
+                  <span className="price-period-small">/mo</span>
+                </div>
+                <p className="pricing-description">For growing businesses</p>
+              </div>
+              <ul className="pricing-features">
+                <li className="feature-item">✓ Up to 10,000 licenses</li>
+                <li className="feature-item">✓ Unlimited workspaces</li>
+                <li className="feature-item">✓ Advanced analytics</li>
+                <li className="feature-item">✓ Priority support</li>
+                <li className="feature-item">✓ Custom domains</li>
+                <li className="feature-item">✓ Webhook integrations</li>
+              </ul>
+              <button 
+                className="btn-pricing btn-pricing-solid"
+                onClick={() => window.location.href = '/payment?plan=professional'}
+              >
+                Get Started
+              </button>
+            </div>
+
+            {/* Enterprise Plan */}
+            <div className="pricing-card">              <div className="pricing-header">
+                <h3 className="pricing-title">Enterprise</h3>
+                <div className="pricing-price">
+                  <span className="price-amount">$199</span>
+                  <span className="price-period">/mo</span>
+                </div>
+                <div className="pricing-price-inr">
+                  <span className="price-amount-small">₹16,649</span>
+                  <span className="price-period-small">/mo</span>
+                </div>
+                <p className="pricing-description">For large organizations</p>
+              </div>
+              <ul className="pricing-features">
+                <li className="feature-item">✓ Unlimited licenses</li>
+                <li className="feature-item">✓ Unlimited workspaces</li>
+                <li className="feature-item">✓ Real-time analytics</li>
+                <li className="feature-item">✓ 24/7 dedicated support</li>
+                <li className="feature-item">✓ SSO & SAML</li>
+                <li className="feature-item">✓ On-premise deployment</li>
+                <li className="feature-item">✓ SLA guarantee</li>
+              </ul>
+              <button 
+                className="btn-pricing btn-pricing-outline"
+                onClick={() => window.location.href = 'mailto:arunimpandey2903@hotmail.com?subject=Enterprise Plan Inquiry'}
+              >
+                Contact Sales
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
       <section className="cta-section">
         <div className="cta-container">
           <h2 className="cta-title">Ready to Design Your Azure Solution?</h2>

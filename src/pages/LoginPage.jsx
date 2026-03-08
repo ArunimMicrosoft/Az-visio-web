@@ -174,7 +174,7 @@ const LoginPage = () => {
       </div>
       
       <div className="auth-branding">
-        <p>© 2026 Arunim's IT Caffe - Azure Architecture Designer v2.1.0</p>
+        <p>© 2026 Arunim's IT Café - Azure Architecture Designer v1.0.0</p>
       </div>
     </div>
   );

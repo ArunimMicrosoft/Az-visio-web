@@ -1,0 +1,109 @@
+/* Trial Banner Styles */
+.trial-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 100;
+  position: sticky;
+  top: 0;
+}
+
+.trial-banner-expired {
+  background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
+  animation: pulse-banner 2s ease-in-out infinite;
+}
+
+@keyframes pulse-banner {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.9; }
+}
+
+.trial-banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.trial-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.trial-badge {
+  background: rgba(255,255,255,0.25);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.trial-badge-expired {
+  background: rgba(255,255,255,0.3);
+  animation: pulse-badge 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.trial-text {
+  font-size: 0.938rem;
+  font-weight: 500;
+}
+
+.trial-upgrade-btn {
+  background: white;
+  color: #667eea;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.trial-upgrade-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.trial-banner-expired .trial-upgrade-btn {
+  color: #dc2626;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .trial-banner-content {
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+  }
+  
+  .trial-info {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .trial-text {
+    font-size: 0.813rem;
+  }
+}

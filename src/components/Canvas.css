@@ -1,19 +1,22 @@
 /* ===== PROFESSIONAL CANVAS TOOLBAR (MATCHES CONTROL PANEL) ===== */
 .canvas-toolbar {
-  position: fixed;
-  top: 140px;  /* Below the main header buttons */
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;  /* Below main header but above canvas */
-  background-color: #f8f9fa;
-  padding: 12px 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  border: 1px solid #dee2e6;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 48px;
+  position: fixed !important;
+  top: 220px !important;  /* Below trial banner and main buttons */
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 999 !important;  /* Very high to ensure visibility */
+  background-color: #f8f9fa !important;
+  padding: 12px 20px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+  border: 2px solid #0078D4 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 48px !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .canvas-toolbar.drawing-mode {
@@ -27,6 +30,8 @@
   align-items: center;
   gap: 8px;
   padding: 0;
+  position: relative;
+  z-index: inherit; /* Inherit from parent */
 }
 
 .toolbar-section:not(:last-child) {
@@ -67,6 +72,8 @@
   padding-right: 32px;
   height: 38px;
   line-height: 1.5;
+  position: relative;
+  z-index: 1; /* Keep within parent z-index context */
 }
 
 .boundary-type-selector-toolbar:hover {
@@ -79,6 +86,7 @@
   outline: none;
   border-color: #0078D4;
   box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.15);
+  /* Don't elevate z-index - let browser handle dropdown menu layering */
 }
 
 /* Professional Control Buttons */
