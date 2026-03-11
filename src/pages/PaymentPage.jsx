@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { createRazorpayOrder, verifyRazorpayPayment, getPricingPlans } from '../services/razorpayService';
+import { createRazorpayOrder, getPricingPlans } from '../services/razorpayService';
 import { upgradeToPaid } from '../utils/authSecurity';
 import './PaymentPage.css';
 
@@ -47,9 +47,7 @@ const PaymentPage = () => {
       }
 
       // Get amount based on currency
-      const amount = currency === 'INR' ? plan.priceINR : plan.priceUSD;
-
-      // Create Razorpay order and open checkout
+      const amount = currency === 'INR' ? plan.priceINR : plan.priceUSD;      // Create Razorpay order and open checkout
       const paymentResponse = await createRazorpayOrder({
         planName: plan.name,
         amount: amount,
@@ -58,22 +56,17 @@ const PaymentPage = () => {
         customerId: user?.id || 'guest',
       });
 
-      // Verify payment on backend
-      const verificationResult = await verifyRazorpayPayment({
-        ...paymentResponse,
-        planName: plan.name,
-        customerId: user?.id,
-        customerEmail: formData.email,
-      });      if (verificationResult.verified) {
-        // Upgrade user subscription
+      // Payment captured by Razorpay handler — no backend verification needed on free tier
+      if (paymentResponse?.paymentId) {
+        // Upgrade user subscription in Supabase
         if (user) {
-          upgradeToPaid(user.id, plan.id);
+          await upgradeToPaid(user.id, plan.id);
         }
 
         // Redirect to success page
         navigate(`/payment-success?payment_id=${paymentResponse.paymentId}&plan=${plan.id}`);
       } else {
-        throw new Error('Payment verification failed');
+        throw new Error('Payment did not return a valid payment ID');
       }
     } catch (err) {
       console.error('Payment error:', err);

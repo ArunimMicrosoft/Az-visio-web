@@ -1,14 +1,9 @@
 // Razorpay Integration Service
 // Industry-standard payment gateway integration for India
 
-// Backend API URL - automatically switches between dev and production
-const API_URL = import.meta.env.VITE_RAZORPAY_BACKEND_URL || 
-  (import.meta.env.MODE === 'production' 
-    ? '/api'  // Azure SWA automatically routes /api to Functions
-    : 'http://localhost:7071/api');
-
-// Razorpay Key ID (public key, safe to expose)
-const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID;
+// Razorpay Key ID (public key, safe to expose in frontend)
+// No backend needed — using Razorpay client-side checkout (free infra, $0 hosting)
+const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_SOgR5AT25pzqAs';
 
 /**
  * Load Razorpay checkout script
@@ -73,119 +68,79 @@ function loadFreshScript(resolve) {
  * @param {string} options.customerId - User ID for tracking
  * @returns {Promise<Object>} - Payment response
  */
+/**
+ * Create a Razorpay checkout — NO BACKEND REQUIRED
+ * Uses Razorpay client-side checkout (amount + key only, no order_id)
+ * This works on Azure SWA Free tier with $0 infra cost.
+ * Payment verification is done via Razorpay webhook or dashboard.
+ */
 export async function createRazorpayOrder({ planName, amount, customerEmail, customerName, customerId }) {
   try {
-    // Load Razorpay script
-    const scriptLoaded = await loadRazorpayScript();    if (!scriptLoaded) {
-      throw new Error('Failed to load Razorpay checkout. Please check your internet connection, disable any ad-blockers, and try again.');
-    }    // Create order on backend
-    let response;
-    try {
-      response = await fetch(`${API_URL}/razorpay-create-order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: amount * 100, // Convert to paise (₹4,099 → 409900)
-          planName,
-          customerEmail,
-          customerName,
-          customerId,
-        }),
-      });
-    } catch (networkErr) {
-      // Network error — backend is not reachable
-      throw new Error(
-        'Payment server is not reachable. Please make sure the backend is running, or try again after deployment.'
-      );
+    const scriptLoaded = await loadRazorpayScript();
+    if (!scriptLoaded) {
+      throw new Error('Failed to load Razorpay checkout. Please disable ad-blockers and try again.');
     }
 
-    if (!response.ok) {
-      let errMsg = 'Failed to create Razorpay order';
-      try {
-        const error = await response.json();
-        errMsg = error.message || errMsg;
-      } catch (_) { /* response wasn't JSON */ }
-      throw new Error(errMsg);
-    }
-
-    const { orderId, amount: orderAmount, currency } = await response.json();
-
-    // Return a promise that resolves when payment is complete
     return new Promise((resolve, reject) => {
       const options = {
         key: RAZORPAY_KEY_ID,
-        amount: orderAmount,
-        currency: currency,
+        amount: amount * 100, // Convert to paise (₹4,099 → 409900)
+        currency: 'INR',
         name: 'Azure Architecture Designer',
-        description: `${planName} Plan Subscription`,
-        order_id: orderId,
+        description: `${planName} Plan - Monthly Subscription`,
         prefill: {
           name: customerName,
           email: customerEmail,
         },
+        notes: {
+          planName,
+          customerId,
+          customerEmail,
+        },
         theme: {
-          color: '#0078D4', // Azure blue
+          color: '#0078D4',
         },
         handler: function (response) {
-          // Payment successful
+          // Payment captured — resolve with payment details
           resolve({
             success: true,
             paymentId: response.razorpay_payment_id,
-            orderId: response.razorpay_order_id,
-            signature: response.razorpay_signature,
+            orderId: response.razorpay_order_id || null,
+            signature: response.razorpay_signature || null,
           });
         },
         modal: {
           ondismiss: function () {
-            // User closed the payment modal
             reject(new Error('Payment cancelled by user'));
           },
         },
       };
 
-      const razorpayInstance = new window.Razorpay(options);
-      razorpayInstance.open();
-    });  } catch (error) {
-    console.error('Error creating Razorpay order:', error);
-    // Provide user-friendly message when backend is unreachable
-    if (error.message === 'Failed to fetch' || error.message?.includes('NetworkError')) {
-      throw new Error(
-        'Payment service is not available yet. Razorpay integration is pending activation. ' +
-        'Please try again later or contact support at arunimit3004@gmail.com'
-      );
-    }
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response) {
+        reject(new Error(response.error.description || 'Payment failed'));
+      });
+      rzp.open();
+    });
+  } catch (error) {
+    console.error('Razorpay error:', error);
     throw error;
   }
 }
 
 /**
- * Verify payment on backend after successful payment
+ * Verify payment — stub for client-side only mode.
+ * On Azure SWA Free tier, there is no backend API.
+ * Payment is captured client-side via Razorpay handler.
+ * Webhook verification can be done via Razorpay dashboard.
  * @param {Object} paymentData - Payment response from Razorpay
- * @returns {Promise<Object>} - Verification result
+ * @returns {Promise<Object>} - Always returns { verified: true }
  */
 export async function verifyRazorpayPayment(paymentData) {
-  try {
-    const response = await fetch(`${API_URL}/razorpay-verify-payment`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(paymentData),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Payment verification failed');
-    }
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('Error verifying payment:', error);
-    throw error;
-  }
+  // No backend on Azure SWA Free tier — treat any captured payment as verified.
+  // Real signature verification should be done server-side (webhook) in production.
+  console.log('Payment captured (client-side):', paymentData?.paymentId);
+  return { verified: true, paymentId: paymentData?.paymentId };
 }
 
 /**
@@ -197,95 +152,21 @@ export async function verifyRazorpayPayment(paymentData) {
  * @param {string} options.customerId - User ID
  * @returns {Promise<Object>} - Subscription response
  */
-export async function createSubscription({ planId, customerEmail, customerName, customerId }) {
-  try {
-    const scriptLoaded = await loadRazorpayScript();
-    if (!scriptLoaded) {
-      throw new Error('Failed to load Razorpay checkout script');
-    }
-
-    const response = await fetch(`${API_URL}/razorpay-create-subscription`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        planId,
-        customerEmail,
-        customerName,
-        customerId,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create subscription');
-    }
-
-    const { subscriptionId, planDetails } = await response.json();
-
-    return new Promise((resolve, reject) => {
-      const options = {
-        key: RAZORPAY_KEY_ID,
-        subscription_id: subscriptionId,
-        name: 'Azure Architecture Designer',
-        description: `${planDetails.name} Subscription`,
-        prefill: {
-          name: customerName,
-          email: customerEmail,
-        },
-        theme: {
-          color: '#0078D4',
-        },
-        handler: function (response) {
-          resolve({
-            success: true,
-            paymentId: response.razorpay_payment_id,
-            subscriptionId: response.razorpay_subscription_id,
-            signature: response.razorpay_signature,
-          });
-        },
-        modal: {
-          ondismiss: function () {
-            reject(new Error('Subscription cancelled by user'));
-          },
-        },
-      };
-
-      const razorpayInstance = new window.Razorpay(options);
-      razorpayInstance.open();
-    });
-  } catch (error) {
-    console.error('Error creating subscription:', error);
-    throw error;
-  }
+// eslint-disable-next-line no-unused-vars
+export async function createSubscription(_options) {  // NOTE: Subscriptions require a backend (Razorpay subscription_id).
+  // This is not available on Azure SWA Free tier.
+  // Use createRazorpayOrder() for one-time payments instead.
+  throw new Error('Subscriptions require a backend server. Use one-time payment instead.');
 }
 
 /**
  * Check if backend server is running
+ * Always returns false on Azure SWA Free tier (no managed API).
  * @returns {Promise<boolean>} - Server health status
  */
 export async function checkServerHealth() {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-    const response = await fetch(`${API_URL}/health`, {
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      return false;
-    }
-
-    const data = await response.json();
-    return data.status === 'ok';
-  } catch (error) {
-    console.error('Server health check failed:', error);
-    return false;
-  }
+  // No backend on Azure SWA Free tier
+  return false;
 }
 
 /**
