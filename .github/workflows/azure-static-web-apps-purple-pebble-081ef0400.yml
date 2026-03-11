@@ -38,52 +38,21 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
-      - name: Install Dependencies
-        run: |
-          echo "📦 Installing dependencies for ${{ env.AZURE_STATIC_WEB_APP_NAME }}..."
-          npm ci
-          echo "✅ Dependencies installed successfully"
-
-      - name: Install API Dependencies
-        run: |
-          echo "📦 Installing API dependencies..."
-          cd api && npm ci
-          echo "✅ API dependencies installed"
-
-      - name: Build Application
+      - name: Deploy to Azure Static Web Apps
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_RAZORPAY_KEY_ID: ${{ secrets.VITE_RAZORPAY_KEY_ID }}
-        run: |
-          echo "🏗️ Building Azure Architecture Designer Web..."
-          npm run build
-          echo "✅ Build completed successfully"
-          echo "📂 Build output:"
-          ls -la build/
-
-      - name: Verify Build Output
-        run: |
-          if [ ! -f "build/index.html" ]; then
-            echo "❌ Error: build/index.html not found!"
-            exit 1
-          fi
-          echo "✅ Build output verified"
-          echo "📊 Build size: $(du -sh build/ | awk '{print $1}')"
-          echo "📁 Resource Group: ${{ env.RESOURCE_GROUP }}"
-          echo "🌐 Static Web App: ${{ env.AZURE_STATIC_WEB_APP_NAME }}"
-
-      - name: Deploy to Azure Static Web Apps
-        id: builddeploy
-        uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PURPLE_PEBBLE_081EF0400 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          skip_app_build: true
-          app_location: "build"
+          app_location: "/"
+          app_build_command: "npm run build"
           api_location: "api"
-          output_location: ""
+          output_location: "build"
           production_branch: "main"
 
       - name: Deployment Summary
