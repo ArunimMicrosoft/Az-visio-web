@@ -12,21 +12,55 @@ const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
 /**
  * Load Razorpay checkout script
+ * The script is also preloaded in index.html for reliability.
+ * This function checks if it's already available, and retries if not.
  * @returns {Promise<boolean>} - Script loaded successfully
  */
 function loadRazorpayScript() {
   return new Promise((resolve) => {
+    // Check if already loaded (from index.html preload or previous call)
     if (window.Razorpay) {
       resolve(true);
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
+    // If the script tag exists but hasn't finished loading, wait for it
+    const existingScript = document.querySelector('script[src*="checkout.razorpay.com"]');
+    if (existingScript) {
+      // Wait up to 10 seconds for the existing script to load
+      let waited = 0;
+      const checkInterval = setInterval(() => {
+        if (window.Razorpay) {
+          clearInterval(checkInterval);
+          resolve(true);
+        } else if (waited >= 10000) {
+          clearInterval(checkInterval);
+          // Remove the failed script and try fresh
+          existingScript.remove();
+          loadFreshScript(resolve);
+        }
+        waited += 200;
+      }, 200);
+      return;
+    }
+
+    // No script tag found — load fresh
+    loadFreshScript(resolve);
   });
+}
+
+/**
+ * Load a fresh Razorpay script tag
+ */
+function loadFreshScript(resolve) {
+  const script = document.createElement('script');
+  script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+  script.onload = () => resolve(true);
+  script.onerror = () => {
+    console.error('Failed to load Razorpay script from CDN');
+    resolve(false);
+  };
+  document.body.appendChild(script);
 }
 
 /**
@@ -42,9 +76,8 @@ function loadRazorpayScript() {
 export async function createRazorpayOrder({ planName, amount, customerEmail, customerName, customerId }) {
   try {
     // Load Razorpay script
-    const scriptLoaded = await loadRazorpayScript();
-    if (!scriptLoaded) {
-      throw new Error('Failed to load Razorpay checkout script');
+    const scriptLoaded = await loadRazorpayScript();    if (!scriptLoaded) {
+      throw new Error('Failed to load Razorpay checkout. Please check your internet connection, disable any ad-blockers, and try again.');
     }    // Create order on backend
     let response;
     try {
