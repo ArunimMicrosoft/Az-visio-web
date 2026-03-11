@@ -9,11 +9,12 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "node server.js",
-    "dev:all": "concurrently \"npm run dev\" \"npm run server\""
+    "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
+    "swa:dev": "swa start http://localhost:5173 --run \"npm run dev\" --api-location api"
   },
   "dependencies": {
     "@azure/functions": "^4.11.2",
-    "@stripe/stripe-js": "^8.9.0",
+    "@supabase/supabase-js": "^2.99.0",
     "concurrently": "^9.2.1",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
@@ -25,10 +26,10 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.6.0",
-    "react-router-dom": "^7.13.1",
-    "stripe": "^20.4.1"
+    "react-router-dom": "^7.13.1"
   },
   "devDependencies": {
+    "@azure/static-web-apps-cli": "^2.0.8",
     "@eslint/js": "^9.39.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",

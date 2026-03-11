@@ -60,7 +60,7 @@ const UpgradeModal = ({ isOpen, onClose, reason, feature }) => {
         </div>
 
         <div className="upgrade-modal-footer">
-          <p>🔒 Secure payment powered by Stripe • Cancel anytime</p>
+          <p>🔒 Secure payment powered by Razorpay • Cancel anytime</p>
         </div>
       </div>
     </div>

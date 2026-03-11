@@ -45,26 +45,36 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
     const scriptLoaded = await loadRazorpayScript();
     if (!scriptLoaded) {
       throw new Error('Failed to load Razorpay checkout script');
+    }    // Create order on backend
+    let response;
+    try {
+      response = await fetch(`${API_URL}/razorpay-create-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: amount * 100, // Convert to paise (₹4,099 → 409900)
+          planName,
+          customerEmail,
+          customerName,
+          customerId,
+        }),
+      });
+    } catch (networkErr) {
+      // Network error — backend is not reachable
+      throw new Error(
+        'Payment server is not reachable. Please make sure the backend is running, or try again after deployment.'
+      );
     }
 
-    // Create order on backend
-    const response = await fetch(`${API_URL}/razorpay-create-order`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        amount: amount * 100, // Convert to paise (₹4,099 → 409900)
-        planName,
-        customerEmail,
-        customerName,
-        customerId,
-      }),
-    });
-
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create Razorpay order');
+      let errMsg = 'Failed to create Razorpay order';
+      try {
+        const error = await response.json();
+        errMsg = error.message || errMsg;
+      } catch (_) { /* response wasn't JSON */ }
+      throw new Error(errMsg);
     }
 
     const { orderId, amount: orderAmount, currency } = await response.json();
@@ -104,9 +114,15 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
 
       const razorpayInstance = new window.Razorpay(options);
       razorpayInstance.open();
-    });
-  } catch (error) {
+    });  } catch (error) {
     console.error('Error creating Razorpay order:', error);
+    // Provide user-friendly message when backend is unreachable
+    if (error.message === 'Failed to fetch' || error.message?.includes('NetworkError')) {
+      throw new Error(
+        'Payment service is not available yet. Razorpay integration is pending activation. ' +
+        'Please try again later or contact support at arunimit3004@gmail.com'
+      );
+    }
     throw error;
   }
 }

@@ -1,52 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { createRazorpayOrder, verifyRazorpayPayment, checkServerHealth, getPricingPlans } from '../services/razorpayService';
+import { createRazorpayOrder, verifyRazorpayPayment, getPricingPlans } from '../services/razorpayService';
 import { upgradeToPaid } from '../utils/authSecurity';
 import './PaymentPage.css';
-
-const PRICING_PLANS = {
-  professional: {
-    name: 'Professional',
-    priceUSD: 49,
-    priceINR: 4099,
-    priceIdUSD: import.meta.env.VITE_STRIPE_PRICE_PROFESSIONAL_USD || 'price_professional_usd',
-    priceIdINR: import.meta.env.VITE_STRIPE_PRICE_PROFESSIONAL_INR || 'price_professional_inr',
-    features: [
-      'Up to 10,000 licenses',
-      'Unlimited workspaces',
-      'Advanced analytics',
-      'Priority support',
-      'Custom domains',
-      'Webhook integrations'
-    ]
-  },
-  enterprise: {
-    name: 'Enterprise',
-    priceUSD: 199,
-    priceINR: 16649,
-    priceIdUSD: import.meta.env.VITE_STRIPE_PRICE_ENTERPRISE_USD || 'price_enterprise_usd',
-    priceIdINR: import.meta.env.VITE_STRIPE_PRICE_ENTERPRISE_INR || 'price_enterprise_inr',
-    features: [
-      'Unlimited licenses',
-      'Unlimited workspaces',
-      'Real-time analytics',
-      '24/7 dedicated support',
-      'SSO & SAML',
-      'On-premise deployment',
-      'SLA guarantee'
-    ]
-  }
-};
 
 const PaymentPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [serverOnline, setServerOnline] = useState(true);
-  const [currency, setCurrency] = useState('INR'); // Default to INR for India
+  const [currency, setCurrency] = useState('INR');
   
   const planType = searchParams.get('plan') || 'professional';
   const pricingPlans = getPricingPlans();
@@ -57,18 +21,6 @@ const PaymentPage = () => {
     name: user?.name || '',
     company: '',
   });
-
-  // Check if Razorpay backend is running
-  useEffect(() => {
-    const checkServer = async () => {
-      const isOnline = await checkServerHealth();
-      setServerOnline(isOnline);
-      if (!isOnline) {
-        setError('Payment server is not responding. Please make sure the backend server is running.');
-      }
-    };
-    checkServer();
-  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -232,9 +184,7 @@ const PaymentPage = () => {
           {/* Payment Form */}
           <div className="payment-form-container">
             <form onSubmit={handleSubmit} className="payment-form">
-              <h2>Payment Information</h2>
-
-              {error && (
+              <h2>Payment Information</h2>              {error && (
                 <div className="error-message">
                   <span>⚠️</span>
                   <p>{error}</p>
@@ -281,9 +231,9 @@ const PaymentPage = () => {
                       placeholder="Your Company Inc."
                     />
                   </div>
-                </div>              </div>              <div className="form-section stripe-notice">
+                </div>              </div>              <div className="form-section razorpay-notice">
                 <h3>💳 Payment Method</h3>
-                <div className="stripe-info">
+                <div className="razorpay-info">
                   <p>
                     <strong>Secure Payment via Razorpay</strong>
                   </p>
@@ -291,23 +241,19 @@ const PaymentPage = () => {
                     After clicking "Proceed to Payment", Razorpay's secure checkout will open 
                     where you can enter your payment information.
                   </p>
-                  <ul className="stripe-benefits">
+                  <ul className="razorpay-benefits">
                     <li>✓ Industry-standard encryption</li>
                     <li>✓ PCI DSS compliant</li>
                     <li>✓ Support for all major credit/debit cards</li>
                     <li>✓ UPI, Netbanking, and Wallets supported</li>
                     <li>✓ No card details stored on our servers</li>
                   </ul>
-                </div>
-              </div>{!serverOnline && (
-                <div className="warning-message">
-                  <span>⚠️</span>
-                  <p>Payment backend server is offline. Please start the server with: <code>npm run server</code></p>
-                </div>
-              )}              <button 
+                </div>              </div>{/* end razorpay-notice */}
+
+              <button 
                 type="submit" 
                 className="btn-submit-payment"
-                disabled={loading || !serverOnline}
+                disabled={loading}
               >
                 {loading ? 'Processing Payment...' : `Proceed to Payment - ${currency === 'INR' ? '₹' + plan.priceINR.toLocaleString('en-IN') : '$' + plan.priceUSD}/month`}
               </button>

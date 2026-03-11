@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import './LandingPage.css';
 
 const LandingPage = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
 
   return (
     <div className="landing-page">      {/* Hero Section */}
@@ -24,17 +24,20 @@ const LandingPage = () => {
               <div className="btn-secondary" style={{ opacity: 0.6, cursor: 'wait' }}>Loading...</div>
             ) : (
               <>
-                {isAuthenticated && (
-                  <div className="auth-status-indicator">
-                    <span className="status-dot"></span>
-                    <span className="status-text">Signed In</span>
-                  </div>
-                )}
-                <Link to="/login" className="btn-secondary">
-                  {isAuthenticated ? 'Dashboard' : 'Sign In'}
-                </Link>
-                {!isAuthenticated && (
-                  <Link to="/signup" className="btn-primary">Get Started</Link>
+                {isAuthenticated ? (
+                  <>
+                    <div className="auth-status-indicator">
+                      <span className="status-dot"></span>
+                      <span className="status-text">{user?.name || 'Signed In'}</span>
+                    </div>
+                    <Link to="/app" className="btn-secondary">Dashboard</Link>
+                    <button onClick={logout} className="btn-signout">Sign Out</button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" className="btn-secondary">Sign In</Link>
+                    <Link to="/signup" className="btn-primary">Get Started</Link>
+                  </>
                 )}
               </>
             )}

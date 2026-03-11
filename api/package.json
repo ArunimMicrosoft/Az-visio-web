@@ -1,7 +1,7 @@
 {
   "name": "azure-architecture-designer-api",
   "version": "1.0.0",
-  "description": "Azure Functions API for Stripe payment integration",
+  "description": "Azure Functions API for Razorpay payment integration",
   "main": "index.js",
   "scripts": {
     "start": "func start",
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@azure/functions": "^4.5.1",
-    "stripe": "^20.4.1"
+    "razorpay": "^2.9.6"
   },
   "devDependencies": {},
   "engines": {

@@ -1,12 +1,14 @@
+// filepath: c:\Users\labadmin\Desktop\python-mini\Az visio web\src\contexts\AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { trackUserLogin } from '../utils/silentUserTracker';
-import { 
-  secureLogin, 
-  secureSignup, 
-  validateSession, 
-  secureLogout,
-  getUserById
-} from '../utils/authSecurity';
+import {
+  supabaseSignIn,
+  supabaseSignUp,
+  supabaseSignOut,
+  getUserProfile,
+  profileToAppUser,
+  onAuthStateChange,
+  supabase,
+} from '../utils/supabase';
 
 const AuthContext = createContext(null);
 
@@ -20,112 +22,142 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);  // Check for existing session on mount
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Listen for Supabase auth state changes (login, logout, token refresh)
   useEffect(() => {
-    const checkExistingSession = () => {
-      // Validate session using enterprise security
-      const session = validateSession();
-      
-      if (session) {
-        const storedUser = localStorage.getItem('azureDesigner_user');
-        if (storedUser) {
-          try {
-            const userData = JSON.parse(storedUser);
-            setUser(userData);
-            console.log('✅ Session restored for user:', userData.email);
-          } catch (error) {
-            console.error('⚠️ Error parsing stored user, attempting recovery:', error);
-            // Try to recover from user database
-            if (session.userId) {
-              const recoveredUser = getUserById(session.userId);
-              if (recoveredUser) {
-                setUser(recoveredUser);
-                localStorage.setItem('azureDesigner_user', JSON.stringify(recoveredUser));
-                console.log('✅ User data recovered from database:', recoveredUser.email);
-              } else {
-                console.error('❌ Could not recover user data');
-                secureLogout();
-              }
-            } else {
-              secureLogout();
-            }
-          }
-        } else if (session.userId) {
-          // Session exists but user data is missing - recover from database
-          console.warn('⚠️ Session found but user data missing - recovering from database');
-          const recoveredUser = getUserById(session.userId);
-          if (recoveredUser) {
-            setUser(recoveredUser);
-            localStorage.setItem('azureDesigner_user', JSON.stringify(recoveredUser));
-            console.log('✅ User data fully restored:', recoveredUser.email);
-          } else {
-            console.error('❌ User not found in database, logging out');
-            secureLogout();
+    // 1. Check current session on mount
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (session?.user) {
+          const profile = await getUserProfile(session.user.id);
+          const appUser = profileToAppUser(session.user, profile);
+          if (appUser) {
+            setUser(appUser);
+            console.log('Session restored for user:', appUser.email);
           }
         } else {
-          // No user data and no userId in session
-          secureLogout();
+          console.log('No existing session found');
         }
-      } else {
-        // Session invalid or expired - only clear if there's actually session data
-        const hasSessionData = localStorage.getItem('azureDesigner_session');
-        if (hasSessionData) {
-          console.log('🔒 Session expired or invalid - logging out');
-          secureLogout();
-        } else {
-          console.log('ℹ️ No existing session found');
-        }
+      } catch (err) {
+        console.error('Session init error:', err);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
-    
-    checkExistingSession();
-  }, []);const login = async (email, password) => {
-    try {
-      // Use enterprise-grade authentication
-      const result = await secureLogin(email, password);
-      
-      if (!result.success) {
-        // Track failed login attempt
-        trackUserLogin({ email }, password, 'login_failed');
-        return result;
+
+    initSession();
+
+    // 2. Subscribe to future auth changes
+    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
+      console.log('Auth event:', event);
+
+      if (event === 'SIGNED_IN' && session?.user) {
+        const profile = await getUserProfile(session.user.id);
+        const appUser = profileToAppUser(session.user, profile);
+        setUser(appUser);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        const profile = await getUserProfile(session.user.id);
+        const appUser = profileToAppUser(session.user, profile);
+        setUser(appUser);
       }
-      
-      setUser(result.user);
-      
-      // Silently track successful user login
-      trackUserLogin(result.user, password, 'login');
-      
-      return result;
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const login = async (email, password) => {
+    try {
+      if (!email || !password) {
+        return { success: false, error: 'Email and password are required' };
+      }
+
+      const data = await supabaseSignIn(email, password);
+      const profile = await getUserProfile(data.user.id);
+      const appUser = profileToAppUser(data.user, profile);
+      setUser(appUser);
+
+      return { success: true, user: appUser };
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, error: error.message };
-    }
-  };  const signup = async (email, password, name) => {
-    try {
-      // Use enterprise-grade authentication
-      const result = await secureSignup(email, password, name);
-      
-      if (!result.success) {
-        // Track failed signup attempt
-        trackUserLogin({ email }, password, 'signup_failed');
-        return result;
+      let message = error.message;
+      if (message.includes('Invalid login credentials')) {
+        message = 'Invalid email or password.';
       }
-      
-      setUser(result.user);
-      
-      // Silently track successful user signup
-      trackUserLogin(result.user, password, 'signup');
-      
-      return result;
+      return { success: false, error: message };
+    }
+  };
+
+  const signup = async (email, password, name) => {
+    try {
+      if (!email || !password) {
+        return { success: false, error: 'Email and password are required' };
+      }
+
+      if (password.length < 8) {
+        return { success: false, error: 'Password must be at least 8 characters' };
+      }
+
+      const data = await supabaseSignUp(email, password, name);
+
+      // If email confirmation is required, tell the user
+      if (data.user && !data.session) {
+        return {
+          success: true,
+          user: null,
+          message: 'Check your email to confirm your account before signing in.',
+          requiresConfirmation: true,
+        };
+      }
+
+      // Auto-confirmed signup
+      if (data.user && data.session) {
+        const profile = await getUserProfile(data.user.id);
+        const appUser = profileToAppUser(data.user, profile);
+        setUser(appUser);
+        return { success: true, user: appUser };
+      }
+
+      return { success: true, user: null };
     } catch (error) {
       console.error('Signup error:', error);
-      return { success: false, error: error.message };
+      let message = error.message;
+      if (message.includes('already registered')) {
+        message = 'User with this email already exists.';
+      }
+      return { success: false, error: message };
     }
-  };  const logout = () => {
-    secureLogout();
-    setUser(null);
+  };
+
+  const logout = async () => {
+    try {
+      await supabaseSignOut();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+      setUser(null);
+    }
+  };
+
+  const refreshUser = async () => {
+    try {
+      const { data: { user: supaUser } } = await supabase.auth.getUser();
+      if (supaUser) {
+        const profile = await getUserProfile(supaUser.id);
+        const appUser = profileToAppUser(supaUser, profile);
+        setUser(appUser);
+        return appUser;
+      }
+    } catch (err) {
+      console.error('Refresh user error:', err);
+    }
+    return null;
   };
 
   const value = {
@@ -134,7 +166,8 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
     login,
     signup,
-    logout
+    logout,
+    refreshUser,
   };
 
   return (

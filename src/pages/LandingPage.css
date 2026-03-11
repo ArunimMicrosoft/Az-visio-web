@@ -170,6 +170,23 @@
   font-weight: 500;
 }
 
+.btn-signout {
+  padding: 0.5rem 1rem;
+  background: rgba(239, 68, 68, 0.2);
+  color: white;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-signout:hover {
+  background: rgba(239, 68, 68, 0.4);
+  border-color: rgba(239, 68, 68, 0.6);
+}
+
 /* Hero Content */
 .hero-content {
   max-width: 1200px;

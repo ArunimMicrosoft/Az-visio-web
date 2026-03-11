@@ -44,7 +44,17 @@ jobs:
           npm ci
           echo "✅ Dependencies installed successfully"
 
+      - name: Install API Dependencies
+        run: |
+          echo "📦 Installing API dependencies..."
+          cd api && npm ci
+          echo "✅ API dependencies installed"
+
       - name: Build Application
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_RAZORPAY_KEY_ID: ${{ secrets.VITE_RAZORPAY_KEY_ID }}
         run: |
           echo "🏗️ Building Azure Architecture Designer Web..."
           npm run build
@@ -72,7 +82,7 @@ jobs:
           action: "upload"
           skip_app_build: true
           app_location: "build"
-          api_location: ""
+          api_location: "api"
           output_location: ""
           production_branch: "main"
 
