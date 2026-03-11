@@ -296,14 +296,13 @@ const LandingPage = () => {
                   <span className="price-amount-small">₹0</span>
                   <span className="price-period-small">/mo</span>
                 </div>
-                <p className="pricing-description">Perfect for testing and small projects</p>
-              </div>
-              <ul className="pricing-features">
-                <li className="feature-item">✓ Up to 100 licenses</li>
-                <li className="feature-item">✓ 1 workspace</li>
-                <li className="feature-item">✓ Basic analytics</li>
-                <li className="feature-item">✓ Email support</li>
-                <li className="feature-item">✓ REST API access</li>
+                <p className="pricing-description">Try free for 7 days, no credit card needed</p>
+              </div>              <ul className="pricing-features">
+                <li className="feature-item">✓ 7-day free trial</li>
+                <li className="feature-item">✓ Up to 3 diagrams</li>
+                <li className="feature-item">✓ 5 PNG exports</li>
+                <li className="feature-item">✓ Drag-and-drop canvas</li>
+                <li className="feature-item">✓ Real-time cost estimates</li>
               </ul>
               <Link to="/signup" className="btn-pricing btn-pricing-outline">Get Started</Link>
             </div>
@@ -321,14 +320,13 @@ const LandingPage = () => {
                   <span className="price-period-small">/mo</span>
                 </div>
                 <p className="pricing-description">For growing businesses</p>
-              </div>
-              <ul className="pricing-features">
-                <li className="feature-item">✓ Up to 10,000 licenses</li>
+              </div>              <ul className="pricing-features">
+                <li className="feature-item">✓ Up to 10,000 diagrams</li>
                 <li className="feature-item">✓ Unlimited workspaces</li>
-                <li className="feature-item">✓ Advanced analytics</li>
+                <li className="feature-item">✓ Unlimited PNG exports</li>
+                <li className="feature-item">✓ PDF & Terraform exports</li>
+                <li className="feature-item">✓ ARM template export</li>
                 <li className="feature-item">✓ Priority support</li>
-                <li className="feature-item">✓ Custom domains</li>
-                <li className="feature-item">✓ Webhook integrations</li>
               </ul>
               <button 
                 className="btn-pricing btn-pricing-solid"
@@ -350,14 +348,13 @@ const LandingPage = () => {
                   <span className="price-period-small">/mo</span>
                 </div>
                 <p className="pricing-description">For large organizations</p>
-              </div>
-              <ul className="pricing-features">
-                <li className="feature-item">✓ Unlimited licenses</li>
+              </div>              <ul className="pricing-features">
+                <li className="feature-item">✓ Unlimited diagrams</li>
                 <li className="feature-item">✓ Unlimited workspaces</li>
-                <li className="feature-item">✓ Real-time analytics</li>
-                <li className="feature-item">✓ 24/7 dedicated support</li>
-                <li className="feature-item">✓ SSO & SAML</li>
-                <li className="feature-item">✓ On-premise deployment</li>
+                <li className="feature-item">✓ All export formats</li>
+                <li className="feature-item">✓ API access & webhooks</li>
+                <li className="feature-item">✓ SSO / SAML</li>
+                <li className="feature-item">✓ Audit logs</li>
                 <li className="feature-item">✓ SLA guarantee</li>
               </ul>
               <button 

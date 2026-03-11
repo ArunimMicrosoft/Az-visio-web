@@ -32,7 +32,7 @@ console.log('Imports loaded successfully');
 
 function App() {
   console.log('=== APP FUNCTION EXECUTING ===');
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [items, setItems] = useState([]);
   const [connections, setConnections] = useState([]);
   const [boundaries, setBoundaries] = useState([]);
@@ -329,9 +329,9 @@ function App() {
         author: 'Arunim Pandey',
         version: '2.0.0',
         timestamp: new Date().toISOString(),      });
-      
-      // Record export for trial users
-      recordPNGExport(user.id);
+        // Record export for trial users and refresh user state immediately
+      await recordPNGExport(user.id);
+      await refreshUser(); // sync updated count from DB → memory
       
       alert(`✅ PNG exported successfully!\n\n📁 ${result.filename}\n📐 ${result.dimensions.width}×${result.dimensions.height}px\n🔬 ${result.dpi} DPI (${result.dpiSetting})\n📊 ${(result.size / 1024).toFixed(1)} KB`);
     } catch (error) {

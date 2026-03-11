@@ -169,13 +169,14 @@ export async function updateUserProfile(userId, updates) {
  */
 export function profileToAppUser(supabaseUser, profile) {
   if (!profile) return null;
-
   return {
     id: supabaseUser.id,
     email: profile.email || supabaseUser.email,
     name: profile.name || supabaseUser.user_metadata?.name || supabaseUser.email.split('@')[0],
     role: profile.role || 'architect',
     subscriptionTier: profile.subscription_tier || 'trial',
+    subscriptionExpiresAt: profile.subscription_expires_at || null,
+    upgradedAt: profile.upgraded_at || null,
     trialStartDate: profile.trial_start_date,
     trialExpiresAt: profile.trial_expires_at,
     trialExportsUsed: profile.trial_exports_used || 0,

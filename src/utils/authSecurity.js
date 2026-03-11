@@ -102,17 +102,23 @@ export async function recordDiagramCreation(userId) {
 }
 
 /**
- * Upgrade user subscription tier in Supabase
+ * Upgrade user subscription tier in Supabase.
+ * Sets subscription_tier, upgraded_at, and subscription_expires_at (30 days from now).
  */
 export async function upgradeToPaid(userId, tier) {
-  const now = new Date().toISOString();
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // +30 days
   const { error } = await supabase
     .from('profiles')
     .update({
       subscription_tier: tier,
-      upgraded_at: now,
+      upgraded_at: now.toISOString(),
+      subscription_expires_at: expiresAt.toISOString(),
     })
     .eq('id', userId);
 
+  if (error) {
+    console.error('upgradeToPaid error:', error);
+  }
   return !error;
 }

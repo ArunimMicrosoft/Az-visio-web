@@ -8,7 +8,7 @@ import './PaymentPage.css';
 const PaymentPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();  const [loading, setLoading] = useState(false);
+  const { user, refreshUser } = useAuth();  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [currency, setCurrency] = useState('INR');
   
@@ -54,13 +54,12 @@ const PaymentPage = () => {
         customerEmail: formData.email,
         customerName: formData.name,
         customerId: user?.id || 'guest',
-      });
-
-      // Payment captured by Razorpay handler — no backend verification needed on free tier
+      });      // Payment captured by Razorpay handler — no backend verification needed on free tier
       if (paymentResponse?.paymentId) {
         // Upgrade user subscription in Supabase
         if (user) {
           await upgradeToPaid(user.id, plan.id);
+          await refreshUser(); // sync new subscriptionTier into memory immediately
         }
 
         // Redirect to success page
