@@ -11,11 +11,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Create Supabase client
+// Using localStorage instead of indexedDB to avoid
+// "AbortError: Lock broken by another request with the 'steal' option"
+// which occurs on hot-reload / multiple tabs with indexedDB locks
 const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    storage: window.localStorage,
+    storageKey: 'azure-arch-auth',
+    flowType: 'pkce',
   },
 });
 
