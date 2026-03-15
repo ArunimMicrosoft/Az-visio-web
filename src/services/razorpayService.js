@@ -3,7 +3,7 @@
 
 // Razorpay Key ID (public key, safe to expose in frontend)
 // No backend needed — using Razorpay client-side checkout (free infra, $0 hosting)
-const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_SOgR5AT25pzqAs';
+const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_SRRAUP26wGg3OF';
 
 /**
  * Load Razorpay checkout script
