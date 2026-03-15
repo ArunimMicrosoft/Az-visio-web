@@ -5,9 +5,6 @@ import { createRazorpayOrder, getPricingPlans } from '../services/razorpayServic
 import { upgradeToPaid } from '../utils/authSecurity';
 import './PaymentPage.css';
 
-// Detect if we're running in Razorpay test mode
-const IS_TEST_MODE = (import.meta.env.VITE_RAZORPAY_KEY_ID || '').startsWith('rzp_test_');
-
 const PaymentPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -114,14 +111,8 @@ const PaymentPage = () => {
     <div className="payment-page">
       <div className="payment-container">        <div className="payment-header">          <button onClick={() => navigate('/')} className="btn-back-link">
             ← Back to Home
-          </button>
-          <h1>Complete Your Purchase</h1>
+          </button>          <h1>Complete Your Purchase</h1>
           <p>Secure payment powered by Razorpay</p>
-          {IS_TEST_MODE && (
-            <div className="test-mode-banner">
-              🧪 <strong>TEST MODE</strong> — No real money will be charged. Use Razorpay test cards.
-            </div>
-          )}
         </div>
 
         <div className="payment-content">          {/* Order Summary */}
