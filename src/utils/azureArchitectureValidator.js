@@ -728,3 +728,83 @@ export function validateConnection(fromServiceType, toServiceType) {
     message: 'Valid connection'
   };
 }
+
+/**
+ * Azure Well-Architected Framework (WAF) 5-Pillar Scorer
+ * Scores the architecture 0-100 per pillar based on what services are present.
+ * Reference: https://learn.microsoft.com/en-us/azure/well-architected/
+ */
+export function scoreWAF(items) {
+  const types = items.map(i =>
+    normalizeServiceType(i.serviceType || i.type || i.icon?.id || i.id || '')
+  );
+  const has = (...keys) => keys.some(k => types.includes(normalizeServiceType(k)));
+
+  const findings = { reliability: [], security: [], cost: [], operations: [], performance: [] };
+
+  // ── RELIABILITY ────────────────────────────────────────────────────────────
+  // +20 each: load balancer, availability zone indicators, Traffic Manager,
+  //           Front Door, geo-redundant storage, backup, site recovery
+  let reliability = 40; // baseline
+  if (has('loadbalancer', 'loadbalancers'))        { reliability += 15; findings.reliability.push('✅ Load Balancer detected'); }
+  else                                              findings.reliability.push('⚠️ Add Load Balancer for HA');
+  if (has('trafficmanager', 'frontdoor', 'azurefrontdoor')) { reliability += 15; findings.reliability.push('✅ Global traffic routing detected'); }
+  else                                              findings.reliability.push('⚠️ Consider Traffic Manager or Front Door for geo-redundancy');
+  if (has('backupvault', 'recoveryservicesvault')) { reliability += 15; findings.reliability.push('✅ Backup/Recovery vault detected'); }
+  else                                              findings.reliability.push('⚠️ No backup solution detected');
+  if (has('applicationgateway', 'appgw'))          { reliability += 15; findings.reliability.push('✅ Application Gateway improves reliability'); }
+
+  // ── SECURITY ───────────────────────────────────────────────────────────────
+  let security = 30; // baseline
+  if (has('keyvault'))                             { security += 20; findings.security.push('✅ Key Vault for secrets management'); }
+  else                                              findings.security.push('🔴 Missing Key Vault — store secrets securely');
+  if (has('networksecuritygroups', 'nsg'))         { security += 15; findings.security.push('✅ NSG for network segmentation'); }
+  else                                              findings.security.push('⚠️ No NSG — add network security groups');
+  if (has('firewall', 'azurefirewall'))            { security += 15; findings.security.push('✅ Azure Firewall detected'); }
+  else                                              findings.security.push('⚠️ Consider Azure Firewall for centralized policy');
+  if (has('defender', 'microsoftdefender', 'sentinel', 'microsoftsentinel')) { security += 10; findings.security.push('✅ Security monitoring (Defender/Sentinel) detected'); }
+  if (has('privateendpoint', 'privateendpoints'))  { security += 10; findings.security.push('✅ Private Endpoints for secure access'); }
+  else                                              findings.security.push('⚠️ Consider Private Endpoints for PaaS services');
+
+  // ── COST OPTIMIZATION ──────────────────────────────────────────────────────
+  let cost = 50; // baseline — no direct signals, reward good patterns
+  if (has('budget', 'costmanagement'))             { cost += 20; findings.cost.push('✅ Cost Management/Budgets detected'); }
+  else                                              findings.cost.push('⚠️ Add Azure Cost Management budgets & alerts');
+  if (has('advisor', 'azureadvisor'))              { cost += 15; findings.cost.push('✅ Azure Advisor for cost recommendations'); }
+  if (has('reservedinstances', 'savingsplan'))     { cost += 15; findings.cost.push('✅ Reserved capacity detected'); }
+  // Penalise if VMs without autoscale
+  if (has('virtualmachine', 'vm') && !has('vmss', 'vmscalesets'))
+    findings.cost.push('⚠️ Consider VMSS instead of single VMs for cost efficiency');
+
+  // ── OPERATIONAL EXCELLENCE ─────────────────────────────────────────────────
+  let operations = 35; // baseline
+  if (has('applicationinsights', 'appinsights'))  { operations += 20; findings.operations.push('✅ Application Insights for monitoring'); }
+  else                                              findings.operations.push('🔴 Missing Application Insights — add observability');
+  if (has('loganalytics', 'loganalyticsworkspace')){ operations += 15; findings.operations.push('✅ Log Analytics workspace detected'); }
+  else                                              findings.operations.push('⚠️ Add Log Analytics for centralized logging');
+  if (has('monitor', 'azuremonitor'))              { operations += 15; findings.operations.push('✅ Azure Monitor detected'); }
+  else                                              findings.operations.push('⚠️ Add Azure Monitor for metrics & alerts');
+  if (has('devops', 'azuredevops', 'pipelines'))  { operations += 15; findings.operations.push('✅ DevOps/CI-CD pipeline detected'); }
+
+  // ── PERFORMANCE EFFICIENCY ─────────────────────────────────────────────────
+  let performance = 40; // baseline
+  if (has('cdn', 'azurecdn', 'frontdoor', 'azurefrontdoor')) { performance += 20; findings.performance.push('✅ CDN/Front Door for edge caching'); }
+  else                                              findings.performance.push('⚠️ Add CDN or Front Door for global performance');
+  if (has('vmss', 'vmscalesets', 'aks', 'kubernetesservices')) { performance += 20; findings.performance.push('✅ Autoscaling compute detected'); }
+  else                                              findings.performance.push('⚠️ Consider autoscaling (VMSS or AKS)');
+  if (has('rediscache', 'cache', 'azurecache'))    { performance += 20; findings.performance.push('✅ Redis Cache for performance'); }
+  else                                              findings.performance.push('⚠️ Consider Azure Cache for Redis');
+
+  // Clamp all scores 0–100
+  const clamp = v => Math.min(100, Math.max(0, v));
+  const scores = {
+    reliability: clamp(reliability),
+    security:    clamp(security),
+    cost:        clamp(cost),
+    operations:  clamp(operations),
+    performance: clamp(performance),
+  };
+  const overall = Math.round(Object.values(scores).reduce((a, b) => a + b, 0) / 5);
+
+  return { scores, overall, findings };
+}

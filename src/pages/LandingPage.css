@@ -401,6 +401,9 @@
 .scroll-indicator {
   margin-top: 2rem;
   animation: bounce 2s infinite;
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .scroll-arrow {
