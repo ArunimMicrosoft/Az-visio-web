@@ -37,9 +37,8 @@ const TrialBanner = ({ user }) => {
 
   // ── PAID PLAN BANNER ──────────────────────────────────────────────────────
   if (tier !== 'trial') {
-    const meta = PLAN_META[tier] || { label: tier, color: '#0078D4', emoji: '✅' };
-    const daysLeft = daysUntil(user.subscriptionExpiresAt);
-    const isExpiringSoon = daysLeft !== null && daysLeft <= 7;
+    const meta = PLAN_META[tier] || { label: tier, color: '#0078D4', emoji: '✅' };    const daysLeft = daysUntil(user.subscriptionExpiresAt);
+    const isExpiringSoon = daysLeft !== null && daysLeft <= 5;
     const isExpired = daysLeft !== null && daysLeft === 0;
 
     return (

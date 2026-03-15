@@ -50,23 +50,22 @@ const LandingPage = () => {
           <p className="hero-subtitle">
             Professional drag-and-drop tool for creating Azure architecture diagrams with real-time validation and cost estimation
           </p>
-          
-          <div className="hero-features-preview">
+            <div className="hero-features-preview">
             <div className="hero-feature-item">
-              <span className="hero-feature-icon">✅</span>
-              <span className="hero-feature-text">Azure Validated</span>
+              <span className="hero-feature-icon">🏛️</span>
+              <span className="hero-feature-text">WAF Validated</span>
             </div>
             <div className="hero-feature-item">
               <span className="hero-feature-icon">💰</span>
               <span className="hero-feature-text">Live Pricing</span>
             </div>
             <div className="hero-feature-item">
-              <span className="hero-feature-icon">🔄</span>
-              <span className="hero-feature-text">Export to Terraform</span>
+              <span className="hero-feature-icon">🔧</span>
+              <span className="hero-feature-text">Terraform Parser</span>
             </div>
             <div className="hero-feature-item">
               <span className="hero-feature-icon">🏢</span>
-              <span className="hero-feature-text">Official Icons</span>
+              <span className="hero-feature-text">700+ Azure Icons</span>
             </div>
           </div>
           
@@ -74,18 +73,21 @@ const LandingPage = () => {
             <Link to="/signup" className="btn-hero-primary">Start Designing Free</Link>
             <a href="#features" className="btn-hero-secondary">See Features</a>
           </div>
-            <div className="hero-stats-box">
+            <div className="hero-stats-box">            <div className="stat-item">
+              <div className="stat-number">700+</div>
+              <div className="stat-label">Azure Icons</div>
+            </div>
             <div className="stat-item">
-              <div className="stat-number">50+</div>
-              <div className="stat-label">Azure Services</div>
+              <div className="stat-number">5 Pillars</div>
+              <div className="stat-label">WAF Validated</div>
             </div>
             <div className="stat-item">
               <div className="stat-number">Real-time</div>
               <div className="stat-label">Cost Calculator</div>
             </div>
             <div className="stat-item">
-              <div className="stat-number">5+</div>
-              <div className="stat-label">Export Formats</div>
+              <div className="stat-number">IaC</div>
+              <div className="stat-label">Terraform + ARM</div>
             </div>
           </div>
           
@@ -102,94 +104,134 @@ const LandingPage = () => {
           <div className="section-header">
             <span className="section-badge">Why Choose Us</span>
             <h2 className="section-title">Enterprise-Grade Features</h2>
-            <p className="section-subtitle">Everything you need to design, validate, and deploy Azure architectures</p>
+            <p className="section-subtitle">Everything you need to design, validate, and deploy Azure architectures at scale</p>
           </div>
           
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon">🎨</div>
               <h3>Drag & Drop Canvas</h3>
-              <p>Intuitive visual editor with Azure official icons. Place services, draw connections, create boundaries.</p>
+              <p>Intuitive visual editor with 700+ official Microsoft Azure icons. Place services, draw connections, create security boundaries.</p>
               <ul className="feature-list">
-                <li>✓ 50+ Official Azure service icons</li>
-                <li>✓ Smart connection routing</li>
-                <li>✓ Multi-select and group operations</li>
+                <li>✓ 700+ Official Azure service icons</li>
+                <li>✓ Smart connection routing with labels</li>
+                <li>✓ Multi-select, group & boundary zones</li>
+              </ul>
+            </div>
+
+            <div className="feature-card feature-card-highlight">
+              <div className="feature-icon">🏛️</div>
+              <h3>Azure Well-Architected Framework</h3>
+              <p>Built-in WAF validator checks your architecture against all 5 pillars — Reliability, Security, Cost Optimization, Operational Excellence, and Performance.</p>
+              <ul className="feature-list">
+                <li>✓ Real-time pillar score (0–100)</li>
+                <li>✓ Actionable fix recommendations</li>
+                <li>✓ WAF compliance report export</li>
+              </ul>
+            </div>
+
+            <div className="feature-card feature-card-highlight">
+              <div className="feature-icon">🔧</div>
+              <h3>Terraform HCL Parser & Generator</h3>
+              <p>Import existing Terraform code and visualize it as a diagram — or export your canvas directly to production-ready Terraform HCL with proper resource blocks and dependencies.</p>
+              <ul className="feature-list">
+                <li>✓ Parse .tf files → auto-generate diagram</li>
+                <li>✓ Export canvas → valid Terraform HCL</li>
+                <li>✓ Supports azurerm provider resources</li>
               </ul>
             </div>
 
             <div className="feature-card">
               <div className="feature-icon">💰</div>
               <h3>Real-Time Cost Calculator</h3>
-              <p>Estimate Azure costs as you design. Compare SKUs, regions, and configurations instantly.</p>
+              <p>Estimate Azure costs as you design using the official Azure Retail Prices API. Compare SKUs, regions, and configurations instantly.</p>
               <ul className="feature-list">
-                <li>✓ Live Azure pricing data</li>
+                <li>✓ Live Azure Retail Prices API</li>
                 <li>✓ Multi-region cost comparison</li>
-                <li>✓ Export detailed cost reports</li>
-              </ul>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">✅</div>
-              <h3>Architecture Validation</h3>
-              <p>Validates dependencies and deployment requirements against Azure best practices.</p>
-              <ul className="feature-list">
-                <li>✓ Real-time dependency checking</li>
-                <li>✓ Security best practices</li>
-                <li>✓ Deployment readiness validation</li>
+                <li>✓ Exportable cost breakdown reports</li>
               </ul>
             </div>
 
             <div className="feature-card">
               <div className="feature-icon">📦</div>
               <h3>Multi-Format Export</h3>
-              <p>Export to PNG, PDF, JSON, Terraform, ARM templates with one click.</p>
+              <p>Export your architecture in any format your team needs — from visual PNG/PDF to deployable IaC templates.</p>
               <ul className="feature-list">
-                <li>✓ Terraform HCL generation</li>
-                <li>✓ ARM template export</li>
-                <li>✓ Professional PDF reports</li>
-              </ul>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">🔗</div>
-              <h3>Visual Connections</h3>
-              <p>Draw arrows between services to show data flow and dependencies clearly.</p>
-              <ul className="feature-list">
-                <li>✓ Custom connection labels</li>
-                <li>✓ Multiple connection types</li>
-                <li>✓ Auto-routing algorithms</li>
+                <li>✓ PNG / PDF (print-ready)</li>
+                <li>✓ Terraform HCL & ARM templates</li>
+                <li>✓ JSON diagram (save & reload)</li>
               </ul>
             </div>
 
             <div className="feature-card">
               <div className="feature-icon">🔒</div>
               <h3>Enterprise Security</h3>
-              <p>Bank-grade authentication with rate limiting and account protection.</p>
+              <p>Bank-grade authentication with rate limiting, account lockout, and full audit logging for compliance.</p>
               <ul className="feature-list">
-                <li>✓ Password strength enforcement</li>
-                <li>✓ Session management</li>
-                <li>✓ Account lockout protection</li>
+                <li>✓ Supabase Auth with RLS policies</li>
+                <li>✓ Rate limiting & account lockout</li>
+                <li>✓ Full audit log trail</li>
               </ul>
             </div>
           </div>
         </div>
-      </section>      {/* Technical Details Section */}
+      </section>
+
+      {/* WAF Deep-Dive Section */}
+      <section className="waf-section">
+        <div className="section-container">
+          <div className="section-header">
+            <span className="section-badge">Built-in Compliance</span>
+            <h2 className="section-title">Azure Well-Architected Framework Validation</h2>
+            <p className="section-subtitle">Every diagram is automatically scored against Microsoft's 5 WAF pillars</p>
+          </div>
+          <div className="waf-pillars">
+            <div className="waf-pillar">
+              <div className="waf-pillar-icon" style={{background:'#10b981'}}>🛡️</div>
+              <h4>Reliability</h4>
+              <p>Detects single points of failure, missing redundancy, and lack of availability zone coverage.</p>
+            </div>
+            <div className="waf-pillar">
+              <div className="waf-pillar-icon" style={{background:'#ef4444'}}>🔐</div>
+              <h4>Security</h4>
+              <p>Flags unprotected endpoints, missing Key Vault integration, and open network access paths.</p>
+            </div>
+            <div className="waf-pillar">
+              <div className="waf-pillar-icon" style={{background:'#f59e0b'}}>💸</div>
+              <h4>Cost Optimization</h4>
+              <p>Identifies over-provisioned resources and recommends right-sizing or reserved instances.</p>
+            </div>
+            <div className="waf-pillar">
+              <div className="waf-pillar-icon" style={{background:'#8b5cf6'}}>⚙️</div>
+              <h4>Operational Excellence</h4>
+              <p>Checks for missing monitoring (Azure Monitor, Log Analytics) and alerting coverage.</p>
+            </div>
+            <div className="waf-pillar">
+              <div className="waf-pillar-icon" style={{background:'#0078D4'}}>⚡</div>
+              <h4>Performance Efficiency</h4>
+              <p>Validates autoscaling, CDN usage, and load balancing across your compute resources.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Technical Details Section */}
       <section className="tech-section">
         <div className="section-container">
           <div className="section-header">
             <span className="section-badge">Built on Standards</span>
             <h2 className="section-title">Official Azure Integration</h2>
-            <p className="section-subtitle">Powered by Microsoft Azure official resources and documentation</p>
+            <p className="section-subtitle">Powered by Microsoft Azure official resources, APIs, and documentation</p>
           </div>
           
           <div className="tech-grid">
             <div className="tech-card">
-              <h3>🏢 Official Azure Icons</h3>
-              <p>Uses Microsoft's official Azure service icon library for accurate and consistent representation of your architecture.</p>
+              <h3>🏢 700+ Official Azure Icons</h3>
+              <p>Uses Microsoft's complete official Azure service icon library — every service accurately represented in SVG format, always up to date.</p>
               <div className="tech-details">
-                <span className="tech-tag">Icon Library</span>
+                <span className="tech-tag">700+ Icons</span>
                 <span className="tech-tag">SVG Format</span>
-                <span className="tech-tag">Always Updated</span>
+                <span className="tech-tag">Microsoft Official</span>
               </div>
               <a href="https://learn.microsoft.com/en-us/azure/architecture/icons/" target="_blank" rel="noopener noreferrer" className="tech-link">
                 View Microsoft Icon Library →
@@ -197,41 +239,41 @@ const LandingPage = () => {
             </div>
 
             <div className="tech-card">
-              <h3>📐 Architecture Validation</h3>
-              <p>Validates your designs against Azure deployment rules and dependency requirements from official documentation.</p>
+              <h3>🔧 Terraform Parser</h3>
+              <p>Paste or upload your existing <code>.tf</code> files — the parser reads <code>azurerm_*</code> resources and auto-generates a visual architecture diagram with correct connections.</p>
               <div className="tech-details">
-                <span className="tech-tag">Best Practices</span>
-                <span className="tech-tag">Real-time Check</span>
-                <span className="tech-tag">Auto-fix Suggestions</span>
+                <span className="tech-tag">azurerm provider</span>
+                <span className="tech-tag">Import & Export</span>
+                <span className="tech-tag">HCL Generation</span>
               </div>
-              <a href="https://learn.microsoft.com/en-us/azure/architecture/" target="_blank" rel="noopener noreferrer" className="tech-link">
-                Azure Architecture Center →
+              <a href="https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs" target="_blank" rel="noopener noreferrer" className="tech-link">
+                AzureRM Provider Docs →
               </a>
             </div>
 
             <div className="tech-card">
-              <h3>🏗️ Infrastructure as Code</h3>
-              <p>Export your designs to Terraform HCL and Azure ARM templates for automated deployment and version control.</p>
+              <h3>🏛️ WAF Validation Engine</h3>
+              <p>Automated scoring against all 5 Azure Well-Architected Framework pillars with specific recommendations and fix suggestions per resource.</p>
               <div className="tech-details">
-                <span className="tech-tag">Terraform</span>
-                <span className="tech-tag">ARM Templates</span>
-                <span className="tech-tag">CI/CD Ready</span>
+                <span className="tech-tag">5 Pillars</span>
+                <span className="tech-tag">Auto-Score</span>
+                <span className="tech-tag">Fix Suggestions</span>
               </div>
-              <a href="https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/" target="_blank" rel="noopener noreferrer" className="tech-link">
-                ARM Templates Documentation →
+              <a href="https://learn.microsoft.com/en-us/azure/well-architected/" target="_blank" rel="noopener noreferrer" className="tech-link">
+                Azure WAF Documentation →
               </a>
             </div>
 
             <div className="tech-card">
               <h3>💵 Live Cost Estimation</h3>
-              <p>Built-in cost calculator provides real-time Azure service pricing estimates based on your selected configurations.</p>
+              <p>Real-time pricing via the Azure Retail Prices API. See monthly/yearly estimates for every service in your diagram as you design.</p>
               <div className="tech-details">
-                <span className="tech-tag">Real-time Pricing</span>
+                <span className="tech-tag">Retail Prices API</span>
                 <span className="tech-tag">Multi-region</span>
-                <span className="tech-tag">Cost Reports</span>
+                <span className="tech-tag">Multi-currency</span>
               </div>
               <a href="https://azure.microsoft.com/en-us/pricing/calculator/" target="_blank" rel="noopener noreferrer" className="tech-link">
-                Official Azure Pricing Calculator →
+                Azure Pricing Calculator →
               </a>
             </div>
           </div>

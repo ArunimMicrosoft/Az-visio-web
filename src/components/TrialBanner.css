@@ -18,12 +18,14 @@
 }
 
 .plan-banner-warning {
-  animation: pulse-banner 2s ease-in-out infinite;
+  background: linear-gradient(135deg, #dc2626cc 0%, #b91c1c 100%) !important;
+  animation: pulse-banner 1.5s ease-in-out infinite;
 }
 
 .plan-text-warning {
-  color: #ffe082;
-  font-weight: 600;
+  color: #fef2f2;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .trial-banner-expired {

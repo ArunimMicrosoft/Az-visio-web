@@ -172,9 +172,9 @@ const LoginPage = () => {
           </div>
         </div>
       </div>
-      
-      <div className="auth-branding">
+        <div className="auth-branding">
         <p>© 2026 Arunim's IT Café - Azure Architecture Designer v1.0.0</p>
+        <Link to="/" className="auth-home-link">← Back to Home</Link>
       </div>
     </div>
   );

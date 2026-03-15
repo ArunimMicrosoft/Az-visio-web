@@ -426,9 +426,11 @@ const AdminDashboard = () => {
             </p>
           </div>
         </div>
-        <div className="ad-header-right">
-          <button className="ad-btn ad-btn-outline" onClick={() => navigate('/app')}>
+        <div className="ad-header-right">          <button className="ad-btn ad-btn-outline" onClick={() => navigate('/app')}>
             ← Back to App
+          </button>
+          <button className="ad-btn ad-btn-outline" onClick={() => navigate('/')}>
+            🏠 Home
           </button>
           <button
             className="ad-btn ad-btn-danger"
