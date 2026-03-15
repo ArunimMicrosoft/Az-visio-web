@@ -39,6 +39,18 @@
   margin-bottom: 0.5rem;
 }
 
+.test-mode-banner {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1.25rem;
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  color: #856404;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
 .payment-header p {
   font-size: 1.125rem;
   color: #666;

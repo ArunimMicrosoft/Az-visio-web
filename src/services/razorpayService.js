@@ -1,9 +1,12 @@
 // Razorpay Integration Service
 // Industry-standard payment gateway integration for India
 
-// Razorpay Key ID (public key, safe to expose in frontend)
-// No backend needed — using Razorpay client-side checkout (free infra, $0 hosting)
-const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_SRRAUP26wGg3OF';
+// Razorpay Key ID (public key — set VITE_RAZORPAY_KEY_ID in your .env or Azure SWA environment variables)
+// Use rzp_test_... for local dev/test mode, rzp_live_... for production.
+const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID;
+if (!RAZORPAY_KEY_ID) {
+  console.error('⚠️ VITE_RAZORPAY_KEY_ID is not set. Payments will fail. Add it to .env or Azure SWA environment variables.');
+}
 
 /**
  * Load Razorpay checkout script
@@ -76,6 +79,10 @@ function loadFreshScript(resolve) {
  */
 export async function createRazorpayOrder({ planName, amount, customerEmail, customerName, customerId }) {
   try {
+    if (!RAZORPAY_KEY_ID) {
+      throw new Error('Razorpay is not configured. Please contact support.');
+    }
+
     const scriptLoaded = await loadRazorpayScript();
     if (!scriptLoaded) {
       throw new Error('Failed to load Razorpay checkout. Please disable ad-blockers and try again.');
@@ -152,7 +159,6 @@ export async function verifyRazorpayPayment(paymentData) {
  * @param {string} options.customerId - User ID
  * @returns {Promise<Object>} - Subscription response
  */
-// eslint-disable-next-line no-unused-vars
 export async function createSubscription(_options) {  // NOTE: Subscriptions require a backend (Razorpay subscription_id).
   // This is not available on Azure SWA Free tier.
   // Use createRazorpayOrder() for one-time payments instead.
