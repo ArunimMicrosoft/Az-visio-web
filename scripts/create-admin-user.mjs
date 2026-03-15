@@ -1,12 +1,11 @@
 /**
  * ONE-TIME ADMIN SETUP SCRIPT
  * ─────────────────────────────────────────────────────────────────────────────
- * Creates / fixes the admin user profile in Supabase so they get full access.
+ * Creates / fixes admin user profiles in Supabase.
+ * Handles both the primary admin and the fallback admin@azuredesigner.com.
  *
  * Usage (run once from project root):
  *   node scripts/create-admin-user.mjs
- *
- * Requirements: npm install @supabase/supabase-js dotenv  (already installed)
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -14,12 +13,9 @@ import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { readFileSync } from 'fs';
 
-// Load .env from project root
 const __dir = dirname(fileURLToPath(import.meta.url));
-const envPath = join(__dir, '..', '.env');
-config({ path: envPath });
+config({ path: join(__dir, '..', '.env') });
 
 const SUPABASE_URL      = process.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
@@ -29,56 +25,62 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   process.exit(1);
 }
 
-// ── Admin credentials ─────────────────────────────────────────────────────────
-const ADMIN_EMAIL    = 'arunimpandey2903@hotmail.com';
-const ADMIN_PASSWORD = 'Admin@AzureDesigner2026!';  // change after first login
-const ADMIN_NAME     = "Arunim Pandey (Admin)";
+// ── Admin accounts ────────────────────────────────────────────────────────────
+const ADMIN_ACCOUNTS = [
+  {
+    email:    'arunimpandey2903@hotmail.com',
+    password: 'Admin@AzureDesigner2026!',
+    name:     'Arunim Pandey (Admin)',
+  },
+  {
+    // Fallback admin — always works even if hotmail account has issues
+    email:    'admin@azuredesigner.com',
+    password: 'AdminAzure@2026!',
+    name:     'Azure Designer Admin',
+  },
+];
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-async function run() {
-  console.log('🔧  Azure Architecture Designer — Admin Setup');
-  console.log('─'.repeat(50));
+async function ensureAdmin({ email, password, name }) {
+  console.log(`\n▶  Processing: ${email}`);
 
-  // 1. Try to sign in — if it works, user already exists
-  console.log(`\n1️⃣  Checking if admin user exists: ${ADMIN_EMAIL}`);
-  const { data: signInData, error: signInErr } =
-    await supabase.auth.signInWithPassword({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
+  // Try sign-in first (user may already exist)
+  const { data: signInData } = await supabase.auth.signInWithPassword({ email, password });
+  let userId = signInData?.user?.id;
 
-  let userId;
-
-  if (signInData?.user) {
-    userId = signInData.user.id;
-    console.log(`   ✅ User already exists  (id: ${userId})`);
+  if (userId) {
+    console.log(`   ✅ Auth user exists (id: ${userId})`);
   } else {
-    // 2. Sign up
-    console.log('   User not found — creating new admin account...');
+    // Sign-up new user
+    console.log(`   Not found — creating auth account...`);
     const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-      email: ADMIN_EMAIL,
-      password: ADMIN_PASSWORD,
-      options: { data: { name: ADMIN_NAME } },
+      email,
+      password,
+      options: { data: { name } },
     });
 
     if (signUpErr) {
-      console.error('   ❌  Sign-up failed:', signUpErr.message);
-      process.exit(1);
+      console.error(`   ❌  Sign-up failed: ${signUpErr.message}`);
+      console.log(`   ℹ️  If "User already registered": go to Supabase → Auth → Users`);
+      console.log(`       find ${email} → Send password reset / update password manually`);
+      return false;
     }
 
     userId = signUpData.user?.id;
     if (!userId) {
-      console.error('   ❌  No user id returned — check if email confirmation is required.');
-      console.log('   ℹ️  In Supabase dashboard → Auth → Settings → disable "Enable email confirmations"');
-      process.exit(1);
+      console.error(`   ❌  No user id — email confirmation may be required.`);
+      console.log(`   ℹ️  Supabase → Auth → Settings → disable "Enable email confirmations"`);
+      return false;
     }
-    console.log(`   ✅ Admin account created (id: ${userId})`);
+    console.log(`   ✅ Auth account created (id: ${userId})`);
   }
 
-  // 3. Upsert the profile row with admin / enterprise settings
-  console.log('\n2️⃣  Upserting profile with enterprise + admin role...');
+  // Upsert profile row → admin + enterprise
   const { error: profileErr } = await supabase.from('profiles').upsert({
     id: userId,
-    email: ADMIN_EMAIL.toLowerCase(),
-    name: ADMIN_NAME,
+    email: email.toLowerCase(),
+    name,
     role: 'admin',
     subscription_tier: 'enterprise',
     trial_exports_used: 0,
@@ -88,21 +90,39 @@ async function run() {
   }, { onConflict: 'id' });
 
   if (profileErr) {
-    console.error('   ❌  Profile upsert failed:', profileErr.message);
-    process.exit(1);
+    console.error(`   ❌  Profile upsert failed: ${profileErr.message}`);
+    return false;
   }
-  console.log('   ✅ Profile set: role=admin, subscription_tier=enterprise');
 
-  // 4. Summary
-  console.log('\n' + '─'.repeat(50));
-  console.log('🎉  Admin user is ready!\n');
-  console.log('   Email    :', ADMIN_EMAIL);
-  console.log('   Password :', ADMIN_PASSWORD);
-  console.log('   Role     : admin');
-  console.log('   Plan     : Enterprise (full access, no watermark, no limits)');
-  console.log('\n⚠️   Change the password after first login!');
-  console.log('─'.repeat(50));
+  console.log(`   ✅ Profile: role=admin, plan=enterprise`);
+  return true;
+}
 
+async function run() {
+  console.log('🔧  Azure Architecture Designer — Admin Setup');
+  console.log('─'.repeat(52));
+
+  let allOk = true;
+  for (const account of ADMIN_ACCOUNTS) {
+    const ok = await ensureAdmin(account);
+    if (!ok) allOk = false;
+  }
+
+  console.log('\n' + '─'.repeat(52));
+  if (allOk) {
+    console.log('🎉  All admin accounts ready!\n');
+    ADMIN_ACCOUNTS.forEach(a => {
+      console.log(`   📧 ${a.email}`);
+      console.log(`   🔑 ${a.password}\n`);
+    });
+    console.log('⚠️   Change passwords after first login!');
+  } else {
+    console.log('⚠️   Some accounts had issues — check output above.');
+    console.log('     Try creating admin@azuredesigner.com manually in Supabase dashboard:');
+    console.log('     Auth → Users → "Invite user" or "Add user"');
+    console.log('     Then run this script again.');
+  }
+  console.log('─'.repeat(52));
   process.exit(0);
 }
 

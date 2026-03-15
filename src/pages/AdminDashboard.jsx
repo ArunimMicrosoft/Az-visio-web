@@ -4,7 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { supabase, writeAuditLog } from '../utils/supabase';
 import './AdminDashboard.css';
 
-const ADMIN_EMAILS = ['arunimpandey2903@hotmail.com', 'demo@arunimitcaffe.com'];
+const ADMIN_EMAILS = [
+  'arunimpandey2903@hotmail.com',
+  'demo@arunimitcaffe.com',
+  'admin@azuredesigner.com',   // fallback admin account
+];
 
 const PLAN_COLORS = {
   trial: '#f59e0b',

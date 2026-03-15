@@ -61,7 +61,11 @@ export async function supabaseSignUp(email, password, name) {
   if (data.user) {
     const now = new Date().toISOString();
     const trialExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    const ADMIN_EMAILS_SIGNUP = ['arunimpandey2903@hotmail.com', 'demo@arunimitcaffe.com'];
+    const ADMIN_EMAILS_SIGNUP = [
+      'arunimpandey2903@hotmail.com',
+      'demo@arunimitcaffe.com',
+      'admin@azuredesigner.com',
+    ];
     const isAdminSignup = ADMIN_EMAILS_SIGNUP.includes(email.toLowerCase());
 
     const { error: profileError } = await supabase.from('profiles').upsert({

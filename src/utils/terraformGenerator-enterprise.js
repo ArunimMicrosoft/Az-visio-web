@@ -442,11 +442,10 @@ const generateStorage = (uniqueName, resourceName, item) => {
     `  resource_group_name      = azurerm_resource_group.main.name`,
     `  location                 = azurerm_resource_group.main.location`,
     `  account_tier             = "Standard"`,
-    `  account_replication_type = "LRS"`,
-    `  account_kind             = "StorageV2"`,
+    `  account_replication_type = "LRS"`,    `  account_kind             = "StorageV2"`,
     ``,
-    `  enable_https_traffic_only = true`,
-    `  min_tls_version           = "TLS1_2"`,
+    `  https_traffic_only_enabled = true`,
+    `  min_tls_version            = "TLS1_2"`,
     ``,
     `  blob_properties {`,
     `    delete_retention_policy {`,
@@ -709,9 +708,8 @@ const generateRedis = (uniqueName, resourceName, item) => {
     `  location            = azurerm_resource_group.main.location`,
     `  resource_group_name = azurerm_resource_group.main.name`,
     `  capacity            = 0`,
-    `  family              = "C"`,
-    `  sku_name            = "Basic"`,
-    `  enable_non_ssl_port = false`,
+    `  family              = "C"`,    `  sku_name            = "Basic"`,
+    `  non_ssl_port_enabled = false`,
     `  minimum_tls_version = "1.2"`,
     ``,
     `  redis_configuration {`,
@@ -965,11 +963,10 @@ const generateVariablesTF = (items, timestamp) => {
     lines.push(`  default     = "azureuser"`);
     lines.push(`}`);
     lines.push(``);
-    
-    lines.push(`variable "vm_ssh_public_key" {`);
-    lines.push(`  description = "SSH public key for VM authentication"`);
+      lines.push(`variable "vm_ssh_public_key" {`);
+    lines.push(`  description = "SSH public key content for VM authentication"`);
     lines.push(`  type        = string`);
-    lines.push(`  default     = ""`);
+    lines.push(`  sensitive   = true`);
     lines.push(`}`);
     lines.push(``);
   }
@@ -1099,11 +1096,10 @@ const generateTFVars = (items, timestamp) => {
   
   // Add VM variables if needed
   const hasVM = items.some(item => ['vm', 'virtualmachine'].includes(item.serviceType.toLowerCase()));
-  if (hasVM) {
-    lines.push(`# VM Configuration`);
+  if (hasVM) {    lines.push(`# VM Configuration`);
     lines.push(`vm_size           = "Standard_B2s"`);
     lines.push(`vm_admin_username = "azureuser"`);
-    lines.push(`# vm_ssh_public_key = "ssh-rsa AAAAB3... your-ssh-key"`);
+    lines.push(`# vm_ssh_public_key = "ssh-rsa AAAAB3... your-ssh-key"  # Required — set via TF_VAR_vm_ssh_public_key`);
     lines.push(``);
   }
   
