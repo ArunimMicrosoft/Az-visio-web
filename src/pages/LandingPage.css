@@ -780,6 +780,20 @@
   background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
 }
 
+.feature-card-highlight h3 {
+  color: #003a70;
+}
+
+.feature-card-highlight p {
+  color: #1a3a5c;
+}
+
+.feature-card-highlight .feature-list li {
+  color: #1a3a5c;
+  border-top-color: rgba(0, 120, 212, 0.15);
+  font-weight: 500;
+}
+
 .feature-card-highlight .feature-icon {
   background: linear-gradient(135deg, #0078D4, #00BCF2);
   -webkit-background-clip: text;
