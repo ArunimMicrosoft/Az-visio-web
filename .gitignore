@@ -7,7 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Dependencies
+# Dependencies — node_modules excluded but lockfiles MUST be committed for CI/CD
 node_modules
 
 # Build output

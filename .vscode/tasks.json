@@ -20,10 +20,14 @@
 		{
 			"label": "Deploy: Commit & Push to main",
 			"type": "shell",
-			"command": "powershell -ExecutionPolicy Bypass -File deploy.ps1",
+			"command": "pwsh.exe -ExecutionPolicy Bypass -File '${workspaceFolder}\\deploy.ps1'",
 			"group": "build",
 			"isBackground": false,
-			"problemMatcher": []
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
 		},
 		{
 			"label": "Git: Status",
