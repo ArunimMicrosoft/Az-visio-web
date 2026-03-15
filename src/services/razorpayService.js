@@ -1,5 +1,6 @@
 // Razorpay Integration Service
 // Industry-standard payment gateway integration for India
+// Deployed: 2026-03-15
 
 // Razorpay Key ID (public key — set VITE_RAZORPAY_KEY_ID in your .env or Azure SWA environment variables)
 // Use rzp_test_... for local dev/test mode, rzp_live_... for production.
