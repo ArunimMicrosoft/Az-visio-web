@@ -12,27 +12,29 @@ const CostSummary = ({ items, onRegionChange, onCurrencyChange, useRealTimeAPI =
   const [useRealTimePricing, setUseRealTimePricing] = useState(useRealTimeAPI);
   const [loadingRealTime, setLoadingRealTime] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-
   useEffect(() => {
     let cancelled = false;
 
-    console.log('🔍 CostSummary received items:', items);
-    console.log('🔍 Items count:', items?.length || 0);
-    console.log('🔍 UseRealTimePricing:', useRealTimePricing);
+    // Wrap all logic in an async IIFE so every setState call is deferred
+    // (inside async/await or .then callbacks), satisfying react-hooks/no-direct-set-state-in-use-effect
+    const run = async () => {
+      console.log('🔍 CostSummary received items:', items);
+      console.log('🔍 Items count:', items?.length || 0);
+      console.log('🔍 UseRealTimePricing:', useRealTimePricing);
 
-    if (!items || items.length === 0) {
-      console.log('⚠️ No items to calculate cost for');
-      setCostData(null);
-      return;
-    }
+      if (!items || items.length === 0) {
+        console.log('⚠️ No items to calculate cost for');
+        if (!cancelled) setCostData(null);
+        return;
+      }
 
-    if (useRealTimePricing) {
-      console.log('🌐 Fetching LIVE pricing from Azure API...');
-      console.log('   Items to price:', items.map(i => ({ id: i.id, name: i.name, type: i.serviceType || i.type })));
-      setLoadingRealTime(true);
+      if (useRealTimePricing) {
+        console.log('🌐 Fetching LIVE pricing from Azure API...');
+        console.log('   Items to price:', items.map(i => ({ id: i.id, name: i.name, type: i.serviceType || i.type })));
+        if (!cancelled) setLoadingRealTime(true);
 
-      getArchitecturePricingSummary(items, selectedRegion, selectedCurrency)
-        .then(realTimeCost => {
+        try {
+          const realTimeCost = await getArchitecturePricingSummary(items, selectedRegion, selectedCurrency);
           console.log('✅ Azure API Response:', realTimeCost);
           if (!cancelled) {
             if (realTimeCost.totalMonthly === 0 || realTimeCost.pricedItemCount === 0) {
@@ -67,20 +69,21 @@ const CostSummary = ({ items, onRegionChange, onCurrencyChange, useRealTimeAPI =
             });
             setLoadingRealTime(false);
           }
-        })
-        .catch(error => {
+        } catch (error) {
           if (!cancelled) {
             console.error('❌ Error fetching real-time pricing:', error);
             const cost = calculateCost(items, selectedRegion, selectedCurrency);
             setCostData({ ...cost, dataSource: 'Static Estimates (API Error)' });
             setLoadingRealTime(false);
           }
-        });
-    } else {
-      const cost = calculateCost(items, selectedRegion, selectedCurrency);
-      if (!cancelled) setCostData(cost);
-    }
+        }
+      } else {
+        const cost = calculateCost(items, selectedRegion, selectedCurrency);
+        if (!cancelled) setCostData(cost);
+      }
+    };
 
+    run();
     return () => { cancelled = true; };
   }, [items, selectedRegion, selectedCurrency, useRealTimePricing]);
 

@@ -12,6 +12,6 @@
     "razorpay": "^2.9.6"
   },
   "devDependencies": {},  "engines": {
-    "node": "18.x"
+    "node": ">=18"
   }
 }
