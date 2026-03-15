@@ -842,19 +842,20 @@ const normalizeServiceType = (serviceType) => {
 export const calculateCost = (items, regionKey = 'eastus', currencyKey = 'USD') => {
   const region = azureRegions[regionKey] || azureRegions['eastus'];
   const currency = currencies[currencyKey] || currencies['USD'];
-  
+
   let totalCost = 0;
   const breakdown = [];
-    items.forEach((item) => {
+
+  items.forEach((item) => {
     // Normalize the service type to match pricing keys
     const normalizedType = normalizeServiceType(item.type || item.serviceType);
     const pricing = azurePricing[normalizedType];
-    
+
     if (pricing) {
       // Apply region multiplier and currency conversion
       const baseCostInRegion = pricing.baseCost * region.multiplier;
       const costInCurrency = baseCostInRegion * currency.rate;
-      
+
       totalCost += costInCurrency;
       breakdown.push({
         name: item.name,
@@ -864,12 +865,26 @@ export const calculateCost = (items, regionKey = 'eastus', currencyKey = 'USD') 
         monthlyCost: costInCurrency,
         cost: costInCurrency,
         unit: pricing.unit,
-        details: pricing.details
+        details: pricing.details,
+        isNotMapped: false,
+      });
+    } else {
+      // Include unrecognised services as $0 so they still appear in the breakdown
+      breakdown.push({
+        name: item.name,
+        service: item.name,
+        serviceType: item.serviceType || item.type || 'Unknown',
+        quantity: 1,
+        monthlyCost: 0,
+        cost: 0,
+        unit: 'not estimated',
+        details: `Service type "${normalizedType}" is not yet in the static pricing database.`,
+        isNotMapped: true,
+        message: `No static pricing available for "${normalizedType}". Enable Live pricing for real-time data.`,
       });
     }
   });
-  
-  return {
+    return {
     totalMonthly: totalCost,
     totalYearly: totalCost * 12,
     breakdown: breakdown.sort((a, b) => b.cost - a.cost),
@@ -877,7 +892,14 @@ export const calculateCost = (items, regionKey = 'eastus', currencyKey = 'USD') 
     currencySymbol: currency.symbol,
     region: region.name,
     regionKey: regionKey,
-    pricingDate: new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })
+    pricingDate: new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+    // Mirror the live-API response shape so CostSummary can render status rows
+    pricedItemCount: breakdown.filter(b => !b.isNotMapped && b.cost > 0).length,
+    freeItemCount: breakdown.filter(b => !b.isNotMapped && b.cost === 0).length,
+    notAvailableItemCount: 0,
+    retiredItemCount: 0,
+    notMappedItemCount: breakdown.filter(b => b.isNotMapped).length,
+    dataSource: 'Static Estimates',
   };
 };
 

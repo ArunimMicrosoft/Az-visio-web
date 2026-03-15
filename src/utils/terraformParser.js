@@ -138,6 +138,14 @@ const TERRAFORM_TO_AZURE_MAPPING = {
   // ===== IDENTITY =====
   'azurerm_active_directory_domain_service':  { serviceType: 'azureactivedirectory', icon: 'azureactivedirectory', category: 'identity', label: 'AD Domain Services' },
   'azurerm_user_assigned_identity':           { serviceType: 'managedidentities', icon: 'managedidentities', category: 'identity', label: 'Managed Identity' },
+  // ===== CONTAINERS (modern) =====
+  'azurerm_container_app':                    { serviceType: 'containerapps', icon: 'containerapps', category: 'containers', label: 'Container App' },
+  'azurerm_container_app_environment':        { serviceType: 'containerapps', icon: 'containerapps', category: 'containers', label: 'Container App Env' },
+
+  // ===== WEB / APP SERVICES (modern) =====
+  'azurerm_static_web_app':                   { serviceType: 'appservices', icon: 'appservices', category: 'compute', label: 'Static Web App' },
+  'azurerm_signalr_service':                  { serviceType: 'signalr', icon: 'signalr', category: 'integration', label: 'SignalR Service' },
+  'azurerm_app_configuration':                { serviceType: 'appconfiguration', icon: 'appconfiguration', category: 'integration', label: 'App Configuration' },
 
   // ===== INTEGRATION =====
   'azurerm_servicebus_namespace':             { serviceType: 'servicebusnamespaces', icon: 'servicebusnamespaces', category: 'integration', label: 'Service Bus' },
@@ -146,21 +154,33 @@ const TERRAFORM_TO_AZURE_MAPPING = {
   'azurerm_eventhub_namespace':               { serviceType: 'eventhubnamespaces', icon: 'eventhubs', category: 'integration', label: 'Event Hub Namespace' },
   'azurerm_eventhub':                         { serviceType: 'eventhubs', icon: 'eventhubs', category: 'integration', label: 'Event Hub' },
   'azurerm_logic_app_workflow':               { serviceType: 'logicapps', icon: 'logicapps', category: 'integration', label: 'Logic App' },
+  'azurerm_logic_app_standard':               { serviceType: 'logicapps', icon: 'logicapps', category: 'integration', label: 'Logic App Standard' },
   'azurerm_api_management':                   { serviceType: 'apimanagement', icon: 'apimanagement', category: 'integration', label: 'API Management' },
   'azurerm_eventgrid_topic':                  { serviceType: 'eventgridtopics', icon: 'eventgridtopics', category: 'integration', label: 'Event Grid Topic' },
+  'azurerm_eventgrid_system_topic':           { serviceType: 'eventgridtopics', icon: 'eventgridtopics', category: 'integration', label: 'Event Grid System Topic' },
   'azurerm_notification_hub':                 { serviceType: 'notificationhubs', icon: 'notificationhubs', category: 'integration', label: 'Notification Hub' },
-
+  'azurerm_notification_hub_namespace':       { serviceType: 'notificationhubs', icon: 'notificationhubs', category: 'integration', label: 'Notification Hub NS' },
+  'azurerm_relay_namespace':                  { serviceType: 'relays', icon: 'servicebusnamespaces', category: 'integration', label: 'Relay Namespace' },
   // ===== AI & ML =====
   'azurerm_cognitive_account':                { serviceType: 'cognitiveservices', icon: 'cognitiveservices', category: 'ai', label: 'Cognitive Services' },
   'azurerm_machine_learning_workspace':       { serviceType: 'machinelearning', icon: 'machinelearning', category: 'ai', label: 'ML Workspace' },
   'azurerm_bot_service':                      { serviceType: 'botservices', icon: 'botservices', category: 'ai', label: 'Bot Service' },
   'azurerm_search_service':                   { serviceType: 'cognitivesearch', icon: 'cognitivesearch', category: 'ai', label: 'AI Search' },
+  'azurerm_ai_services':                      { serviceType: 'cognitiveservices', icon: 'cognitiveservices', category: 'ai', label: 'Azure AI Services' },
+  'azurerm_openai':                           { serviceType: 'azureopenai', icon: 'azureopenai', category: 'ai', label: 'Azure OpenAI' },
+  'azurerm_cognitive_deployment':             null, // child resource — skip
 
   // ===== ANALYTICS =====
   'azurerm_databricks_workspace':             { serviceType: 'azuredatabricks', icon: 'azuredatabricks', category: 'analytics', label: 'Databricks' },
   'azurerm_stream_analytics_job':             { serviceType: 'streamanalyticsjobs', icon: 'streamanalyticsjobs', category: 'analytics', label: 'Stream Analytics' },
   'azurerm_hdinsight_hadoop_cluster':         { serviceType: 'hdinsightclusters', icon: 'hdinsightclusters', category: 'analytics', label: 'HDInsight' },
+  'azurerm_hdinsight_kafka_cluster':          { serviceType: 'hdinsightclusters', icon: 'hdinsightclusters', category: 'analytics', label: 'HDInsight Kafka' },
+  'azurerm_hdinsight_spark_cluster':          { serviceType: 'hdinsightclusters', icon: 'hdinsightclusters', category: 'analytics', label: 'HDInsight Spark' },
   'azurerm_data_factory':                     { serviceType: 'datafactories', icon: 'datafactories', category: 'analytics', label: 'Data Factory' },
+  'azurerm_data_factory_pipeline':            null, // child resource — skip
+  'azurerm_kusto_cluster':                    { serviceType: 'azuredataexplorerclusters', icon: 'azuredataexplorerclusters', category: 'analytics', label: 'Data Explorer' },
+  'azurerm_analysis_services_server':         { serviceType: 'analysisservices', icon: 'analysisservices', category: 'analytics', label: 'Analysis Services' },
+  'azurerm_purview_account':                  { serviceType: 'microsoftpurview', icon: 'microsoftpurview', category: 'analytics', label: 'Purview' },
 
   // ===== IOT =====
   'azurerm_iothub':                           { serviceType: 'iothub', icon: 'iothub', category: 'iot', label: 'IoT Hub' },
