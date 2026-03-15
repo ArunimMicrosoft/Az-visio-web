@@ -37,39 +37,8 @@ jobs:
           submodules: true
           lfs: false
 
-      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          # no cache — avoids "lock file not found" error
-
-      - name: 📦 Install frontend dependencies
-        run: npm install
-
-      - name: 🔍 Lint (non-blocking)
-        run: npm run lint -- --max-warnings 100
-        continue-on-error: true
-
-      # Vite picks up VITE_* vars at build time — must be set here
-      - name: 🏗️ Build frontend
-        run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_RAZORPAY_KEY_ID: ${{ secrets.VITE_RAZORPAY_KEY_ID }}
-          NODE_ENV: production
-
-      - name: ✅ Verify build output
-        run: |
-          if [ ! -f "build/index.html" ]; then
-            echo "❌ build/index.html not found — aborting"
-            exit 1
-          fi
-          echo "📦 Build size: $(du -sh build/ | awk '{print $1}')"
-          echo "✅ build/index.html confirmed"
-
-      # skip_app_build=true because we built manually above
-      - name: 🚀 Deploy to Azure Static Web Apps
+      # Let the SWA action run Oryx to build — it only uploads build output, not node_modules
+      - name: 🚀 Build and Deploy to Azure Static Web Apps
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
@@ -77,17 +46,19 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: upload
           app_location: /
-          skip_app_build: true
           api_location: api
           output_location: build
           production_branch: main
+          app_build_command: "npm install && npm run build"
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_RAZORPAY_KEY_ID: ${{ secrets.VITE_RAZORPAY_KEY_ID }}
 
       - name: 🎉 Deployment summary
         if: success()
         run: |
-          echo "✅ Deployed!"
-          echo "🌐 https://purple-pebble-081ef0400.4.azurestaticapps.net"
-          echo "📅 $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          echo "✅ Deployed to https://purple-pebble-081ef0400.4.azurestaticapps.net"
 
   # ──────────────────────────────────────────────────────────────
   # CLOSE staging environment when a PR is merged/closed
