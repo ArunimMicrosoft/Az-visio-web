@@ -473,13 +473,170 @@ const azurePricing = {
     baseCost: 0.002,
     unit: 'per 1K tokens',
     details: 'GPT-3.5-turbo model'
-  },
-  botservice: {
+  },  botservice: {
     name: 'Bot Service',
     baseCost: 0.50,
     unit: 'per 1K messages',
     details: 'Standard channel, 10K messages free/month'
-  }
+  },
+
+  // ── Aliases so normalizeServiceType keys always resolve ──────────────────
+
+  // Integration aliases
+  eventhub: {
+    name: 'Event Hubs',
+    baseCost: 11.23,
+    unit: 'per throughput unit/month',
+    details: 'Standard tier, 1 throughput unit'
+  },
+  logicapp: {
+    name: 'Logic Apps',
+    baseCost: 12.50,
+    unit: 'per month (est. 100K actions)',
+    details: 'Consumption plan (~$0.000125/action × 100K)'
+  },
+  notificationhubs: {
+    name: 'Notification Hubs',
+    baseCost: 10.00,
+    unit: 'per namespace/month',
+    details: 'Basic tier, 1M pushes/month'
+  },
+
+  // Compute aliases
+  containerregistry: {
+    name: 'Container Registry',
+    baseCost: 5.00,
+    unit: 'per registry/month',
+    details: 'Basic tier, 10 GB storage'
+  },
+
+  // Analytics
+  databricks: {
+    name: 'Azure Databricks',
+    baseCost: 0.07,
+    unit: 'per DBU/hour',
+    details: 'Standard tier (~$50/month light usage)'
+  },
+  hdinsight: {
+    name: 'HDInsight',
+    baseCost: 146.00,
+    unit: 'per cluster/month',
+    details: 'Spark cluster, 2 worker nodes (D3 v2)'
+  },
+  streamanalytics: {
+    name: 'Stream Analytics',
+    baseCost: 80.30,
+    unit: 'per streaming unit/month',
+    details: '1 Streaming Unit (standard)'
+  },
+
+  // AI/ML aliases
+  cognitive: {
+    name: 'Cognitive Services',
+    baseCost: 1.00,
+    unit: 'per 1K transactions',
+    details: 'Standard tier, varies by service'
+  },
+  search: {
+    name: 'Azure AI Search',
+    baseCost: 73.73,
+    unit: 'per search unit/month',
+    details: 'Basic tier, 1 search unit'
+  },
+
+  // IoT
+  iothub: {
+    name: 'IoT Hub',
+    baseCost: 10.00,
+    unit: 'per month',
+    details: 'S1 Standard tier, 400K messages/day'
+  },
+  iotcentral: {
+    name: 'IoT Central',
+    baseCost: 2.00,
+    unit: 'per device/month',
+    details: 'Standard tier, 10 devices'
+  },
+  digitaltwins: {
+    name: 'Azure Digital Twins',
+    baseCost: 0.1228,
+    unit: 'per 1K operations',
+    details: 'Pay-as-you-go'
+  },
+
+  // Networking aliases
+  cdn: {
+    name: 'CDN Profile',
+    baseCost: 7.50,
+    unit: 'per month',
+    details: 'Standard Verizon, 100 GB transfer'
+  },
+  trafficmanager: {
+    name: 'Traffic Manager',
+    baseCost: 0.54,
+    unit: 'per profile/month',
+    details: '1M health checks, 1M DNS queries'
+  },
+  routetable: {
+    name: 'Route Table',
+    baseCost: 0.00,
+    unit: 'free',
+    details: 'No additional charge'
+  },
+  nic: {
+    name: 'Network Interface',
+    baseCost: 0.00,
+    unit: 'free',
+    details: 'No additional charge'
+  },
+
+  // Security aliases
+  securitycenter: {
+    name: 'Defender for Cloud',
+    baseCost: 15.00,
+    unit: 'per server/month',
+    details: 'Standard tier per resource'
+  },
+
+  // Storage aliases
+  disks: {
+    name: 'Managed Disks',
+    baseCost: 9.60,
+    unit: 'per 128 GB disk/month',
+    details: 'Standard SSD E10, 128 GB'
+  },
+
+  // Identity / Management (free or near-free)
+  aad: {
+    name: 'Azure Active Directory',
+    baseCost: 0.00,
+    unit: 'free (Basic)',
+    details: 'Azure AD Free tier included'
+  },
+  identity: {
+    name: 'Managed Identity',
+    baseCost: 0.00,
+    unit: 'free',
+    details: 'No additional charge'
+  },
+  resourcegroup: {
+    name: 'Resource Group',
+    baseCost: 0.00,
+    unit: 'free',
+    details: 'No additional charge'
+  },
+  automation: {
+    name: 'Automation Account',
+    baseCost: 0.002,
+    unit: 'per 500 minutes/month',
+    details: 'First 500 minutes free/month'
+  },
+  policy: {
+    name: 'Azure Policy',
+    baseCost: 0.00,
+    unit: 'free',
+    details: 'Included with Azure subscription'
+  },
 };
 
 /**
@@ -496,36 +653,189 @@ const azurePricing = {
  * Normalize service type to match pricing keys
  */
 const normalizeServiceType = (serviceType) => {
-  // Handle undefined, null, or empty serviceType
-  if (!serviceType) {
-    return 'generic';
-  }
-  
+  if (!serviceType) return 'generic';
+
+  const normalized = serviceType.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  // Canonical map — covers drag-drop ids, Terraform parser serviceType values,
+  // and every plural/abbreviated variant used across the app
   const mappings = {
+    // ── Compute ──────────────────────────────────────────────────────────────
+    'vm': 'vm',
     'virtualmachine': 'vm',
+    'virtualmachines': 'vm',
+    'vmss': 'vmss',
     'vmscalesets': 'vmss',
+    'virtualmachinescalesets': 'vmss',
+    'functionapp': 'function',
     'functionapps': 'function',
+    'appservice': 'appservice',
     'appservices': 'appservice',
+    'webapp': 'appservice',
+    'webapps': 'appservice',
+    'appserviceplans': 'appservice',
+    'aks': 'aks',
     'kubernetesservices': 'aks',
+    'kubernetes': 'aks',
+    'containerinstances': 'containerinstances',
+    'containerinstance': 'containerinstances',
+    'containerregistries': 'containerregistry',
+    'containerregistry': 'containerregistry',
+    'batchaccounts': 'batch',
+    'batch': 'batch',
+    'availabilitysets': 'vm',   // priced as VM
+
+    // ── Storage ───────────────────────────────────────────────────────────────
+    'storage': 'storage',
+    'storageaccount': 'storage',
     'storageaccounts': 'storage',
+    'storageaccountblob': 'storage',
+    'storageaccountqueue': 'storage',
+    'storageaccounttable': 'storage',
+    'storageaccountsazurefiles': 'storage',
+    'disks': 'disks',
+    'manageddisks': 'disks',
+    'snapshots': 'disks',
+    'backupvault': 'recovery',
+    'backupvaults': 'recovery',
+    'recoveryservicesvaults': 'recovery',
+    'recovery': 'recovery',
+    'datalakestoregen1': 'datalake',
+    'datalakestoregen2': 'datalake',
+    'azurenetappfiles': 'netapp',
+
+    // ── Databases ─────────────────────────────────────────────────────────────
+    'sqldb': 'sqldb',
     'sqldatabase': 'sqldb',
+    'sqldatabases': 'sqldb',
+    'sqlserver': 'sqldb',
+    'mssqlserver': 'sqldb',
+    'mssqldatabase': 'sqldb',
+    'sqlmanagedinstance': 'sqlmi',
+    'sqlmanagedinstances': 'sqlmi',
+    'cosmosdb': 'cosmosdb',
     'azurecosmosdb': 'cosmosdb',
+    'mysql': 'mysql',
+    'azuredatabaseformysqlservers': 'mysql',
+    'mysqlflexibleserver': 'mysql',    'postgresql': 'postgres',
+    'azuredatabaseforpostgresqlservers': 'postgres',
+    'postgresqlflexibleserver': 'postgres',
+    'mariadb': 'mariadb',
+    'azuredatabaseformariadbservers': 'mariadb',    'redis': 'cache',
+    'cacheforredis': 'cache',
+    'azurecacheforredis': 'cache',
+    'azuresynapseanalytics': 'synapse',
+    'synapse': 'synapse',
+
+    // ── Networking ────────────────────────────────────────────────────────────
+    'vnet': 'vnet',
+    'virtualnetwork': 'vnet',
     'virtualnetworks': 'vnet',
+    'subnets': 'vnet',
+    'subnet': 'vnet',
+    'loadbalancer': 'loadbalancer',
     'loadbalancers': 'loadbalancer',
     'applicationgateway': 'appgw',
     'applicationgateways': 'appgw',
     'networksecuritygroups': 'nsg',
+    'networksecuritygroup': 'nsg',
+    'nsg': 'nsg',
     'publicipaddresses': 'publicip',
+    'publicipaddress': 'publicip',
+    'publicip': 'publicip',
     'dnszones': 'dns',
+    'dnszone': 'dns',
+    'dns': 'dns',
+    'firewalls': 'firewall',
+    'firewall': 'firewall',
+    'bastions': 'bastion',
+    'bastion': 'bastion',
+    'trafficmanagerprofiles': 'trafficmanager',
+    'trafficmanager': 'trafficmanager',
+    'frontdoors': 'frontdoor',
+    'frontdoor': 'frontdoor',
+    'cdnprofiles': 'cdn',
+    'cdn': 'cdn',
+    'expressroutecircuits': 'expressroute',
+    'expressroute': 'expressroute',
+    'privatelinkservices': 'privatelink',
+    'privatelink': 'privatelink',
+    'virtualnetworkgateways': 'vpngateway',
+    'virtualgateways': 'vpngateway',
+    'vpngateway': 'vpngateway',
+    'natgateway': 'nat',
+    'nat': 'nat',
+    'networkinterfaces': 'nic',
+    'networkinterface': 'nic',
+    'routetables': 'routetable',
+
+    // ── Security ──────────────────────────────────────────────────────────────
+    'keyvault': 'keyvault',
+    'keyvaults': 'keyvault',
+    'microsoftdefenderforcloud': 'securitycenter',
+    'securitycenter': 'securitycenter',
+    'microsoftsentinel': 'sentinel',
+    'sentinel': 'sentinel',
+
+    // ── Monitoring ────────────────────────────────────────────────────────────
+    'appinsights': 'appinsights',
     'applicationinsights': 'appinsights',
-    'containerregistries': 'containerregistry',
+    'loganalyticsworkspaces': 'loganalytics',
+    'loganalytics': 'loganalytics',
+    'azuremonitor': 'monitor',
+    'monitor': 'monitor',
+
+    // ── Integration ───────────────────────────────────────────────────────────
+    'servicebus': 'servicebus',
+    'servicebusnamespaces': 'servicebus',
+    'servicebusqueues': 'servicebus',
+    'servicebustopics': 'servicebus',
+    'eventhub': 'eventhub',
     'eventhubs': 'eventhub',
+    'eventhubnamespaces': 'eventhub',
+    'logicapps': 'logicapp',
+    'logicapp': 'logicapp',
+    'apimanagement': 'apim',
+    'apim': 'apim',
+    'eventgridtopics': 'eventgrid',
+    'eventgrid': 'eventgrid',
+    'notificationhubs': 'notificationhubs',
+
+    // ── Analytics ─────────────────────────────────────────────────────────────
+    'datafactory': 'datafactory',
+    'datafactories': 'datafactory',
+    'databricks': 'databricks',
     'azuredatabricks': 'databricks',
-    'synapseanalytics': 'synapse',
-    'datafactories': 'datafactory'
+    'hdinsightclusters': 'hdinsight',
+    'hdinsight': 'hdinsight',
+    'streamanalyticsjobs': 'streamanalytics',
+    'streamanalytics': 'streamanalytics',
+
+    // ── AI / ML ───────────────────────────────────────────────────────────────
+    'cognitiveservices': 'cognitive',
+    'cognitive': 'cognitive',
+    'machinelearning': 'ml',
+    'ml': 'ml',
+    'botservices': 'botservice',
+    'botservice': 'botservice',
+    'cognitivesearch': 'search',
+    'search': 'search',
+    'azureopenai': 'openai',
+    'openai': 'openai',
+
+    // ── IoT ───────────────────────────────────────────────────────────────────
+    'iothub': 'iothub',
+    'azureiotcentral': 'iotcentral',
+    'azuredigitaltwins': 'digitaltwins',
+
+    // ── Identity / Management ─────────────────────────────────────────────────
+    'managedidentities': 'identity',
+    'azureactivedirectory': 'aad',
+    'resourcegroups': 'resourcegroup',
+    'automationaccounts': 'automation',
+    'policy': 'policy',
   };
-  
-  const normalized = serviceType.toLowerCase().replace(/[^a-z0-9]/g, '');
+
   return mappings[normalized] || normalized;
 };
 
@@ -603,25 +913,36 @@ export const getCostCategory = (monthlyCost) => {
  */
 export const getCostOptimizations = (items) => {
   const suggestions = [];
-  
-  const serviceTypes = items.map(i => (i.type || i.serviceType || '').toLowerCase());
-  const hasVMs = serviceTypes.some(t => t === 'vm' || t === 'virtualmachine');
-  const hasVMSS = serviceTypes.some(t => t === 'vmss');
-  const hasAKS = serviceTypes.some(t => t === 'aks' || t === 'kubernetes');
-  const hasSQL = serviceTypes.some(t => ['sqldb', 'sql', 'sqldatabase'].includes(t));
-  const hasCosmos = serviceTypes.some(t => t === 'cosmosdb');
-  const hasStorage = serviceTypes.some(t => t === 'storage' || t === 'storageaccount');
-  const hasFirewall = serviceTypes.some(t => t === 'firewall');
-  const hasAppGW = serviceTypes.some(t => t === 'appgw' || t === 'applicationgateway');
-  const hasSQLMI = serviceTypes.some(t => t === 'sqlmi');
-  const hasRedis = serviceTypes.some(t => t === 'redis');
-  const hasAppService = serviceTypes.some(t => t === 'appservice');
-  const hasFunctions = serviceTypes.some(t => t === 'function' || t === 'functionapp');
-  const hasDataFactory = serviceTypes.some(t => t === 'datafactory');
-  const hasSynapse = serviceTypes.some(t => t === 'synapse');
-  const hasLoadBalancer = serviceTypes.some(t => t === 'loadbalancer' || t === 'lb');
-  const hasFrontDoor = serviceTypes.some(t => t === 'frontdoor');
-  const hasContainerInstances = serviceTypes.some(t => t === 'containerinstances' || t === 'aci');
+
+  // Normalize every item's service type through the same mapping used for pricing
+  // so that drag-drop ids ('virtualmachines'), Terraform ids ('virtualmachines'),
+  // and legacy ids ('vm') all resolve to the same canonical key.
+  const serviceTypes = items.map(i => normalizeServiceType(i.type || i.serviceType));
+
+  const hasVMs              = serviceTypes.some(t => t === 'vm');
+  const hasVMSS             = serviceTypes.some(t => t === 'vmss');
+  const hasAKS              = serviceTypes.some(t => t === 'aks');
+  const hasSQL              = serviceTypes.some(t => t === 'sqldb');
+  const hasCosmos           = serviceTypes.some(t => t === 'cosmosdb');
+  const hasStorage          = serviceTypes.some(t => t === 'storage');
+  const hasFirewall         = serviceTypes.some(t => t === 'firewall');
+  const hasAppGW            = serviceTypes.some(t => t === 'appgw');
+  const hasSQLMI            = serviceTypes.some(t => t === 'sqlmi');
+  const hasRedis            = serviceTypes.some(t => t === 'cache');
+  const hasAppService       = serviceTypes.some(t => t === 'appservice');
+  const hasFunctions        = serviceTypes.some(t => t === 'function');
+  const hasDataFactory      = serviceTypes.some(t => t === 'datafactory');
+  const hasSynapse          = serviceTypes.some(t => t === 'synapse');
+  const hasLoadBalancer     = serviceTypes.some(t => t === 'loadbalancer');
+  const hasFrontDoor        = serviceTypes.some(t => t === 'frontdoor');
+  const hasContainerInstances = serviceTypes.some(t => t === 'containerinstances');
+  const hasDatabricks       = serviceTypes.some(t => t === 'databricks');
+  const hasContainerRegistry = serviceTypes.some(t => t === 'containerregistry');
+  const hasBastion          = serviceTypes.some(t => t === 'bastion');
+  const hasExpressRoute     = serviceTypes.some(t => t === 'expressroute');
+  const hasServiceBus       = serviceTypes.some(t => t === 'servicebus');
+  const hasLogicApp         = serviceTypes.some(t => t === 'logicapp');
+  const hasAPIM             = serviceTypes.some(t => t === 'apim');
 
   // --- Compute Optimizations ---
   if (hasVMs) {
@@ -827,7 +1148,6 @@ export const getCostOptimizations = (items) => {
       priority: 'medium'
     });
   }
-
   if (hasSynapse) {
     suggestions.push({
       category: '📊 Analytics',
@@ -835,6 +1155,79 @@ export const getCostOptimizations = (items) => {
       suggestion: 'Use serverless SQL pools for ad-hoc queries instead of dedicated pools. Pause dedicated pools when not in use.',
       potentialSavings: '50-80%',
       priority: 'high'
+    });
+  }
+
+  if (hasDatabricks) {
+    suggestions.push({
+      category: '📊 Analytics',
+      service: 'Azure Databricks',
+      suggestion: 'Use spot instances for worker nodes and auto-termination policies to shut down idle clusters. Spot VMs can save 60-90% on compute.',
+      potentialSavings: '60-90%',
+      priority: 'high'
+    });
+  }
+
+  // --- Integration Optimizations ---
+  if (hasServiceBus) {
+    suggestions.push({
+      category: '🔗 Integration',
+      service: 'Service Bus',
+      suggestion: 'Use the Basic tier for simple point-to-point messaging. Upgrade to Standard only if you need topics/subscriptions or queues > 256 KB.',
+      potentialSavings: 'Up to $10/month',
+      priority: 'low'
+    });
+  }
+
+  if (hasLogicApp) {
+    suggestions.push({
+      category: '🔗 Integration',
+      service: 'Logic Apps',
+      suggestion: 'Audit Logic App run history — unused or failed runs still incur action charges. Consider Azure Functions for high-frequency tasks (cheaper per execution).',
+      potentialSavings: '20-50%',
+      priority: 'medium'
+    });
+  }
+
+  if (hasAPIM) {
+    suggestions.push({
+      category: '🔗 Integration',
+      service: 'API Management',
+      suggestion: 'Use the Consumption tier (pay-per-call) for low/irregular traffic instead of the Developer ($49/month) or Standard ($695/month) tiers.',
+      potentialSavings: 'Up to $695/month',
+      priority: 'high'
+    });
+  }
+
+  // --- Container Optimizations ---
+  if (hasContainerRegistry) {
+    suggestions.push({
+      category: '📦 Containers',
+      service: 'Container Registry',
+      suggestion: 'Use the Basic tier ($5/month) for dev/test. Enable geo-replication only in Premium tier when truly needed for multi-region deployments.',
+      potentialSavings: '$95+/month',
+      priority: 'low'
+    });
+  }
+
+  // --- Networking Optimizations ---
+  if (hasBastion) {
+    suggestions.push({
+      category: '🌐 Networking',
+      service: 'Azure Bastion',
+      suggestion: 'Azure Bastion Basic SKU ($140/month) supports most use cases. Developer SKU ($21/month) is available for single-VM access scenarios.',
+      potentialSavings: 'Up to $119/month',
+      priority: 'medium'
+    });
+  }
+
+  if (hasExpressRoute) {
+    suggestions.push({
+      category: '🌐 Networking',
+      service: 'ExpressRoute',
+      suggestion: 'Use Metered billing instead of Unlimited if outbound data volume is < 10 TB/month. Consider ExpressRoute Local for sites adjacent to Azure regions.',
+      potentialSavings: '30-50%',
+      priority: 'medium'
     });
   }
 
