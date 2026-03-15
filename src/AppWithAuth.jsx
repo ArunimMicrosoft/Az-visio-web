@@ -19,12 +19,11 @@ const AppWithAuth = () => {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
-          
-          {/* Protected route - admin dashboard */}
+            {/* Protected route - admin dashboard (admin role only) */}
           <Route 
             path="/admin" 
             element={
-              <ProtectedRoute>
+              <ProtectedRoute adminOnly={true}>
                 <AdminDashboard />
               </ProtectedRoute>
             } 

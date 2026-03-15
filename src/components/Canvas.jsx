@@ -3,7 +3,7 @@ import { validateConnection, getConnectionMessage } from '../utils/connectionVal
 import BoundaryCanvas from './BoundaryCanvas';
 import './Canvas.css';
 
-const Canvas = ({ items, setItems, connections, setConnections, boundaries, setBoundaries, canvasRef }) => {
+const Canvas = ({ items, setItems, connections, setConnections, boundaries, setBoundaries, canvasRef, isTrial }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -341,9 +341,8 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
     const item = items.find(i => i.id === itemId);
     if (!item) return { x: 0, y: 0 };
     return { x: item.x + 40, y: item.y + 40 };
-  };
-  return (
-    <>
+  };  return (
+    <div className="canvas-wrapper">
       {/* Professional Toolbar - Matches ControlPanel Design */}
       <div className={`canvas-toolbar ${boundaryDrawMode ? 'drawing-mode' : ''}`}>
         {/* Section 1: Drawing Tools */}
@@ -398,17 +397,15 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
         )}
       </div>
 
-      <div ref={containerRef} className="canvas-container">
-        <div
+      <div ref={containerRef} className="canvas-container">        <div
           ref={activeCanvasRef}
-          className="canvas"
+          className={`canvas${isTrial ? ' canvas-trial' : ''}`}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onClick={handleCanvasClick}
-        >
-          {/* Boundary Layer - INSIDE canvas so it shares coordinate system */}
+        >{/* Boundary Layer - INSIDE canvas so it shares coordinate system */}
           <BoundaryCanvas
             boundaries={boundaries}
             setBoundaries={setBoundaries}
@@ -417,9 +414,7 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
             drawingBoundary={drawingBoundary}
             setDrawingBoundary={setDrawingBoundary}
             boundaryType={boundaryType}
-          />
-
-          {connectionMode && (
+          />          {connectionMode && (
             <div className="connecting-status">
               🔗 Connection Mode — <strong>Double-click</strong> on a target service to connect
               {' '}| <span className="valid-hint">🟢 Valid</span>{' '}
@@ -646,19 +641,21 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
               )}
             </div>
           );
-        })}
-
-        {items.length === 0 && (
+        })}        {items.length === 0 && (
           <div className="canvas-placeholder">
             <p>🎨 Drag and drop Azure services here</p>
             <p className="canvas-hint">🔗 <strong>Right-click</strong> on a service to start a connection</p>
             <p className="canvas-hint">🔗 <strong>Double-click</strong> the target service to complete the connection</p>
             <p className="canvas-hint">✏️ Press <strong>DELETE</strong> to remove selected items</p>
           </div>
-        )}
+        )}        {/* Trial watermark — CSS class on .canvas drives a ::after pseudo-element
+            with a repeating SVG background tile. Covers every pixel of the
+            5000×5000 canvas with zero DOM nodes and zero overflow.
+            Only shown for trial users — never for admin/paid/enterprise. */}
+        {/* (watermark is pure CSS — see .canvas.trial-watermark-active::after) */}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

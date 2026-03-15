@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import Toolbar from './components/Toolbar';
 import CanvasComponent from './components/Canvas.jsx';
@@ -19,9 +19,9 @@ import {
 } from './utils/enterpriseExporter';
 import { 
   canExportPNG, 
-  canCreateDiagram, 
   recordPNGExport, 
-  recordDiagramCreation
+  recordDiagramCreation,
+  isAdminUser
 } from './utils/authSecurity';
 import { parseTerraformFile, validateTerraformFile } from './utils/terraformParser';
 import { validateArchitecture } from './utils/azureArchitectureValidator';
@@ -41,42 +41,95 @@ function App() {
   const [isValidationOpen, setIsValidationOpen] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState('');
-  const [upgradeFeature, setUpgradeFeature] = useState('');
-  const canvasRef = useRef(null);
-
-  // Helper function to check diagram creation limit
-  const checkDiagramLimit = () => {
-    const diagramCheck = canCreateDiagram(user);
-    if (!diagramCheck.allowed) {
-      setUpgradeReason(diagramCheck.reason);
-      setUpgradeFeature('Unlimited Diagrams');
-      setUpgradeModalOpen(true);
-      return false;
+  const [upgradeFeature, setUpgradeFeature] = useState('');  const canvasRef = useRef(null);
+  // Tracks whether the current canvas session has already been counted as a diagram
+  const diagramCountedThisSession = useRef(false);
+  // Refresh user from DB on mount so banner shows correct counts immediately
+  useEffect(() => {
+    if (user?.id) {
+      refreshUser();
     }
-    return true;
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
-  // Wrapper for setItems to enforce diagram limits
+  // Listen for PAYMENT_SUCCESS message from the payment tab (opened via UpgradeModal).
+  // When received, refresh the user so the trial banner disappears immediately
+  // without losing any canvas state (items, connections, boundaries).
+  useEffect(() => {
+    const handlePaymentMessage = async (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'PAYMENT_SUCCESS') {
+        await refreshUser();
+      }
+    };
+    window.addEventListener('message', handlePaymentMessage);
+    return () => window.removeEventListener('message', handlePaymentMessage);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Block snapshot/snipping tools for trial users
+  useEffect(() => {
+    if (user?.subscriptionTier === 'trial') {
+      // Block PrintScreen
+      const blockPrintScreen = (e) => {
+        if (e.key === 'PrintScreen') {
+          e.preventDefault();
+          alert('Snapshots are disabled in trial mode. Upgrade to unlock this feature.');
+        }
+        // Block Ctrl+Shift+S (Windows Snip)
+        if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          alert('Snipping is disabled in trial mode. Upgrade to unlock this feature.');
+        }
+      };
+      window.addEventListener('keydown', blockPrintScreen);
+      // Block right-click
+      const blockContextMenu = (e) => {
+        e.preventDefault();
+        alert('Right-click is disabled in trial mode. Upgrade to unlock this feature.');
+      };
+      window.addEventListener('contextmenu', blockContextMenu);
+      return () => {
+        window.removeEventListener('keydown', blockPrintScreen);
+        window.removeEventListener('contextmenu', blockContextMenu);
+      };
+    }
+  }, [user]);  // isLoadingDiagram ref — when true, skip trial diagram limit (user is loading saved file)
+  const isLoadingDiagram = useRef(false);
+
+  // Wrapper for setItems — blocks NEW drawing if trial diagram limit (3) reached.
+  // Load and Clear are never blocked.
   const handleSetItems = (itemsOrUpdater) => {
-    // Check if this is adding new items
     if (typeof itemsOrUpdater === 'function') {
       setItems(prev => {
         const newItems = itemsOrUpdater(prev);
-        // If items increased, check limit
-        if (newItems.length > prev.length && user?.subscriptionTier === 'trial') {
-          // Count unique diagrams (simplified - checking total items)
-          if (prev.length === 0 && newItems.length > 0) {
-            // New diagram started
-            if (!checkDiagramLimit()) {
-              return prev; // Don't add items
-            }
-            recordDiagramCreation(user.id);
+        const isAdding = newItems.length > prev.length;        // Only block drag-drop (not load/terraform import) when trial limit reached
+        if (isAdding && !isLoadingDiagram.current && user?.subscriptionTier === 'trial' && !isAdminUser(user)) {
+          const diagramsUsed = user?.diagramsCreated || 0;
+          if (diagramsUsed >= 3 && !diagramCountedThisSession.current) {
+            setTimeout(() => {
+              setUpgradeReason('You have used all 3 trial diagrams. Upgrade for unlimited diagrams.');
+              setUpgradeFeature('Unlimited Diagrams');
+              setUpgradeModalOpen(true);
+            }, 0);
+            return prev;
           }
         }
+
         return newItems;
       });
     } else {
+      // Direct set (load / clear) — reset session tracker
+      diagramCountedThisSession.current = false;
       setItems(itemsOrUpdater);
+    }
+  };
+  // Count a diagram for trial users on first export of a session, then refresh banner
+  const countDiagramIfTrial = async () => {
+    if (user?.subscriptionTier === 'trial' && !isAdminUser(user) && !diagramCountedThisSession.current) {
+      diagramCountedThisSession.current = true;
+      await recordDiagramCreation(user.id);
+      await refreshUser(); // updates banner: 3/3 → 2/3 → 1/3 → 0/3
     }
   };
 
@@ -161,11 +214,12 @@ function App() {
           if (!diagram.items || !Array.isArray(diagram.items)) {
             throw new Error('Invalid diagram file: missing or invalid items array');
           }
-          
-          // Load the diagram
+            // Load the diagram — bypass trial limit (loading is not creating)
+          isLoadingDiagram.current = true;
           handleSetItems(diagram.items || []);
           setConnections(diagram.connections || []);
           setBoundaries(diagram.boundaries || []);
+          isLoadingDiagram.current = false;
 
           const itemCount = diagram.items.length;
           const connCount = (diagram.connections || []).length;
@@ -220,9 +274,12 @@ function App() {
           if (result.items.length === 0) {
             alert('⚠️ No Azure resources found!');
             return;
-          }
-          handleSetItems(prev => [...prev, ...result.items]);
-          setConnections(prev => [...prev, ...result.connections]);
+          }          // Import Terraform — bypass trial limit, set connections fresh to match item IDs
+          isLoadingDiagram.current = true;
+          handleSetItems(result.items);
+          setConnections(result.connections || []);
+          setBoundaries([]);
+          isLoadingDiagram.current = false;
           alert(`✅ Imported ${result.items.length} Azure resources from Terraform!\n\n💰 Costs calculated from actual Azure pricing.`);
         } catch (error) {
           alert(`❌ Error: ${error.message}`);
@@ -255,12 +312,13 @@ function App() {
       alert('No items on canvas to export! Please add Azure services first. ❌');
       return;
     }
-    try {
-      const result = await exportJSON(items, connections, {
+    try {      const result = await exportJSON(items, connections, {
         environment: 'production',
         author: 'User',
         description: 'Azure Architecture Diagram'
       });
+      await countDiagramIfTrial(); // count diagram on JSON export too
+      await refreshUser();
       alert(`✅ JSON exported successfully!\n\n📁 ${result.filename}\n📊 ${result.itemCount} services, ${result.connectionCount} connections`);
     } catch (error) {
       console.error('Error exporting JSON:', error);
@@ -328,10 +386,10 @@ function App() {
         validationSummary: validation,
         author: 'Arunim Pandey',
         version: '2.0.0',
-        timestamp: new Date().toISOString(),      });
-        // Record export for trial users and refresh user state immediately
+        timestamp: new Date().toISOString(),      });        // Record export for trial users and refresh user state immediately
+      await countDiagramIfTrial(); // counts diagram session (3→2→1→0) on first export
       await recordPNGExport(user.id);
-      await refreshUser(); // sync updated count from DB → memory
+      await refreshUser(); // sync updated counts from DB → banner
       
       alert(`✅ PNG exported successfully!\n\n📁 ${result.filename}\n📐 ${result.dimensions.width}×${result.dimensions.height}px\n🔬 ${result.dpi} DPI (${result.dpiSetting})\n📊 ${(result.size / 1024).toFixed(1)} KB`);
     } catch (error) {
@@ -401,7 +459,7 @@ function App() {
         timestamp: new Date().toISOString(),
       });
       
-      alert(`✅ Terraform configuration exported successfully!\n\n📦 Files generated:\n${result.files.map(f => `  • ${f}`).join('\n')}\n\n📊 ${result.itemCount} services, ${result.connectionCount} connections`);
+      alert(`✅ Terraform configuration exported!\n\n📦 Downloaded: ${result.files[0]}\n\nContains: main.tf · variables.tf · outputs.tf · terraform.tfvars · README.md\n\n📊 ${result.itemCount} services, ${result.connectionCount} connections`);
     } catch (error) {
       console.error('Error exporting Terraform:', error);
       alert(`❌ Failed to export Terraform!\n\n${error.message}`);
@@ -486,8 +544,7 @@ function App() {
       />
       <HelpOverlay />
       <div className="main-content">
-        <Toolbar />
-        <CanvasComponent
+        <Toolbar />        <CanvasComponent
           items={items}
           setItems={handleSetItems}
           connections={connections}
@@ -495,6 +552,7 @@ function App() {
           boundaries={boundaries}
           setBoundaries={setBoundaries}
           canvasRef={canvasRef}
+          isTrial={user?.subscriptionTier === 'trial' && !isAdminUser(user)}
         />
         <CostSummary 
           items={items} 

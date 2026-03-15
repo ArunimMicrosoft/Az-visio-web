@@ -38,3 +38,7 @@ api/local.settings.json
 # Debug/temp files
 TOOLBAR_DEBUGGING.md
 *.corrupted
+
+# Local deploy helpers — not needed in repo
+DEPLOY_NOW.bat
+deploy.ps1

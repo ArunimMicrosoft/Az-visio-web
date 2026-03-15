@@ -5,8 +5,59 @@
   border: 2px solid #dee2e6;
   border-radius: 10px;
   padding: 18px;
-  margin: 10px 0;
+  margin: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.05);
+  width: 280px;
+  min-width: 280px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-left: 2px solid #dee2e6;
+  border-radius: 0;
+  transition: width 0.25s ease, min-width 0.25s ease;
+  position: relative;
+}
+
+/* Collapsed — icon-only strip */
+.cost-summary.cost-summary-collapsed {
+  width: 42px;
+  min-width: 42px;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Collapse toggle button */
+.cost-collapse-btn {
+  position: absolute;
+  top: 8px;
+  left: 6px;
+  z-index: 10;
+  width: 26px;
+  height: 26px;
+  background: #0078D4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.cost-collapse-btn:hover { background: #005a9e; }
+
+.cost-summary.cost-summary-collapsed .cost-collapse-btn {
+  left: 50%;
+  transform: translateX(-50%);
+  top: 10px;
+}
+
+/* Inner wrapper shown when not collapsed */
+.cost-inner {
+  display: flex;
+  flex-direction: column;
+  padding-top: 36px; /* space below the collapse button */
+  width: 100%;
 }
 
 .cost-summary.empty {

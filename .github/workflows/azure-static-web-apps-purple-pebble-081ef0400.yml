@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD - AzureArchitectureDesignerWeb
+name: Azure Static Web Apps CI/CD
 
 on:
   push:
@@ -13,65 +13,98 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_STATIC_WEB_APP_NAME: azurearchitecturedesignerweb
-  RESOURCE_GROUP: Application-website
   NODE_VERSION: '20'
 
 jobs:
+  # ──────────────────────────────────────────────────────────────
+  # BUILD + DEPLOY  (push / PR open / manual trigger)
+  # ──────────────────────────────────────────────────────────────
   build_and_deploy_job:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch'
+    if: >
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' && github.event.action != 'closed') ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    name: Build and Deploy Job
+    name: Build and Deploy
     environment:
       name: production
       url: https://purple-pebble-081ef0400.4.azurestaticapps.net
+
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
         with:
           submodules: true
           lfs: false
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
-      - name: Deploy to Azure Static Web Apps
-        id: builddeploy
-        uses: Azure/static-web-apps-deploy@v1
+      - name: 📦 Install frontend dependencies
+        run: npm ci
+
+      - name: 📦 Install API dependencies
+        run: npm ci
+        working-directory: api
+
+      - name: 🔍 Lint (non-blocking)
+        run: npm run lint -- --max-warnings 100
+        continue-on-error: true
+
+      # Vite picks up VITE_* vars at build time — must be set here
+      - name: 🏗️ Build frontend
+        run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_RAZORPAY_KEY_ID: ${{ secrets.VITE_RAZORPAY_KEY_ID }}
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PURPLE_PEBBLE_081EF0400 }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: "upload"
-          app_location: "/"
-          app_build_command: "npm run build"
-          api_location: "api"
-          output_location: "build"
-          production_branch: "main"
+          VITE_RAZORPAY_BACKEND_URL: ${{ secrets.VITE_RAZORPAY_BACKEND_URL }}
+          NODE_ENV: production
 
-      - name: Deployment Summary
-        if: success()
+      - name: ✅ Verify build output
         run: |
-          echo "✅ Deployment successful!"
-          echo "🌐 Static Web App: ${{ env.AZURE_STATIC_WEB_APP_NAME }}"
-          echo "📦 Resource Group: ${{ env.RESOURCE_GROUP }}"
-          echo "🔗 Live URL: https://purple-pebble-081ef0400.4.azurestaticapps.net"
-          echo "📅 Deployed: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          if [ ! -f "build/index.html" ]; then
+            echo "❌ build/index.html not found — aborting"
+            exit 1
+          fi
+          echo "📦 Build size: $(du -sh build/ | awk '{print $1}')"
+          echo "✅ build/index.html confirmed"
 
-  close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    name: Close Pull Request Job
-    steps:
-      - name: Close Pull Request
-        id: closepullrequest
+      # skip_app_build=true because we built manually above
+      - name: 🚀 Deploy to Azure Static Web Apps
+        id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PURPLE_PEBBLE_081EF0400 }}
-          action: "close"
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: /
+          skip_app_build: true
+          api_location: api
+          output_location: build
+          production_branch: main
+
+      - name: 🎉 Deployment summary
+        if: success()
+        run: |
+          echo "✅ Deployed!"
+          echo "🌐 https://purple-pebble-081ef0400.4.azurestaticapps.net"
+          echo "📅 $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+
+  # ──────────────────────────────────────────────────────────────
+  # CLOSE staging environment when a PR is merged/closed
+  # ──────────────────────────────────────────────────────────────
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Environment
+    steps:
+      - name: 🧹 Close staging environment
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PURPLE_PEBBLE_081EF0400 }}
+          action: close
+          app_location: /

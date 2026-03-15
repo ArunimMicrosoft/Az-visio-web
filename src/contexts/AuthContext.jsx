@@ -54,16 +54,15 @@ export const AuthProvider = ({ children }) => {
     const { data: { subscription } } = onAuthStateChange(async (event, session) => {
       console.log('Auth event:', event);
 
-      if (event === 'SIGNED_IN' && session?.user) {
-        const profile = await getUserProfile(session.user.id);
-        const appUser = profileToAppUser(session.user, profile);
-        setUser(appUser);
-      } else if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT') {
         setUser(null);
-      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        setIsLoading(false);
+      }
+      // TOKEN_REFRESHED: silently update user
+      if (event === 'TOKEN_REFRESHED' && session?.user) {
         const profile = await getUserProfile(session.user.id);
         const appUser = profileToAppUser(session.user, profile);
-        setUser(appUser);
+        if (appUser) setUser(appUser);
       }
     });
 
@@ -137,7 +136,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await supabaseSignOut();
+      // Pass current user info so the audit log can capture who logged out
+      await supabaseSignOut(user?.id || null, user?.email || null);
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);

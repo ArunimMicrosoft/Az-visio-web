@@ -1,14 +1,15 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import './UpgradeModal.css';
 
 const UpgradeModal = ({ isOpen, onClose, reason, feature }) => {
-  const navigate = useNavigate();
-
   if (!isOpen) return null;
 
+  // Open payment in a NEW TAB so the canvas (items, connections, boundaries)
+  // is fully preserved in the current tab. When payment completes the new tab
+  // posts a 'PAYMENT_SUCCESS' message back here, then closes itself.
   const handleUpgrade = (plan) => {
-    navigate(`/payment?plan=${plan}`);
+    const url = `${window.location.origin}/payment?plan=${plan}&return=tab`;
+    window.open(url, '_blank', 'noopener');
     onClose();
   };
 

@@ -53,15 +53,55 @@
 }
 
 .toolbar {
-  width: 250px;
+  width: 200px;
+  min-width: 200px;
   background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
   border-right: 2px solid #dee2e6;
   padding: 0;
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
+  transition: width 0.25s ease, min-width 0.25s ease;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Collapsed state — icon-only strip */
+.toolbar.toolbar-collapsed {
+  width: 42px;
+  min-width: 42px;
+  overflow: hidden;
+}
+
+/* Collapse toggle button */
+.toolbar-collapse-btn {
+  position: absolute;
+  top: 8px;
+  right: 6px;
+  z-index: 10;
+  width: 26px;
+  height: 26px;
+  background: #0078D4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.toolbar-collapse-btn:hover { background: #005a9e; }
+
+/* When collapsed, show collapse button centered */
+.toolbar.toolbar-collapsed .toolbar-collapse-btn {
+  right: 50%;
+  transform: translateX(50%);
+  top: 10px;
 }
 
 .toolbar-header {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './BoundaryCanvas.css';
 
 const boundaryTypeConfig = {
@@ -178,24 +178,98 @@ const BoundaryCanvas = ({ boundaries, setBoundaries, items, boundaryDrawMode, dr
         console.error('Error parsing boundary data:', error);
       }
     }
-  };
-  // Start dragging boundary
+  };  // Store layer ref so we can compute coords from window events
+  const layerRef = useRef(null);
+
+  // ── Window-level mousemove/mouseup so pointer-events:none never blocks drag ──
+  useEffect(() => {
+    if (!draggingBoundary && !resizingBoundary) return;
+
+    const onMove = (e) => {
+      // Get the canvas element (parent of boundary-layer)
+      const layer = layerRef.current;
+      const canvas = layer?.parentElement;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scrollLeft = canvas.parentElement?.scrollLeft || 0;
+      const scrollTop  = canvas.parentElement?.scrollTop  || 0;
+
+      if (draggingBoundary) {
+        const newX = e.clientX - rect.left + scrollLeft - dragOffset.x;
+        const newY = e.clientY - rect.top  + scrollTop  - dragOffset.y;
+        setBoundaries(prev => prev.map(b =>
+          b.id === draggingBoundary
+            ? { ...b, x: Math.max(0, newX), y: Math.max(0, newY) }
+            : b
+        ));
+      }
+
+      if (resizingBoundary && resizeStart) {
+        const deltaX = e.clientX - resizeStart.x;
+        const deltaY = e.clientY - resizeStart.y;
+        const minWidth = 100, minHeight = 80;
+
+        setBoundaries(prev => prev.map(b => {
+          if (b.id !== resizingBoundary) return b;
+          let newWidth  = resizeStart.width,  newHeight = resizeStart.height;
+          let newX      = resizeStart.boundaryX, newY   = resizeStart.boundaryY;
+          switch (resizeStart.handle) {
+            case 'se':
+              newWidth  = Math.max(minWidth,  resizeStart.width  + deltaX);
+              newHeight = Math.max(minHeight, resizeStart.height + deltaY);
+              break;
+            case 'sw':
+              newWidth  = Math.max(minWidth,  resizeStart.width  - deltaX);
+              newHeight = Math.max(minHeight, resizeStart.height + deltaY);
+              if (resizeStart.width - deltaX >= minWidth) newX = resizeStart.boundaryX + deltaX;
+              break;
+            case 'ne':
+              newWidth  = Math.max(minWidth,  resizeStart.width  + deltaX);
+              newHeight = Math.max(minHeight, resizeStart.height - deltaY);
+              if (resizeStart.height - deltaY >= minHeight) newY = resizeStart.boundaryY + deltaY;
+              break;
+            case 'nw':
+              newWidth  = Math.max(minWidth,  resizeStart.width  - deltaX);
+              newHeight = Math.max(minHeight, resizeStart.height - deltaY);
+              if (resizeStart.width  - deltaX >= minWidth)  newX = resizeStart.boundaryX + deltaX;
+              if (resizeStart.height - deltaY >= minHeight) newY = resizeStart.boundaryY + deltaY;
+              break;
+            default: break;
+          }
+          return { ...b, x: Math.max(0, newX), y: Math.max(0, newY), width: newWidth, height: newHeight };
+        }));
+      }
+    };
+
+    const onUp = () => {
+      setDraggingBoundary(null);
+      setResizingBoundary(null);
+      setResizeStart(null);
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup',   onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup',   onUp);
+    };
+  }, [draggingBoundary, resizingBoundary, dragOffset, resizeStart, setBoundaries]);
+
+  // Start dragging boundary (triggered from boundary header mousedown)
   const handleBoundaryMouseDown = (e, boundary) => {
     e.stopPropagation();
     e.preventDefault();
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const scrollLeft = e.currentTarget.parentElement?.scrollLeft || 0;
-    const scrollTop = e.currentTarget.parentElement?.scrollTop || 0;
-    
     if (e.target.classList.contains('boundary-header') || e.target.closest('.boundary-header')) {
+      const canvas = layerRef.current?.parentElement;
+      const rect   = canvas?.getBoundingClientRect() || { left: 0, top: 0 };
+      const scrollLeft = canvas?.parentElement?.scrollLeft || 0;
+      const scrollTop  = canvas?.parentElement?.scrollTop  || 0;
       setSelectedBoundary(boundary.id);
       setDraggingBoundary(boundary.id);
       setDragOffset({
         x: e.clientX - rect.left + scrollLeft - boundary.x,
-        y: e.clientY - rect.top + scrollTop - boundary.y
+        y: e.clientY - rect.top  + scrollTop  - boundary.y,
       });
-      console.log('Started dragging boundary:', boundary.label);
     }
   };
 
@@ -203,117 +277,15 @@ const BoundaryCanvas = ({ boundaries, setBoundaries, items, boundaryDrawMode, dr
   const handleResizeStart = (e, boundary, handle) => {
     e.stopPropagation();
     e.preventDefault();
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const scrollLeft = e.currentTarget.parentElement?.scrollLeft || 0;
-    const scrollTop = e.currentTarget.parentElement?.scrollTop || 0;
-    
     setResizingBoundary(boundary.id);
     setResizeStart({
-      x: e.clientX,
-      y: e.clientY,
-      width: boundary.width,
-      height: boundary.height,
-      boundaryX: boundary.x,
-      boundaryY: boundary.y,
+      x: e.clientX, y: e.clientY,
+      width: boundary.width, height: boundary.height,
+      boundaryX: boundary.x, boundaryY: boundary.y,
       handle,
-      scrollLeft,
-      scrollTop
     });
-    console.log('Started resizing boundary:', boundary.label, 'handle:', handle);
   };
-  // Handle mouse move for dragging and resizing (SMOOTH)
-  const handleMouseMove = (e) => {
-    e.preventDefault();
-    
-    if (draggingBoundary) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const scrollLeft = e.currentTarget.parentElement?.scrollLeft || 0;
-      const scrollTop = e.currentTarget.parentElement?.scrollTop || 0;
-      
-      const newX = e.clientX - rect.left + scrollLeft - dragOffset.x;
-      const newY = e.clientY - rect.top + scrollTop - dragOffset.y;
 
-      requestAnimationFrame(() => {
-        setBoundaries(boundaries.map(b =>
-          b.id === draggingBoundary
-            ? { ...b, x: Math.max(0, newX), y: Math.max(0, newY) }
-            : b
-        ));
-      });
-    }
-
-    if (resizingBoundary && resizeStart) {
-      const deltaX = e.clientX - resizeStart.x;
-      const deltaY = e.clientY - resizeStart.y;
-
-      requestAnimationFrame(() => {
-        setBoundaries(boundaries.map(b => {
-          if (b.id !== resizingBoundary) return b;
-
-          let newWidth = resizeStart.width;
-          let newHeight = resizeStart.height;
-          let newX = resizeStart.boundaryX;
-          let newY = resizeStart.boundaryY;
-
-          // Minimum sizes for better UX
-          const minWidth = 100;
-          const minHeight = 80;
-
-          switch (resizeStart.handle) {
-            case 'se': // Bottom-right
-              newWidth = Math.max(minWidth, resizeStart.width + deltaX);
-              newHeight = Math.max(minHeight, resizeStart.height + deltaY);
-              break;
-            case 'sw': // Bottom-left
-              newWidth = Math.max(minWidth, resizeStart.width - deltaX);
-              newHeight = Math.max(minHeight, resizeStart.height + deltaY);
-              if (resizeStart.width - deltaX >= minWidth) {
-                newX = resizeStart.boundaryX + deltaX;
-              }
-              break;
-            case 'ne': // Top-right
-              newWidth = Math.max(minWidth, resizeStart.width + deltaX);
-              newHeight = Math.max(minHeight, resizeStart.height - deltaY);
-              if (resizeStart.height - deltaY >= minHeight) {
-                newY = resizeStart.boundaryY + deltaY;
-              }
-              break;
-            case 'nw': // Top-left
-              newWidth = Math.max(minWidth, resizeStart.width - deltaX);
-              newHeight = Math.max(minHeight, resizeStart.height - deltaY);
-              if (resizeStart.width - deltaX >= minWidth) {
-                newX = resizeStart.boundaryX + deltaX;
-              }
-              if (resizeStart.height - deltaY >= minHeight) {
-                newY = resizeStart.boundaryY + deltaY;
-              }
-              break;
-            default:
-              break;
-          }          return {
-            ...b,
-            x: Math.max(0, newX),
-            y: Math.max(0, newY),
-            width: newWidth,
-            height: newHeight
-          };
-        }));
-      });
-    }
-  };
-  // Handle mouse up
-  const handleMouseUp = () => {
-    if (draggingBoundary) {
-      console.log('Finished dragging boundary');
-    }
-    if (resizingBoundary) {
-      console.log('Finished resizing boundary');
-    }
-    setDraggingBoundary(null);
-    setResizingBoundary(null);
-    setResizeStart(null);
-  };
   // Delete boundary
   const handleDeleteBoundary = (boundaryId) => {
     setBoundaries(boundaries.filter(b => b.id !== boundaryId));
@@ -328,21 +300,16 @@ const BoundaryCanvas = ({ boundaries, setBoundaries, items, boundaryDrawMode, dr
       item.y >= boundary.y &&
       item.y <= boundary.y + boundary.height
     ).length;
-  };return (
+  };  return (
     <div
+      ref={layerRef}
       className={`boundary-layer ${boundaryDrawMode ? 'drawing-mode' : ''}`}
       onMouseDown={boundaryDrawMode ? handleDrawStart : undefined}
-      onMouseMove={boundaryDrawMode ? handleDrawMove : handleMouseMove}
-      onMouseUp={boundaryDrawMode ? handleDrawEnd : handleMouseUp}
+      onMouseMove={boundaryDrawMode ? handleDrawMove : undefined}
+      onMouseUp={boundaryDrawMode ? handleDrawEnd : undefined}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleBoundaryDrop}
-      style={{ 
-        cursor: boundaryDrawMode ? 'crosshair' : 'default'
-        // pointer-events controlled by CSS:
-        //   .boundary-layer = none (transparent, clicks pass to canvas items)
-        //   .boundary-layer.drawing-mode = auto (captures draw events)
-        //   .boundary elements themselves always have pointer-events: auto
-      }}
+      style={{ cursor: boundaryDrawMode ? 'crosshair' : 'default' }}
     >
       {/* Drawing boundary preview */}
       {drawingBoundary && (

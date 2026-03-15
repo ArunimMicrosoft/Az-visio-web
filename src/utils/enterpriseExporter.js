@@ -2,6 +2,7 @@
 // Follows industry best practices for file naming, metadata, validation, and error handling
 
 import { jsPDF } from 'jspdf';
+import JSZip from 'jszip';
 import { generateTerraform } from './terraformGenerator-enterprise';
 import { generateARMTemplate } from './armTemplateGenerator';
 import { generateCostPDF } from './costPDFGenerator';
@@ -544,50 +545,26 @@ export const exportTerraform = async (items, connections, boundaries = [], optio
     const terraformFiles = formatTerraformFiles(rawTerraformFiles);
     console.log('✅ Terraform files formatted with terraform fmt conventions');
     console.log(`📐 Architecture includes ${boundaries.length} boundaries for organization`);
-    
-    // Download all files with delays to prevent browser lag
+      // Download all files with delays to prevent browser lag
     const fileNames = [];
     const environment = options.environment || 'prod';
-    
-    // Download main.tf
-    const mainFilename = generateFileName('main', 'tf', environment);
-    const mainBlob = new Blob([terraformFiles.main], { type: 'text/plain;charset=utf-8' });
-    await downloadBlob(mainBlob, mainFilename);
-    fileNames.push(mainFilename);
-    
-    // Small delay between downloads
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
-    // Download variables.tf
-    const variablesFilename = generateFileName('variables', 'tf', environment);
-    const variablesBlob = new Blob([terraformFiles.variables], { type: 'text/plain;charset=utf-8' });
-    await downloadBlob(variablesBlob, variablesFilename);
-    fileNames.push(variablesFilename);
-    
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
-    // Download outputs.tf
-    const outputsFilename = generateFileName('outputs', 'tf', environment);
-    const outputsBlob = new Blob([terraformFiles.outputs], { type: 'text/plain;charset=utf-8' });
-    await downloadBlob(outputsBlob, outputsFilename);
-    fileNames.push(outputsFilename);
-    
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
-    // Download terraform.tfvars
-    const tfvarsFilename = generateFileName('terraform', 'tfvars', environment);
-    const tfvarsBlob = new Blob([terraformFiles.tfvars], { type: 'text/plain;charset=utf-8' });
-    await downloadBlob(tfvarsBlob, tfvarsFilename);
-    fileNames.push(tfvarsFilename);
-    
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
-    // Download README.md
-    const readmeFilename = `README_terraform_${environment}.md`;
-    const readmeBlob = new Blob([terraformFiles.readme], { type: 'text/markdown;charset=utf-8' });
-    await downloadBlob(readmeBlob, readmeFilename);
-    fileNames.push(readmeFilename);
-    
+
+    // ── Bundle all 5 files into a single ZIP ─────────────────────────────────
+    const zip = new JSZip();
+    const folderName = `terraform_${environment}_${new Date().toISOString().split('T')[0]}`;
+    const folder = zip.folder(folderName);
+
+    folder.file('main.tf',           terraformFiles.main);
+    folder.file('variables.tf',      terraformFiles.variables);
+    folder.file('outputs.tf',        terraformFiles.outputs);
+    folder.file('terraform.tfvars',  terraformFiles.tfvars);
+    folder.file('README.md',         terraformFiles.readme);
+
+    const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    const zipFilename = `azure_terraform_${environment}_${new Date().toISOString().split('T')[0]}_v${EXPORT_VERSION}.zip`;
+    await downloadBlob(zipBlob, zipFilename);
+    fileNames.push(zipFilename);
+
     return {
       success: true,
       files: fileNames,

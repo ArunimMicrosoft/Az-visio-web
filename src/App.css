@@ -39,23 +39,19 @@ body {
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* Cost Summary positioning in layout */
+/* Cost Summary — self-managed width via CostSummary.css */
 .main-content > .cost-summary {
-  width: 320px;
-  max-width: 320px;
-  min-width: 280px;
   overflow-y: auto;
   flex-shrink: 0;
-  border-left: 2px solid #dee2e6;
   border-radius: 0;
   margin: 0;
 }
 
-/* Boundary Toolbar positioning in layout - Between Canvas and Cost Summary */
+/* Boundary Toolbar positioning in layout */
 .main-content > .boundary-toolbar {
-  width: 280px;
-  max-width: 280px;
-  min-width: 240px;
+  width: 240px;
+  max-width: 240px;
+  min-width: 200px;
   overflow-y: auto;
   flex-shrink: 0;
   border-left: 2px solid #dee2e6;

@@ -28,8 +28,10 @@ const TrialBanner = ({ user }) => {
     const id = setInterval(() => setTick(t => t + 1), 60_000);
     return () => clearInterval(id);
   }, []);
-
   if (!user) return null;
+
+  // Admin accounts — show nothing at all
+  if (user.isAdmin || user.role === 'admin') return null;
 
   const tier = user.subscriptionTier || 'trial';
 

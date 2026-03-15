@@ -567,7 +567,7 @@ export const calculateCost = (items, regionKey = 'eastus', currencyKey = 'USD') 
     currencySymbol: currency.symbol,
     region: region.name,
     regionKey: regionKey,
-    pricingDate: 'February 2026'
+    pricingDate: new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })
   };
 };
 

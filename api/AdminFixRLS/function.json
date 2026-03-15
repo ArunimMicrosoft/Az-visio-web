@@ -5,8 +5,8 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["post"],
-      "route": "webhook"
+      "methods": ["post", "options"],
+      "route": "admin/fix-rls"
     },
     {
       "type": "http",

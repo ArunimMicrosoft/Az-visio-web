@@ -181,17 +181,42 @@ export const parseTerraformFile = (content, filename) => {
 /**
  * Parse HCL format with dependency tracking
  */
+/**
+ * Extract the full body of a block starting at `startIndex` (the opening `{`).
+ * Handles unlimited nesting depth by counting braces.
+ */
+const extractBlock = (content, startIndex) => {
+  let depth = 0;
+  let i = startIndex;
+  while (i < content.length) {
+    if (content[i] === '{') depth++;
+    else if (content[i] === '}') {
+      depth--;
+      if (depth === 0) return content.slice(startIndex + 1, i); // body without outer braces
+    }
+    i++;
+  }
+  return null;
+};
+
 const parseTerraformHCL = (content, items, connections, resourceMap, idCounter) => {
-  let cleaned = content.replace(/#.*$/gm, '').replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//gm, '');
-  
-  const resourceRegex = /resource\s+"([^"]+)"\s+"([^"]+)"\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/g;
+  // Strip comments
+  let cleaned = content
+    .replace(/#.*$/gm, '')
+    .replace(/\/\/.*$/gm, '')
+    .replace(/\/\*[\s\S]*?\*\//gm, '');
+
+  // Match: resource "type" "name" { ... } — header only, extract body via brace counter
+  const headerRegex = /resource\s+"([^"]+)"\s+"([^"]+)"\s*\{/g;
   let match;
-  
-  while ((match = resourceRegex.exec(cleaned)) !== null) {
+
+  while ((match = headerRegex.exec(cleaned)) !== null) {
     const resourceType = match[1];
     const resourceName = match[2];
-    const resourceBody = match[3];
-    
+    const blockStart = match.index + match[0].length - 1; // position of opening {
+    const resourceBody = extractBlock(cleaned, blockStart);
+    if (resourceBody === null) continue;
+
     const item = createItemFromResource(resourceType, resourceName, resourceBody, idCounter++);
     if (item) {
       items.push(item);
@@ -199,13 +224,14 @@ const parseTerraformHCL = (content, items, connections, resourceMap, idCounter) 
       extractDependencies(resourceBody, item, resourceMap, connections);
     }
   }
-
-  const dataRegex = /data\s+"([^"]+)"\s+"([^"]+)"\s*\{([^}]*)\}/g;
-  while ((match = dataRegex.exec(cleaned)) !== null) {
+  const dataHeaderRegex = /data\s+"([^"]+)"\s+"([^"]+)"\s*\{/g;
+  while ((match = dataHeaderRegex.exec(cleaned)) !== null) {
     const dataType = match[1];
     const dataName = match[2];
-    const dataBody = match[3];
-    
+    const blockStart = match.index + match[0].length - 1;
+    const dataBody = extractBlock(cleaned, blockStart);
+    if (dataBody === null) continue;
+
     const item = createItemFromResource(dataType, dataName, dataBody, idCounter++);
     if (item) {
       items.push(item);

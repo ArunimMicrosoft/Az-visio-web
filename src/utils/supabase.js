@@ -15,7 +15,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false,
   },
 });
 
@@ -46,19 +46,24 @@ export async function supabaseSignUp(email, password, name) {
     },
   });
 
-  if (error) throw error;
+  if (error) {
+    await writeAuditLog({ email, event: 'SIGNUP_FAILED', details: { reason: error.message } });
+    throw error;
+  }
 
   // Create profile row in profiles table
   if (data.user) {
     const now = new Date().toISOString();
     const trialExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const ADMIN_EMAILS_SIGNUP = ['arunimpandey2903@hotmail.com', 'demo@arunimitcaffe.com'];
+    const isAdminSignup = ADMIN_EMAILS_SIGNUP.includes(email.toLowerCase());
 
     const { error: profileError } = await supabase.from('profiles').upsert({
       id: data.user.id,
       email: email.toLowerCase(),
       name: name || email.split('@')[0],
-      role: email.toLowerCase() === 'admin@azuredesigner.com' ? 'admin' : 'architect',
-      subscription_tier: 'trial',
+      role: isAdminSignup ? 'admin' : 'architect',
+      subscription_tier: isAdminSignup ? 'enterprise' : 'trial',
       trial_start_date: now,
       trial_expires_at: trialExpiresAt,
       trial_exports_used: 0,
@@ -70,10 +75,47 @@ export async function supabaseSignUp(email, password, name) {
     if (profileError) {
       console.error('Profile creation error:', profileError);
     }
+
+    // Log successful signup
+    await writeAuditLog({
+      userId: data.user.id,
+      email: email.toLowerCase(),
+      event: 'SIGNUP',
+      details: {
+        name: name || email.split('@')[0],
+        plan: isAdminSignup ? 'enterprise' : 'trial',
+        role: isAdminSignup ? 'admin' : 'architect',
+      },
+    });
   }
 
   return data;
 }
+
+/**
+ * Write an audit log entry to the audit_logs table.
+ * Silently ignores errors so it never blocks normal auth flows.
+ */
+export async function writeAuditLog({ userId, email, event, details = null, ip = null }) {
+  try {
+    await supabase.from('audit_logs').insert({
+      user_id: userId || null,
+      email: email || null,
+      event,
+      details: details ? JSON.stringify(details) : null,
+      ip_address: ip || null,
+      created_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    // Never throw — audit logging must never break the app
+    console.warn('Audit log write failed (non-blocking):', e.message);
+  }
+}
+
+/**
+ * Sign up a new user with email and password
+ * Also creates a profile row in the `profiles` table
+ */
 
 /**
  * Sign in an existing user with email and password
@@ -84,7 +126,11 @@ export async function supabaseSignIn(email, password) {
     password,
   });
 
-  if (error) throw error;
+  if (error) {
+    // Log failed login attempt
+    await writeAuditLog({ email, event: 'LOGIN_FAILED', details: { reason: error.message } });
+    throw error;
+  }
 
   // Update last_login in profiles
   if (data.user) {
@@ -92,6 +138,14 @@ export async function supabaseSignIn(email, password) {
       .from('profiles')
       .update({ last_login: new Date().toISOString() })
       .eq('id', data.user.id);
+
+    // Log successful login
+    await writeAuditLog({
+      userId: data.user.id,
+      email: data.user.email,
+      event: 'LOGIN',
+      details: { provider: 'email' },
+    });
   }
 
   return data;
@@ -100,7 +154,11 @@ export async function supabaseSignIn(email, password) {
 /**
  * Sign out the current user
  */
-export async function supabaseSignOut() {
+export async function supabaseSignOut(userId = null, email = null) {
+  // Log logout before signing out (session still valid)
+  if (userId || email) {
+    await writeAuditLog({ userId, email, event: 'LOGOUT' });
+  }
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 }
@@ -169,13 +227,26 @@ export async function updateUserProfile(userId, updates) {
  */
 export function profileToAppUser(supabaseUser, profile) {
   if (!profile) return null;
+
+  // Admin/demo accounts always get enterprise tier regardless of DB value
+  const ADMIN_EMAILS = ['arunimpandey2903@hotmail.com', 'demo@arunimitcaffe.com'];
+  const isAdmin = ADMIN_EMAILS.includes((profile.email || supabaseUser.email || '').toLowerCase());
+
+  // Compute 30-day expiry from upgraded_at if subscription_expires_at column missing
+  let subscriptionExpiresAt = profile.subscription_expires_at || null;
+  if (!subscriptionExpiresAt && profile.upgraded_at && profile.subscription_tier !== 'trial') {
+    subscriptionExpiresAt = new Date(
+      new Date(profile.upgraded_at).getTime() + 30 * 24 * 60 * 60 * 1000
+    ).toISOString();
+  }
+
   return {
     id: supabaseUser.id,
     email: profile.email || supabaseUser.email,
     name: profile.name || supabaseUser.user_metadata?.name || supabaseUser.email.split('@')[0],
-    role: profile.role || 'architect',
-    subscriptionTier: profile.subscription_tier || 'trial',
-    subscriptionExpiresAt: profile.subscription_expires_at || null,
+    role: isAdmin ? 'admin' : (profile.role || 'architect'),
+    subscriptionTier: isAdmin ? 'enterprise' : (profile.subscription_tier || 'trial'),
+    subscriptionExpiresAt: isAdmin ? null : subscriptionExpiresAt,
     upgradedAt: profile.upgraded_at || null,
     trialStartDate: profile.trial_start_date,
     trialExpiresAt: profile.trial_expires_at,
@@ -184,6 +255,7 @@ export function profileToAppUser(supabaseUser, profile) {
     createdAt: profile.created_at,
     lastLogin: profile.last_login,
     isActive: profile.is_active !== false,
+    isAdmin,
   };
 }
 

@@ -1,24 +1,28 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './PaymentSuccess.css';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-    const paymentId = searchParams.get('payment_id');
+  const { refreshUser } = useAuth();
+  const paymentId = searchParams.get('payment_id');
   const plan = searchParams.get('plan') || 'professional';
   const [initialError] = useState(() => !paymentId ? 'Invalid payment reference' : null);
 
   useEffect(() => {
-    // Auto-redirect to app after 5 seconds
+    // Refresh user profile so subscriptionTier is updated in memory.
+    // This ensures the trial banner is gone the moment the user lands on /app.
     if (!initialError && paymentId) {
+      refreshUser();
       const timer = setTimeout(() => {
         navigate('/app');
       }, 5000);
-
       return () => clearTimeout(timer);
     }
-  }, [navigate, initialError, paymentId]);  return (
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, initialError, paymentId]);return (
     <div className="payment-success-page">
       <div className="success-container">
         {initialError ? (

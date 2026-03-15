@@ -62,8 +62,20 @@ const PaymentPage = () => {
           await refreshUser(); // sync new subscriptionTier into memory immediately
         }
 
-        // Redirect to success page
-        navigate(`/payment-success?payment_id=${paymentResponse.paymentId}&plan=${plan.id}`);
+        // If this tab was opened from the app (return=tab), post a message back
+        // to the opener tab so it refreshes the user, then close this tab.
+        const returnMode = searchParams.get('return');
+        if (returnMode === 'tab' && window.opener) {
+          window.opener.postMessage(
+            { type: 'PAYMENT_SUCCESS', paymentId: paymentResponse.paymentId, plan: plan.id },
+            window.location.origin
+          );
+          // Brief pause so opener can process the message before this tab closes
+          setTimeout(() => window.close(), 800);
+        } else {
+          // Fallback — same-tab flow (direct navigation to /payment)
+          navigate(`/payment-success?payment_id=${paymentResponse.paymentId}&plan=${plan.id}`);
+        }
       } else {
         throw new Error('Payment did not return a valid payment ID');
       }

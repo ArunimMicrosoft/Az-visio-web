@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "server": "node server.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
-    "swa:dev": "swa start http://localhost:5173 --run \"npm run dev\" --api-location api"
+    "swa:dev": "swa start http://localhost:5173 --run \"npm run dev\" --api-location api",
+    "admin:setup": "node scripts/create-admin-user.mjs"
   },
   "dependencies": {
     "@azure/functions": "^4.11.2",
@@ -22,6 +23,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^5.0.7",
+    "jszip": "^3.10.1",
     "razorpay": "^2.9.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

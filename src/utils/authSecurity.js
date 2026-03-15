@@ -9,28 +9,39 @@ import { supabase } from './supabase';
 // Trial Management Functions
 // ============================================================
 
+// Admin/demo accounts — always treated as paid (full access, no trial limits)
+const ADMIN_EMAILS = ['arunimpandey2903@hotmail.com', 'demo@arunimitcaffe.com'];
+
+/**
+ * Check if user is an admin/demo account
+ */
+export function isAdminUser(user) {
+  return user && ADMIN_EMAILS.includes(user.email?.toLowerCase());
+}
+
 /**
  * Get the trial status for a user (pure function, no DB call)
  */
 export function getTrialStatus(user) {
+  // Admin accounts always have full access — never show trial limits
+  if (isAdminUser(user)) return { isTrial: false };
+
   if (!user || user.subscriptionTier !== 'trial') {
     return { isTrial: false };
   }
 
   const now = Date.now();
   const expiresAt = new Date(user.trialExpiresAt).getTime();
-  const gracePeriodEnd = expiresAt + 2 * 24 * 60 * 60 * 1000; // 2 days grace
 
   const daysRemaining = Math.ceil((expiresAt - now) / (24 * 60 * 60 * 1000));
-  const isExpired = now > expiresAt;
-  const isGracePeriod = isExpired && now <= gracePeriodEnd;
-  const isHardExpired = now > gracePeriodEnd;
+  const isExpired    = now > expiresAt;  // Hard-expired immediately after 7 days — no grace
+  const isHardExpired = isExpired;
 
   return {
     isTrial: true,
     isActive: !isHardExpired,
     isExpired,
-    isGracePeriod,
+    isGracePeriod: false,           // No grace period
     isHardExpired,
     daysRemaining: Math.max(0, daysRemaining),
     exportsRemaining: Math.max(0, 5 - (user.trialExportsUsed || 0)),
@@ -69,12 +80,12 @@ export function canCreateDiagram(user) {
  * Record a PNG export in Supabase (increments counter)
  */
 export async function recordPNGExport(userId) {
+  // Atomic increment via rpc if available, else SELECT+UPDATE
   const { data } = await supabase
     .from('profiles')
     .select('trial_exports_used')
     .eq('id', userId)
     .single();
-
   if (data) {
     await supabase
       .from('profiles')
@@ -83,21 +94,18 @@ export async function recordPNGExport(userId) {
   }
 }
 
-/**
- * Record a diagram creation in Supabase (increments counter)
- */
 export async function recordDiagramCreation(userId) {
   const { data } = await supabase
     .from('profiles')
     .select('diagrams_created')
     .eq('id', userId)
     .single();
-
   if (data) {
-    await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({ diagrams_created: (data.diagrams_created || 0) + 1 })
       .eq('id', userId);
+    if (error) console.error('recordDiagramCreation error:', error);
   }
 }
 
@@ -107,15 +115,30 @@ export async function recordDiagramCreation(userId) {
  */
 export async function upgradeToPaid(userId, tier) {
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // +30 days
-  const { error } = await supabase
+  // Try with subscription_expires_at first; fall back without it if column missing
+  const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  let { error } = await supabase
     .from('profiles')
     .update({
       subscription_tier: tier,
       upgraded_at: now.toISOString(),
-      subscription_expires_at: expiresAt.toISOString(),
+      subscription_expires_at: expiresAt,
     })
     .eq('id', userId);
+
+  if (error && error.code === '42703') {
+    // Column doesn't exist yet — update without it
+    console.warn('subscription_expires_at column missing, updating without it');
+    const result = await supabase
+      .from('profiles')
+      .update({
+        subscription_tier: tier,
+        upgraded_at: now.toISOString(),
+      })
+      .eq('id', userId);
+    error = result.error;
+  }
 
   if (error) {
     console.error('upgradeToPaid error:', error);

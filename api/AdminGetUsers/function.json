@@ -5,8 +5,8 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["post"],
-      "route": "webhook"
+      "methods": ["get", "options"],
+      "route": "admin/users"
     },
     {
       "type": "http",
