@@ -499,6 +499,16 @@ const CATEGORY_ORDER = [
 const layoutItems = (items) => {
   if (items.length === 0) return;
 
+  const COL_WIDTH  = 200;  // px between columns
+  const ROW_HEIGHT = 160;  // px between rows
+  const START_X    = 80;
+  const START_Y    = 80;
+  // Auto-size MAX_ROWS so the diagram stays roughly square
+  // Aim for canvas width ≈ 1400px usable → max columns ≈ 7
+  const MAX_COLS   = 7;
+  const totalCols  = Math.min(Math.ceil(Math.sqrt(items.length * 1.5)), MAX_COLS);
+  const MAX_ROWS   = Math.ceil(items.length / totalCols) + 1;
+
   // Group by category
   const byCategory = new Map();
   for (const item of items) {
@@ -507,31 +517,28 @@ const layoutItems = (items) => {
     byCategory.get(cat).push(item);
   }
 
-  const COL_WIDTH  = 180;  // horizontal gap between category columns
-  const ROW_HEIGHT = 150;  // vertical gap between rows within a column
-  const START_X    = 60;
-  const START_Y    = 60;
-  const MAX_ROWS   = 5;    // max items per column before wrapping to next column
-
-  let colOffset = 0;
-
+  // Build ordered flat list: category order → items within each category
+  const ordered = [];
   for (const cat of CATEGORY_ORDER) {
     const group = byCategory.get(cat);
-    if (!group || group.length === 0) continue;
+    if (group?.length) ordered.push(...group);
+  }
+  // Anything not in CATEGORY_ORDER (shouldn't happen, but safe)
+  for (const item of items) {
+    if (!ordered.includes(item)) ordered.push(item);
+  }
 
-    // Multiple columns within one category if > MAX_ROWS items
-    let row = 0;
-    let colWithinCat = 0;
-    for (const item of group) {
-      if (row >= MAX_ROWS) {
-        row = 0;
-        colWithinCat++;
-      }
-      item.x = START_X + (colOffset + colWithinCat) * COL_WIDTH;
-      item.y = START_Y + row * ROW_HEIGHT;
-      row++;
+  // Place in a grid column-first so same-category items stay together vertically
+  let col = 0;
+  let row = 0;
+  for (const item of ordered) {
+    item.x = START_X + col * COL_WIDTH;
+    item.y = START_Y + row * ROW_HEIGHT;
+    row++;
+    if (row >= MAX_ROWS) {
+      row = 0;
+      col++;
     }
-    colOffset += Math.ceil(group.length / MAX_ROWS);
   }
 };
 
