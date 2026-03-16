@@ -424,21 +424,16 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
             </div>
           )}
 
-        <svg className="connections-svg">
-          {connectionMode && connectingFrom && (
-            <line
-              x1={getItemCenter(connectingFrom).x}
-              y1={getItemCenter(connectingFrom).y}
-              x2={mousePos.x}
-              y2={mousePos.y}
+        <svg className="connections-svg">          {connectionMode && connectingFrom && (
+            <path
+              d={`M ${getItemCenter(connectingFrom).x} ${getItemCenter(connectingFrom).y} C ${getItemCenter(connectingFrom).x + 60} ${getItemCenter(connectingFrom).y}, ${mousePos.x - 60} ${mousePos.y}, ${mousePos.x} ${mousePos.y}`}
+              fill="none"
               stroke="#0078D4"
               strokeWidth="2"
               strokeDasharray="5,5"
               opacity="0.6"
             />
-          )}
-
-          {connections.map((conn, index) => {
+          )}{connections.map((conn, index) => {
             const from = getItemCenter(conn.from);
             const to = getItemCenter(conn.to);
             const status = conn.status || 'valid';
@@ -446,10 +441,15 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
             
             const midX = (from.x + to.x) / 2;
             const midY = (from.y + to.y) / 2;
-            
             const strokeColor = message.color;
             const markerId = `arrowhead-${status}`;
-            
+
+            // Cubic bezier: control points pulled horizontally so lines curve
+            // smoothly between tiers instead of crossing diagonally
+            const dx = Math.abs(to.x - from.x);
+            const cpOffset = Math.max(60, dx * 0.45);
+            const pathD = `M ${from.x} ${from.y} C ${from.x + cpOffset} ${from.y}, ${to.x - cpOffset} ${to.y}, ${to.x} ${to.y}`;
+
             // Build tooltip with cost info
             const costText = conn.cost 
               ? (conn.cost.cost > 0 
@@ -460,17 +460,15 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
             
             return (
               <g key={index}>
-                <line
-                  x1={from.x}
-                  y1={from.y}
-                  x2={to.x}
-                  y2={to.y}
+                <path
+                  d={pathD}
+                  fill="none"
                   stroke={strokeColor}
                   strokeWidth="2"
                   markerEnd={`url(#${markerId})`}
                   className={`connection-line connection-${status}`}
                 />
-                {/* Connection cost label (shown near midpoint) */}
+                {/* Connection cost label */}
                 {conn.cost && conn.cost.cost > 0 && (
                   <text
                     x={midX}
@@ -484,27 +482,10 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
                     ${conn.cost.cost.toFixed(2)}/mo
                   </text>
                 )}
-                <circle
-                  cx={midX}
-                  cy={midY}
-                  r="6"
-                  fill={strokeColor}
-                  stroke="white"
-                  strokeWidth="2"
-                  className={`connection-led led-${status}`}
-                >
+                <circle cx={midX} cy={midY} r="6" fill={strokeColor} stroke="white" strokeWidth="2" className={`connection-led led-${status}`}>
                   <title>{tooltip}</title>
                 </circle>
-                <circle
-                  cx={midX}
-                  cy={midY}
-                  r="6"
-                  fill="none"
-                  stroke={strokeColor}
-                  strokeWidth="2"
-                  opacity="0.6"
-                  className={`led-pulse led-pulse-${status}`}
-                />
+                <circle cx={midX} cy={midY} r="6" fill="none" stroke={strokeColor} strokeWidth="2" opacity="0.6" className={`led-pulse led-pulse-${status}`} />
               </g>
             );
           })}

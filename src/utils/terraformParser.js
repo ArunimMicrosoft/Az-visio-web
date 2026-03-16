@@ -430,7 +430,7 @@ const buildItem = (resourceType, resourceName, body, id) => {
  * Handles: depends_on, *_id = azurerm_x.y.id, direct interpolations.
  */
 const extractDependencies = (body, currentItem, resourceMap, connections, connectionSet) => {
-  // explicit depends_on = [azurerm_x.y, ...]
+  // 1. explicit depends_on = [azurerm_x.y, ...]
   const dependsOnMatch = body.match(/depends_on\s*=\s*\[([^\]]*)\]/s);
   if (dependsOnMatch) {
     for (const dep of dependsOnMatch[1].split(',')) {
@@ -438,21 +438,27 @@ const extractDependencies = (body, currentItem, resourceMap, connections, connec
     }
   }
 
-  // Only connect on real ID references (e.g. subnet_id, vnet_id, server_id, network_interface_ids)
-  // Ignore .name, .location, .type, .kind — those are just property reads, not architectural links
-  const idRefRegex = /\b\w+_ids?\s*=\s*[\[\s]*azurerm_[a-z_]+\.[a-z0-9_]+/g;
-  let refMatch;
-  while ((refMatch = idRefRegex.exec(body)) !== null) {
-    // extract the azurerm_type.name part
-    const azureRef = refMatch[0].match(/azurerm_[a-z_]+\.[a-z0-9_]+/);
-    if (azureRef) addConnection(azureRef[0], currentItem, resourceMap, connections, connectionSet);
+  // 2. Real ID references: subnet_id, vnet_subnet_id, server_id, service_plan_id, workspace_id etc.
+  //    Only match lines where the VALUE is azurerm_type.name.id (or .ids array)
+  //    This excludes .name / .location / .type which are property reads, not architectural links.
+  const idRefRegex = /\b[\w_]+_ids?\s*=\s*[\[\s]*azurerm_([a-z_]+)\.([a-z0-9_]+)/g;
+  let m;
+  while ((m = idRefRegex.exec(body)) !== null) {
+    addConnection(`azurerm_${m[1]}.${m[2]}`, currentItem, resourceMap, connections, connectionSet);
   }
 
-  // Also connect on storage_account_name, service_plan_id, workspace_id etc (named deps)
-  const namedDepRegex = /\b(?:storage_account_name|service_plan_id|workspace_id|cluster_id|namespace_id|vault_id|hub_id|profile_id|server_id|registry_id|gateway_id|firewall_id)\s*=\s*azurerm_[a-z_]+\.[a-z0-9_]+/g;
-  while ((refMatch = namedDepRegex.exec(body)) !== null) {
-    const azureRef = refMatch[0].match(/azurerm_[a-z_]+\.[a-z0-9_]+/);
-    if (azureRef) addConnection(azureRef[0], currentItem, resourceMap, connections, connectionSet);
+  // 3. Interpolated ID refs: = "...${azurerm_type.name.id}..."
+  const interpIdRegex = /\$\{\s*azurerm_([a-z_]+)\.([a-z0-9_]+)\.id\s*\}/g;
+  while ((m = interpIdRegex.exec(body)) !== null) {
+    addConnection(`azurerm_${m[1]}.${m[2]}`, currentItem, resourceMap, connections, connectionSet);
+  }
+
+  // 4. Key named deps that use .name instead of .id but are real architectural links
+  //    e.g. storage_account_name = azurerm_storage_account.x.name
+  //         virtual_network_name = azurerm_virtual_network.x.name
+  const namedLinkRegex = /\b(?:storage_account_name|virtual_network_name|namespace_name|hub_name|profile_name|cluster_name|registry_login_server)\s*=\s*azurerm_([a-z_]+)\.([a-z0-9_]+)\./g;
+  while ((m = namedLinkRegex.exec(body)) !== null) {
+    addConnection(`azurerm_${m[1]}.${m[2]}`, currentItem, resourceMap, connections, connectionSet);
   }
 };
 
@@ -484,61 +490,120 @@ const addConnection = (depRef, targetItem, resourceMap, connections, connectionS
 };
 
 // ---------------------------------------------------------------------------
-// Category-aware layout
-// Places resources in columns by category so the diagram reads like a
-// real architecture (networking → compute → storage → databases → etc.)
+// Azure Well-Architected Framework tier layout
+//
+// Left → Right, matching real Azure architecture reference diagrams:
+//
+//  TIER 0         TIER 1          TIER 2           TIER 3         TIER 4          TIER 5
+//  Edge /       │ Networking    │ Compute /       │ Data          │ Integration /  │ Security /
+//  Management   │ (VNet,GW,FW)  │ Containers      │ (DB, Storage) │ Analytics/AI   │ Monitoring
+//
+// Same-tier items stack vertically. Wide tiers wrap into a second column.
+// A fixed gap separates each tier for visual breathing room.
+// Within each tier items are sorted by WAF sub-order (perimeter → internal).
 // ---------------------------------------------------------------------------
 
-const CATEGORY_ORDER = [
-  'management', 'networking', 'compute', 'containers', 'storage',
-  'databases', 'integration', 'security', 'identity',
-  'analytics', 'ai', 'monitoring', 'iot',
-  'migration', 'hybrid', 'unknown',
-];
+const CATEGORY_TIER = {
+  management:  0, migration: 0, hybrid: 0,
+  networking:  1,
+  compute:     2, containers: 2,
+  storage:     3, databases:  3,
+  integration: 4, analytics:  4, ai: 4, iot: 4,
+  security:    5, identity:   5, monitoring: 5, unknown: 5,
+};
+
+// WAF sub-order within a tier — lower = placed first (top)
+const SERVICE_SORT_ORDER = {
+  // Networking — perimeter first, then internal
+  applicationgateways: 0, frontdoors: 0, cdnprofiles: 1,
+  loadbalancers: 2, trafficmanagerprofiles: 2,
+  firewalls: 3, networksecuritygroups: 4,
+  virtualnetworks: 5, subnets: 6,
+  virtualnetworkgateways: 7, expressroutecircuits: 7,
+  bastions: 8, publicipaddresses: 9, networkinterfaces: 10,
+  // Compute — orchestrators first
+  kubernetesservices: 0, containerapps: 1,
+  virtualmachines: 2, vmscalesets: 2,
+  appservices: 3, functionapps: 4, appserviceplans: 5,
+  containerinstances: 6, containerregistries: 7,
+  // Data — primary DBs first, storage last
+  sqlserver: 0, sqldatabases: 1, sqlmanagedinstances: 2,
+  azurecosmosdb: 3, cacheforredis: 4,
+  azuredatabaseformysqlservers: 5, azuredatabaseforpostgresqlservers: 6,
+  storageaccounts: 7,
+  // Integration
+  apimanagement: 0, logicapps: 1,
+  servicebusnamespaces: 2, eventhubs: 3, eventgridtopics: 4,
+  // Security/Monitoring
+  keyvaults: 0, microsoftdefenderforcloud: 1, microsoftsentinel: 2,
+  applicationinsights: 3, loganalyticsworkspaces: 4, azuremonitor: 5,
+};
 
 const layoutItems = (items) => {
   if (items.length === 0) return;
 
-  const COL_WIDTH  = 200;  // px between columns
-  const ROW_HEIGHT = 160;  // px between rows
+  // Canvas card is ~120px wide × 130px tall (icon 64px + label + 10px padding each side)
+  const CARD_W     = 120;   // rendered card width
+  const CARD_H     = 130;   // rendered card height
+  const COL_GAP    = 50;    // gap between items in same column
+  const ROW_GAP    = 28;    // gap between rows
+  const TIER_EXTRA = 70;    // extra space between tiers (on top of COL_GAP)
+  const MAX_ROWS   = 5;     // max items per column before wrapping within a tier
   const START_X    = 80;
   const START_Y    = 80;
-  // Auto-size MAX_ROWS so the diagram stays roughly square
-  // Aim for canvas width ≈ 1400px usable → max columns ≈ 7
-  const MAX_COLS   = 7;
-  const totalCols  = Math.min(Math.ceil(Math.sqrt(items.length * 1.5)), MAX_COLS);
-  const MAX_ROWS   = Math.ceil(items.length / totalCols) + 1;
 
-  // Group by category
-  const byCategory = new Map();
+  const COL_STEP = CARD_W + COL_GAP;   // ~170px per column slot
+  const ROW_STEP = CARD_H + ROW_GAP;   // ~158px per row slot
+
+  // Group by tier
+  const tiers = new Map();
   for (const item of items) {
-    const cat = item.metadata?.category || 'unknown';
-    if (!byCategory.has(cat)) byCategory.set(cat, []);
-    byCategory.get(cat).push(item);
+    const cat  = item.metadata?.category || 'unknown';
+    const tier = CATEGORY_TIER[cat] ?? 5;
+    if (!tiers.has(tier)) tiers.set(tier, []);
+    tiers.get(tier).push(item);
   }
 
-  // Build ordered flat list: category order → items within each category
-  const ordered = [];
-  for (const cat of CATEGORY_ORDER) {
-    const group = byCategory.get(cat);
-    if (group?.length) ordered.push(...group);
-  }
-  // Anything not in CATEGORY_ORDER (shouldn't happen, but safe)
-  for (const item of items) {
-    if (!ordered.includes(item)) ordered.push(item);
+  // Sort within each tier by WAF sub-order then name
+  for (const [, group] of tiers) {
+    group.sort((a, b) => {
+      const ao = SERVICE_SORT_ORDER[a.serviceType] ?? 99;
+      const bo = SERVICE_SORT_ORDER[b.serviceType] ?? 99;
+      if (ao !== bo) return ao - bo;
+      return (a.name || '').localeCompare(b.name || '');
+    });
   }
 
-  // Place in a grid column-first so same-category items stay together vertically
-  let col = 0;
-  let row = 0;
-  for (const item of ordered) {
-    item.x = START_X + col * COL_WIDTH;
-    item.y = START_Y + row * ROW_HEIGHT;
-    row++;
-    if (row >= MAX_ROWS) {
-      row = 0;
-      col++;
+  // Calculate starting x for each tier — tiers advance by their column count + 1 gap column
+  let xCursor = 0;
+  const tierStartX = new Map();
+  for (let t = 0; t <= 5; t++) {
+    const group = tiers.get(t) || [];
+    tierStartX.set(t, xCursor);
+    if (group.length > 0) {
+      const cols = Math.ceil(group.length / MAX_ROWS);
+      xCursor += cols * COL_STEP + TIER_EXTRA;
     }
+  }
+
+  // Place items
+  for (let t = 0; t <= 5; t++) {
+    const group = tiers.get(t);
+    if (!group?.length) continue;
+
+    const cols      = Math.ceil(group.length / MAX_ROWS);
+    const rowsInCol = Math.ceil(group.length / cols);
+    const tierH     = rowsInCol * ROW_STEP - ROW_GAP;
+    const maxH      = MAX_ROWS * ROW_STEP - ROW_GAP;
+    // Vertically centre short tiers against the tallest tier height
+    const topPad    = Math.max(0, Math.round((maxH - tierH) / 2));
+
+    group.forEach((item, idx) => {
+      const col = Math.floor(idx / rowsInCol);
+      const row = idx % rowsInCol;
+      item.x = START_X + tierStartX.get(t) + col * COL_STEP;
+      item.y = START_Y + topPad + row * ROW_STEP;
+    });
   }
 };
 
