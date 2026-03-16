@@ -452,11 +452,9 @@ const extractDependencies = (body, currentItem, resourceMap, connections, connec
   while ((m = interpIdRegex.exec(body)) !== null) {
     addConnection(`azurerm_${m[1]}.${m[2]}`, currentItem, resourceMap, connections, connectionSet);
   }
-
-  // 4. Key named deps that use .name instead of .id but are real architectural links
-  //    e.g. storage_account_name = azurerm_storage_account.x.name
-  //         virtual_network_name = azurerm_virtual_network.x.name
-  const namedLinkRegex = /\b(?:storage_account_name|virtual_network_name|namespace_name|hub_name|profile_name|cluster_name|registry_login_server)\s*=\s*azurerm_([a-z_]+)\.([a-z0-9_]+)\./g;
+  // 4. Named deps: storage_account_name, virtual_network_name etc — real architectural links
+  //    Match both = azurerm_X.Y.name and = azurerm_X.Y (no trailing attribute)
+  const namedLinkRegex = /\b(?:storage_account_name|virtual_network_name|namespace_name|hub_name|profile_name|cluster_name|registry_login_server)\s*=\s*azurerm_([a-z_]+)\.([a-z0-9_]+)/g;
   while ((m = namedLinkRegex.exec(body)) !== null) {
     addConnection(`azurerm_${m[1]}.${m[2]}`, currentItem, resourceMap, connections, connectionSet);
   }
@@ -514,18 +512,20 @@ const CATEGORY_TIER = {
 
 // WAF sub-order within a tier — lower = placed first (top)
 const SERVICE_SORT_ORDER = {
-  // Networking — perimeter first, then internal
-  applicationgateways: 0, frontdoors: 0, cdnprofiles: 1,
-  loadbalancers: 2, trafficmanagerprofiles: 2,
-  firewalls: 3, networksecuritygroups: 4,
-  virtualnetworks: 5, subnets: 6,
-  virtualnetworkgateways: 7, expressroutecircuits: 7,
-  bastions: 8, publicipaddresses: 9, networkinterfaces: 10,
+  // Tier 0 Management
+  resourcegroups: 0, managementgroups: 1, automationaccounts: 2, policy: 3,
+  // Networking — perimeter first (CDN/AppGW/FrontDoor), then internal
+  cdnprofiles: 0, frontdoors: 0, applicationgateways: 1, trafficmanagerprofiles: 2,
+  loadbalancers: 3,
+  firewalls: 4, networksecuritygroups: 5,
+  virtualnetworks: 6, subnets: 7,
+  virtualnetworkgateways: 8, expressroutecircuits: 8,
+  bastions: 9, publicipaddresses: 10, networkinterfaces: 11,
   // Compute — orchestrators first
   kubernetesservices: 0, containerapps: 1,
-  virtualmachines: 2, vmscalesets: 2,
-  appservices: 3, functionapps: 4, appserviceplans: 5,
-  containerinstances: 6, containerregistries: 7,
+  virtualmachines: 2, vmscalesets: 3,
+  appservices: 4, functionapps: 5, appserviceplans: 6,
+  containerinstances: 7, containerregistries: 8,
   // Data — primary DBs first, storage last
   sqlserver: 0, sqldatabases: 1, sqlmanagedinstances: 2,
   azurecosmosdb: 3, cacheforredis: 4,
@@ -542,18 +542,27 @@ const SERVICE_SORT_ORDER = {
 const layoutItems = (items) => {
   if (items.length === 0) return;
 
-  // Canvas card is ~120px wide × 130px tall (icon 64px + label + 10px padding each side)
-  const CARD_W     = 120;   // rendered card width
-  const CARD_H     = 130;   // rendered card height
-  const COL_GAP    = 50;    // gap between items in same column
-  const ROW_GAP    = 28;    // gap between rows
-  const TIER_EXTRA = 70;    // extra space between tiers (on top of COL_GAP)
-  const MAX_ROWS   = 5;     // max items per column before wrapping within a tier
-  const START_X    = 80;
-  const START_Y    = 80;
+  // Canvas card: ~120px wide × 130px tall
+  const CARD_W   = 120;
+  const CARD_H   = 130;
+  const COL_GAP  = 45;   // between items in same tier
+  const ROW_GAP  = 30;   // between rows
+  const MAX_ROWS = 5;    // before wrapping to second column within tier
 
-  const COL_STEP = CARD_W + COL_GAP;   // ~170px per column slot
-  const ROW_STEP = CARD_H + ROW_GAP;   // ~158px per row slot
+  const COL_STEP = CARD_W + COL_GAP;  // 165px
+  const ROW_STEP = CARD_H + ROW_GAP;  // 160px
+
+  // FIXED tier x positions — tiers never overlap regardless of item count
+  // Each tier is allocated enough columns for up to 2 inner columns + gap
+  // Tier widths (in column slots): 0=1, 1=2, 2=2, 3=2, 4=2, 5=2
+  const TIER_X_PX = {
+    0:  80,   // Management  — 1 col
+    1:  320,  // Networking  — up to 2 cols (5+5 items)
+    2:  720,  // Compute     — up to 2 cols
+    3: 1080,  // Data        — up to 2 cols
+    4: 1440,  // Integration — up to 2 cols
+    5: 1800,  // Security    — up to 2 cols
+  };
 
   // Group by tier
   const tiers = new Map();
@@ -574,19 +583,10 @@ const layoutItems = (items) => {
     });
   }
 
-  // Calculate starting x for each tier — tiers advance by their column count + 1 gap column
-  let xCursor = 0;
-  const tierStartX = new Map();
-  for (let t = 0; t <= 5; t++) {
-    const group = tiers.get(t) || [];
-    tierStartX.set(t, xCursor);
-    if (group.length > 0) {
-      const cols = Math.ceil(group.length / MAX_ROWS);
-      xCursor += cols * COL_STEP + TIER_EXTRA;
-    }
-  }
+  // Max height across all tiers — for vertical centering
+  const maxTierH = MAX_ROWS * ROW_STEP - ROW_GAP;
 
-  // Place items
+  // Place each item
   for (let t = 0; t <= 5; t++) {
     const group = tiers.get(t);
     if (!group?.length) continue;
@@ -594,15 +594,13 @@ const layoutItems = (items) => {
     const cols      = Math.ceil(group.length / MAX_ROWS);
     const rowsInCol = Math.ceil(group.length / cols);
     const tierH     = rowsInCol * ROW_STEP - ROW_GAP;
-    const maxH      = MAX_ROWS * ROW_STEP - ROW_GAP;
-    // Vertically centre short tiers against the tallest tier height
-    const topPad    = Math.max(0, Math.round((maxH - tierH) / 2));
+    const topPad    = Math.max(0, Math.round((maxTierH - tierH) / 2));
 
     group.forEach((item, idx) => {
       const col = Math.floor(idx / rowsInCol);
       const row = idx % rowsInCol;
-      item.x = START_X + tierStartX.get(t) + col * COL_STEP;
-      item.y = START_Y + topPad + row * ROW_STEP;
+      item.x = TIER_X_PX[t] + col * COL_STEP;
+      item.y = 80 + topPad + row * ROW_STEP;
     });
   }
 };
