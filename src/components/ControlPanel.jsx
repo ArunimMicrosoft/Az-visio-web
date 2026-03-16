@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isAdmin } from '../utils/adminCheck';
+import TerraformPastePanel from './TerraformPastePanel';
 import './ControlPanel.css';
 
 const ControlPanel = ({ 
@@ -15,7 +16,10 @@ const ControlPanel = ({
   onExportTerraform,
   onExportARM,
   onExportCostReport,
-  onImportTerraform
+  onImportTerraform,
+  onPasteTerraform,
+  isTrial,
+  onUpgrade,
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, logout } = useAuth();
@@ -81,10 +85,14 @@ const ControlPanel = ({
           💾 Save
         </button>        <button className="control-btn load-btn" onClick={onLoad} title="Load diagram from file">
           📂 Load
-        </button>
-        <button className="control-btn terraform-import-btn" onClick={onImportTerraform} title="Import Terraform file (.tf or .tf.json)">
+        </button>        <button className="control-btn terraform-import-btn" onClick={onImportTerraform} title="Import Terraform file (.tf or .tf.json)">
           🏗️ Import TF
         </button>
+        <TerraformPastePanel
+          onImport={onPasteTerraform}
+          isTrial={isTrial}
+          onUpgrade={onUpgrade}
+        />
         <button className="control-btn validate-btn" onClick={onValidate} title="Validate architecture for deployment">
           ✅ Validate
         </button>

@@ -25,7 +25,6 @@ import {
 } from './utils/authSecurity';
 import { parseTerraformFile, validateTerraformFile } from './utils/terraformParser';
 import { validateArchitecture } from './utils/azureArchitectureValidator';
-import TerraformPastePanel from './components/TerraformPastePanel';
 import './App.css';
 
 console.log('=== APP.JSX LOADING ===');
@@ -532,8 +531,7 @@ function App() {
   };
   return (
     <div className="app">
-      <TrialBanner user={user} />
-      <ControlPanel
+      <TrialBanner user={user} />      <ControlPanel
         onSave={handleSave}
         onLoad={handleLoad}
         onClear={handleClear}
@@ -545,13 +543,19 @@ function App() {
         onExportARM={handleExportARM}
         onExportCostReport={handleExportCostReport}
         onImportTerraform={handleImportTerraform}
+        onPasteTerraform={handlePasteTerraformImport}
+        isTrial={user?.subscriptionTier === 'trial' && !isAdminUser(user)}
+        onUpgrade={() => {
+          setUpgradeReason('Terraform Paste is a Pro feature. Upgrade to paste HCL and generate diagrams instantly.');
+          setUpgradeFeature('Terraform Paste');
+          setUpgradeModalOpen(true);
+        }}
       />      <UpgradeModal 
         isOpen={upgradeModalOpen}
         onClose={() => setUpgradeModalOpen(false)}
         reason={upgradeReason}
         feature={upgradeFeature}
       />
-      <TerraformPastePanel onImport={handlePasteTerraformImport} />
       <HelpOverlay />
       <div className="main-content">
         <Toolbar />        <CanvasComponent

@@ -60,81 +60,129 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* TerraformPastePanel — light theme, dropdown from toolbar */
+
+/* wrapper sits inline in the control-buttons flex row */
+.tf-paste-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+/* the toggle button inherits .control-btn styles from ControlPanel.css */
+.tf-toggle-btn {
+  background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%) !important;
+  border-color: #0078D4 !important;
+  color: #0078D4 !important;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tf-toggle-btn--active,
+.tf-toggle-btn:hover {
+  background: linear-gradient(135deg, #0078D4 0%, #005a9e 100%) !important;
+  color: #fff !important;
+}
+
+/* ── dropdown card ── */
+.tf-paste-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 999;
+  width: 560px;
+  background: #ffffff;
+  border: 1.5px solid #0078D4;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 120, 212, 0.18), 0 2px 8px rgba(0,0,0,0.10);
+  animation: tf-drop 0.18s ease;
+  overflow: hidden;
+}
+
+@keyframes tf-drop {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* header bar */
+.tf-paste-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+  border-bottom: 1px solid #d0e8f8;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0078D4;
+}
+
+.tf-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+}
+.tf-close-btn:hover { background: #f0f0f0; color: #333; }
+
 /* ── textarea ── */
 .tf-paste-textarea {
+  display: block;
   width: 100%;
-  min-height: 180px;
-  max-height: 340px;
+  min-height: 200px;
+  max-height: 320px;
   resize: vertical;
-  background: #0d1117;
-  color: #c9d1d9;
-  border: 1px solid #30363d;
-  border-radius: 6px;
-  padding: 10px 12px;
+  background: #fafbfc;
+  color: #24292e;
+  border: none;
+  border-bottom: 1px solid #e1e4e8;
+  padding: 12px 14px;
   font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.65;
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.2s;
 }
+.tf-paste-textarea:focus { background: #fff; }
+.tf-paste-textarea::placeholder { color: #aab0b7; }
 
-.tf-paste-textarea:focus {
-  border-color: #0078d4;
-}
-
-.tf-paste-textarea::placeholder {
-  color: #484f58;
-}
-
-/* ── footer row ── */
+/* ── footer ── */
 .tf-paste-footer {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #f6f8fa;
   flex-wrap: wrap;
 }
 
-.tf-paste-actions {
-  display: flex;
-  gap: 8px;
-}
+.tf-paste-actions { display: flex; gap: 8px; }
 
 /* ── buttons ── */
 .tf-btn {
-  padding: 6px 14px;
+  padding: 7px 16px;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s, transform 0.1s;
 }
+.tf-btn:active { transform: scale(0.96); }
 
-.tf-btn:active {
-  transform: scale(0.96);
-}
+.tf-btn--run   { background: #0078D4; color: #fff; }
+.tf-btn--run:hover { background: #005a9e; }
 
-.tf-btn--run {
-  background: #0078d4;
-  color: #fff;
-}
+.tf-btn--clear { background: #e1e4e8; color: #586069; }
+.tf-btn--clear:hover { background: #d1d5da; }
 
-.tf-btn--run:hover {
-  background: #006cbf;
-}
+.tf-btn--upgrade { background: #107c10; color: #fff; font-size: 13px; padding: 8px 18px; }
+.tf-btn--upgrade:hover { background: #0a5f0a; }
 
-.tf-btn--clear {
-  background: #2d333b;
-  color: #8b949e;
-}
-
-.tf-btn--clear:hover {
-  background: #3d444d;
-  color: #c9d1d9;
-}
-
-/* ── status messages ── */
+/* ── status ── */
 .tf-paste-status {
   flex: 1;
   font-size: 12px;
@@ -143,21 +191,19 @@
   white-space: pre-line;
   line-height: 1.5;
 }
+.tf-paste-status--success { background: #e6ffed; color: #22863a; border: 1px solid #c3e6cb; }
+.tf-paste-status--error   { background: #ffeef0; color: #d73a49; border: 1px solid #fdbdbd; }
+.tf-paste-status--warn    { background: #fff8e1; color: #b08800; border: 1px solid #ffe082; }
 
-.tf-paste-status--success {
-  background: rgba(35, 197, 94, 0.12);
-  color: #3fb950;
-  border: 1px solid rgba(35, 197, 94, 0.25);
+/* trial upgrade block */
+.tf-trial-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px;
+  background: #fff8e1;
+  border-top: 1px solid #ffe082;
 }
-
-.tf-paste-status--error {
-  background: rgba(248, 81, 73, 0.1);
-  color: #f85149;
-  border: 1px solid rgba(248, 81, 73, 0.25);
-}
-
-.tf-paste-status--warn {
-  background: rgba(210, 153, 34, 0.1);
-  color: #e3b341;
-  border: 1px solid rgba(210, 153, 34, 0.25);
-}
+.tf-trial-icon { font-size: 28px; flex-shrink: 0; }
+.tf-trial-text { display: flex; flex-direction: column; gap: 3px; flex: 1; font-size: 13px; color: #444; }
+.tf-trial-text strong { color: #b08800; font-size: 14px; }
