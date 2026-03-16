@@ -25,6 +25,7 @@ import {
 } from './utils/authSecurity';
 import { parseTerraformFile, validateTerraformFile } from './utils/terraformParser';
 import { validateArchitecture } from './utils/azureArchitectureValidator';
+import TerraformPastePanel from './components/TerraformPastePanel';
 import './App.css';
 
 console.log('=== APP.JSX LOADING ===');
@@ -252,6 +253,15 @@ function App() {
       setConnections([]);
       setBoundaries([]);
     }
+  };
+
+  // Called by TerraformPastePanel — result is already parsed by the panel
+  const handlePasteTerraformImport = (result) => {
+    isLoadingDiagram.current = true;
+    handleSetItems(result.items);
+    setConnections(result.connections || []);
+    setBoundaries([]);
+    isLoadingDiagram.current = false;
   };
 
   const handleImportTerraform = () => {
@@ -535,13 +545,13 @@ function App() {
         onExportARM={handleExportARM}
         onExportCostReport={handleExportCostReport}
         onImportTerraform={handleImportTerraform}
-      />
-      <UpgradeModal 
+      />      <UpgradeModal 
         isOpen={upgradeModalOpen}
         onClose={() => setUpgradeModalOpen(false)}
         reason={upgradeReason}
         feature={upgradeFeature}
       />
+      <TerraformPastePanel onImport={handlePasteTerraformImport} />
       <HelpOverlay />
       <div className="main-content">
         <Toolbar />        <CanvasComponent
