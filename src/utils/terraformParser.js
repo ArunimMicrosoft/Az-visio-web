@@ -210,7 +210,6 @@ const TERRAFORM_TO_AZURE_MAPPING = {
 
 // Resource types that are purely configuration — skip them on the canvas
 const SKIP_RESOURCE_TYPES = new Set([
-  'azurerm_resource_group',          // shown as boundary, not icon
   'random_string', 'random_id', 'random_password', 'random_pet',
   'azurerm_client_config',           // data source
   'azurerm_subscription',            // data source
@@ -439,11 +438,21 @@ const extractDependencies = (body, currentItem, resourceMap, connections, connec
     }
   }
 
-  // any reference like azurerm_type.name  (must have a dot — not just the type)
-  const refRegex = /\bazurerm_[a-z_]+\.[a-z0-9_]+/g;
+  // Only connect on real ID references (e.g. subnet_id, vnet_id, server_id, network_interface_ids)
+  // Ignore .name, .location, .type, .kind — those are just property reads, not architectural links
+  const idRefRegex = /\b\w+_ids?\s*=\s*[\[\s]*azurerm_[a-z_]+\.[a-z0-9_]+/g;
   let refMatch;
-  while ((refMatch = refRegex.exec(body)) !== null) {
-    addConnection(refMatch[0], currentItem, resourceMap, connections, connectionSet);
+  while ((refMatch = idRefRegex.exec(body)) !== null) {
+    // extract the azurerm_type.name part
+    const azureRef = refMatch[0].match(/azurerm_[a-z_]+\.[a-z0-9_]+/);
+    if (azureRef) addConnection(azureRef[0], currentItem, resourceMap, connections, connectionSet);
+  }
+
+  // Also connect on storage_account_name, service_plan_id, workspace_id etc (named deps)
+  const namedDepRegex = /\b(?:storage_account_name|service_plan_id|workspace_id|cluster_id|namespace_id|vault_id|hub_id|profile_id|server_id|registry_id|gateway_id|firewall_id)\s*=\s*azurerm_[a-z_]+\.[a-z0-9_]+/g;
+  while ((refMatch = namedDepRegex.exec(body)) !== null) {
+    const azureRef = refMatch[0].match(/azurerm_[a-z_]+\.[a-z0-9_]+/);
+    if (azureRef) addConnection(azureRef[0], currentItem, resourceMap, connections, connectionSet);
   }
 };
 
@@ -481,9 +490,9 @@ const addConnection = (depRef, targetItem, resourceMap, connections, connectionS
 // ---------------------------------------------------------------------------
 
 const CATEGORY_ORDER = [
-  'networking', 'compute', 'containers', 'storage',
+  'management', 'networking', 'compute', 'containers', 'storage',
   'databases', 'integration', 'security', 'identity',
-  'analytics', 'ai', 'monitoring', 'iot', 'management',
+  'analytics', 'ai', 'monitoring', 'iot',
   'migration', 'hybrid', 'unknown',
 ];
 
@@ -498,11 +507,11 @@ const layoutItems = (items) => {
     byCategory.get(cat).push(item);
   }
 
-  const COL_WIDTH  = 220;  // horizontal gap between category columns
-  const ROW_HEIGHT = 160;  // vertical gap between rows within a column
-  const START_X    = 80;
-  const START_Y    = 80;
-  const MAX_ROWS   = 6;    // max items per column before wrapping to next column
+  const COL_WIDTH  = 180;  // horizontal gap between category columns
+  const ROW_HEIGHT = 150;  // vertical gap between rows within a column
+  const START_X    = 60;
+  const START_Y    = 60;
+  const MAX_ROWS   = 5;    // max items per column before wrapping to next column
 
   let colOffset = 0;
 
