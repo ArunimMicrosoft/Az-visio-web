@@ -57,7 +57,7 @@ export const generateCostPDF = (items, regionKey = 'eastus', currencyKey = 'USD'
     doc.text("Enterprise Architecture Cost Analysis", pageWidth / 2, 40, { align: 'center' });
     
     doc.setFontSize(10);
-    doc.text("Arunim's IT Café — Azure Architecture Designer v1.0.0", pageWidth / 2, 52, { align: 'center' });
+    doc.text("Arunim's IT Café — Cloud Canvas Designer v1.0.0", pageWidth / 2, 52, { align: 'center' });
     
     currentY = 80;
 
@@ -503,7 +503,7 @@ export const generateCostPDF = (items, regionKey = 'eastus', currencyKey = 'USD'
       
       // Footer branding on all pages
       doc.setFontSize(7);
-      doc.text(`© Arunim's IT Café | Azure Architecture Designer v1.0.0 | ${reportDate}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+      doc.text(`© Arunim's IT Café | Cloud Canvas Designer v1.0.0 | ${reportDate}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
     }
 
     // Save

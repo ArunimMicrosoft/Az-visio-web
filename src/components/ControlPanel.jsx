@@ -50,7 +50,7 @@ const ControlPanel = ({
   return (
     <div className="control-panel">
       <div className="control-panel-header">
-        <h2 className="app-title">Azure Architecture Designer</h2>
+        <h2 className="app-title">Cloud Canvas Designer</h2>
         
         <div className="user-menu-container">
           <button 

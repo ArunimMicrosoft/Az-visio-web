@@ -53,7 +53,7 @@ const SharedDiagram = () => {
         </div>
         <div className="shared-meta">
           {diagram.item_count} services · {diagram.connection_count} connections
-          · Shared from Azure Architecture Designer
+          · Shared from Cloud Canvas Designer
         </div>
       </div>
 

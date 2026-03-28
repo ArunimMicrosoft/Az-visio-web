@@ -321,7 +321,7 @@ function App() {
           itemCount: items.length,
           connectionCount: connections.length,
           boundaryCount: boundaries.length,
-          appName: 'Azure Architecture Designer'
+          appName: 'Cloud Canvas Designer'
         }
       };
 
@@ -402,7 +402,7 @@ function App() {
           alert(`✅ Diagram loaded successfully!\n\n📁 File: ${file.name}\n📊 ${itemCount} services, ${connCount} connections, ${boundaryCount} boundaries\n📅 Saved: ${savedDate}`);
         } catch (error) {
           console.error('Error loading diagram:', error);
-          alert(`❌ Failed to load diagram!\n\n${error.message}\n\nPlease ensure the file is a valid Azure Architecture Designer JSON file.`);
+          alert(`❌ Failed to load diagram!\n\n${error.message}\n\nPlease ensure the file is a valid Cloud Canvas Designer JSON file.`);
         }
       };
       

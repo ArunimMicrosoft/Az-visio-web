@@ -16,7 +16,7 @@ const HelpOverlay = () => {
     <div className="help-overlay">
       <div className="help-content">
         <button className="close-help" onClick={() => setIsVisible(false)}>×</button>
-        <h3>🎯 How to Use Azure Architecture Designer</h3>
+        <h3>🎯 How to Use Cloud Canvas Designer</h3>
         
         <div className="help-section">
           <h4>📦 Adding Services</h4>

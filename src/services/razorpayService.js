@@ -94,7 +94,7 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
         key: RAZORPAY_KEY_ID,
         amount: amount * 100, // Convert to paise (₹4,099 → 409900)
         currency: 'INR',
-        name: 'Azure Architecture Designer',
+        name: 'Cloud Canvas Designer',
         description: `${planName} Plan - Monthly Subscription`,
         prefill: {
           name: customerName,

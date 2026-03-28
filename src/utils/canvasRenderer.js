@@ -103,7 +103,7 @@ export const renderDiagramToCanvas = async (items, connections, boundaries = [],
   ctx.font = 'bold 24px "Segoe UI", Arial, sans-serif';
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
-  ctx.fillText("Arunim's IT Caffe — Azure Architecture Designer", 20, HEADER_HEIGHT / 2);
+  ctx.fillText("Arunim's IT Caffe — Cloud Canvas Designer", 20, HEADER_HEIGHT / 2);
 
   // Draw environment/context info
   ctx.font = '14px "Segoe UI", Arial, sans-serif';

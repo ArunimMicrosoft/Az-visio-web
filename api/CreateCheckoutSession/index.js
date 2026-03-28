@@ -56,7 +56,7 @@ module.exports = async function (context, req) {
       customer_email: customerEmail || undefined,
       metadata: {
         customerName: customerName || '',
-        source: 'Azure Architecture Designer',
+        source: 'Cloud Canvas Designer',
         timestamp: new Date().toISOString(),
       },
       allow_promotion_codes: true,

@@ -8,7 +8,7 @@ const Footer = () => {
     <footer className="app-footer">
       <div className="footer-content">
         <span className="footer-copyright">
-          © {new Date().getFullYear()} Azure Architecture Designer v{appVersion}
+          © {new Date().getFullYear()} Cloud Canvas Designer v{appVersion}
         </span>
         <span className="footer-divider">|</span>
         <span className="footer-author">

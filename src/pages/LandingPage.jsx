@@ -16,7 +16,7 @@ const LandingPage = () => {
               <path d="M2 17L12 22L22 17V7L12 12L2 7V17Z" fill="#50E6FF"/>
             </svg>
             <div className="brand-info">
-              <span className="brand-name">Azure Architecture Designer</span>
+              <span className="brand-name">Cloud Canvas Designer</span>
               <span className="brand-tagline">Powered by Arunim's IT Café</span>
             </div>
           </div>          <div className="landing-nav-actions">
@@ -450,7 +450,7 @@ const LandingPage = () => {
                 <path d="M2 17L12 22L22 17V7L12 12L2 7V17Z" fill="#50E6FF"/>
               </svg>
               <div>
-                <span className="footer-brand-name">Azure Architecture Designer</span>
+                <span className="footer-brand-name">Cloud Canvas Designer</span>
               </div>
             </div>
           </div>
@@ -478,7 +478,7 @@ const LandingPage = () => {
         </div>        <div className="footer-bottom">
           <div className="footer-bottom-content">
             <p className="footer-copyright">
-              © 2026 Azure Architecture Designer. All rights reserved. | Built By: <a href="https://arunimitcaffe.gumroad.com/" target="_blank" rel="noopener noreferrer" style={{color: '#00BCF2', textDecoration: 'none'}}>Arunim's IT Café</a>
+              © 2026 Cloud Canvas Designer. All rights reserved. | Built By: <a href="https://arunimitcaffe.gumroad.com/" target="_blank" rel="noopener noreferrer" style={{color: '#00BCF2', textDecoration: 'none'}}>Arunim's IT Café</a>
             </p>
           </div>
         </div>

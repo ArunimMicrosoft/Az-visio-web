@@ -66,7 +66,7 @@ const PresentationMode = ({ isOpen, onClose, items, connections, boundaries, can
           )}
         </div>
         <div className="presentation-branding">
-          Azure Architecture Designer · Press Esc to exit
+          Cloud Canvas Designer · Press Esc to exit
         </div>
       </div>
     </div>

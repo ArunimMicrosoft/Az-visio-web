@@ -426,7 +426,7 @@ const AdminDashboard = () => {
           <div>
             <h1 className="ad-title">Admin Control Panel</h1>
             <p className="ad-sub">
-              Azure Architecture Designer &nbsp;·&nbsp; <strong>{user?.email}</strong>
+              Cloud Canvas Designer &nbsp;·&nbsp; <strong>{user?.email}</strong>
             </p>
           </div>
         </div>

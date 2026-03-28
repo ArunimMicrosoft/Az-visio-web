@@ -71,7 +71,7 @@ const LoginPage = () => {
           <div className="auth-header">
             <div className="auth-logo">
               <div className="logo-icon">☁️</div>
-              <h1>Azure Architecture Designer</h1>
+              <h1>Cloud Canvas Designer</h1>
               <p className="tagline">Design. Validate. Deploy.</p>
             </div>
           </div>
@@ -173,7 +173,7 @@ const LoginPage = () => {
         </div>
       </div>
         <div className="auth-branding">
-        <p>© 2026 Arunim's IT Café - Azure Architecture Designer v1.0.0</p>
+        <p>© 2026 Arunim's IT Café - Cloud Canvas Designer v1.0.0</p>
         <Link to="/" className="auth-home-link">← Back to Home</Link>
       </div>
     </div>
