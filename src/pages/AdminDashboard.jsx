@@ -2,13 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase, writeAuditLog } from '../utils/supabase';
+import { ADMIN_EMAILS } from '../utils/adminConfig';
 import './AdminDashboard.css';
-
-const ADMIN_EMAILS = [
-  'arunimpandey2903@hotmail.com',
-  'demo@arunimitcaffe.com',
-  'admin@azuredesigner.com',   // fallback admin account
-];
 
 const PLAN_COLORS = {
   trial: '#f59e0b',
@@ -259,12 +254,22 @@ const AdminDashboard = () => {
   const handleSetPlan = async (userId, plan, targetEmail) => {
     try {
       const now = new Date().toISOString();
-      await updateProfile(userId, {
+      const updates = {
         subscription_tier: plan,
-        upgraded_at: now,
+        upgraded_at: plan !== 'trial' ? now : null,
         subscription_expires_at: plan !== 'trial' ? addDays(now, 30) : null,
         is_active: true,
-      });
+      };
+      // When switching to trial, reset trial dates so user gets a fresh 7-day trial
+      if (plan === 'trial') {
+        updates.trial_start_date = now;
+        updates.trial_expires_at = addDays(now, 7);
+        updates.trial_exports_used = 0;
+        updates.diagrams_created = 0;
+        updates.upgraded_at = null;
+        updates.subscription_expires_at = null;
+      }
+      await updateProfile(userId, updates);
       await writeAuditLog({
         userId: user.id,
         email: user.email,
@@ -279,27 +284,37 @@ const AdminDashboard = () => {
   };
 
   const handleRevoke = async (u) => {
-    if (!window.confirm(`Revoke subscription for ${u.email}? They will be downgraded to Trial.`)) return;
+    if (!window.confirm(`Revoke subscription for ${u.email}? They will be downgraded to Trial with a fresh 7-day period.`)) return;
     try {
-      await updateProfile(u.id, { subscription_tier: 'trial', subscription_expires_at: null, upgraded_at: null });
+      const now = new Date().toISOString();
+      await updateProfile(u.id, {
+        subscription_tier: 'trial',
+        subscription_expires_at: null,
+        upgraded_at: null,
+        trial_start_date: now,
+        trial_expires_at: addDays(now, 7),
+        trial_exports_used: 0,
+        diagrams_created: 0,
+      });
       await writeAuditLog({
         userId: user.id,
         email: user.email,
         event: 'SUB_REVOKED',
         details: { targetEmail: u.email },
       });
-      showFlash('success', `✅ Subscription revoked for ${u.email}`);
+      showFlash('success', `✅ Subscription revoked for ${u.email} — fresh 7-day trial granted`);
     } catch (e) {
       showFlash('error', e.message);
     }
   };
 
   const handleBanToggle = async (u) => {
-    const action = u.is_active !== false ? 'ban' : 'unban';
+    const isBanned = u.is_active === false;
+    const action = isBanned ? 'unban' : 'ban';
     if (!window.confirm(`${action.toUpperCase()} user ${u.email}?`)) return;
     try {
-      await updateProfile(u.id, { is_active: u.is_active === false });
-      const event = u.is_active !== false ? 'USER_BANNED' : 'USER_UNBANNED';
+      await updateProfile(u.id, { is_active: isBanned ? true : false });
+      const event = isBanned ? 'USER_UNBANNED' : 'USER_BANNED';
       await writeAuditLog({
         userId: user.id,
         email: user.email,
