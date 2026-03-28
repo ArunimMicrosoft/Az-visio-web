@@ -13,6 +13,8 @@ const SignupPage = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
   const { signup } = useAuth();
 
@@ -207,33 +209,63 @@ const SignupPage = () => {
               
               <div className="form-group">
                 <label htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  autoComplete="new-password"
-                  required
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(p => !p)}
+                    style={{
+                      position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '4px',
+                      color: '#666',
+                    }}
+                    tabIndex={-1}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
                 <small className="form-hint">Must be at least 6 characters</small>
               </div>
               
               <div className="form-group">
                 <label htmlFor="confirmPassword">Confirm Password</label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  autoComplete="new-password"
-                  required
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirm ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(p => !p)}
+                    style={{
+                      position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '4px',
+                      color: '#666',
+                    }}
+                    tabIndex={-1}
+                    aria-label={showConfirm ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirm ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
               
               <button 

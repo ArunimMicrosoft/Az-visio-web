@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import ForgotPassword from './pages/ForgotPassword';
 import PaymentPage from './pages/PaymentPage';
 import PaymentSuccess from './pages/PaymentSuccess';
 import AdminDashboard from './pages/AdminDashboard';
@@ -18,6 +19,7 @@ const AppWithAuth = () => {
           <Route path="/" element={<LandingPage />} />          {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
 

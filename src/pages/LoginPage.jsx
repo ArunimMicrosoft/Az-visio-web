@@ -8,6 +8,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -104,16 +105,31 @@ const LoginPage = () => {
               
               <div className="form-group">
                 <label htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                  autoComplete="current-password"
-                  required
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                    autoComplete="current-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(p => !p)}
+                    style={{
+                      position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '4px',
+                      color: '#666',
+                    }}
+                    tabIndex={-1}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
               
               <button 
@@ -138,6 +154,9 @@ const LoginPage = () => {
             </button>
             
             <div className="auth-footer">
+              <p>
+                <Link to="/forgot-password" className="auth-link">Forgot your password?</Link>
+              </p>
               <p>
                 Don't have an account?{' '}
                 <Link to="/signup" className="auth-link">Sign up for free</Link>

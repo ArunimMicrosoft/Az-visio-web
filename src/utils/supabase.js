@@ -170,6 +170,20 @@ export async function supabaseSignOut(userId = null, email = null) {
 }
 
 /**
+ * Send password reset email via Supabase
+ */
+export async function supabaseResetPassword(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/login`,
+  });
+  if (error) {
+    await writeAuditLog({ email, event: 'PASSWORD_RESET_FAILED', details: { reason: error.message } });
+    throw error;
+  }
+  await writeAuditLog({ email, event: 'PASSWORD_RESET_REQUESTED' });
+}
+
+/**
  * Get current session
  */
 export async function getSession() {
