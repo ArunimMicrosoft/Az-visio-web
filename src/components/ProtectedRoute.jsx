@@ -86,7 +86,7 @@ const TrialExpiredGate = ({ user }) => {
           onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
           onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
         >
-          🚀 Upgrade to Professional — ₹4,099/mo
+          🚀 Upgrade to Professional — ₹2,000/mo
         </button>
 
         <button

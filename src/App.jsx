@@ -9,6 +9,15 @@ import CostSummary from './components/CostSummary';
 import ValidationPanel from './components/ValidationPanel';
 import TrialBanner from './components/TrialBanner';
 import UpgradeModal from './components/UpgradeModal';
+import TemplateGallery from './components/TemplateGallery';
+import VersionHistoryPanel from './components/VersionHistoryPanel';
+import PresentationMode from './components/PresentationMode';
+import RegionCompare from './components/RegionCompare';
+import MyDiagrams from './components/MyDiagrams';
+import TrialWatermark from './components/TrialWatermark';
+import { useUndoRedo } from './hooks/useUndoRedo';
+import { useVersionHistory } from './hooks/useVersionHistory';
+import { exportBicepFile } from './utils/bicepGenerator';
 import { 
   exportJSON, 
   exportPNG, 
@@ -27,11 +36,7 @@ import { parseTerraformFile, validateTerraformFile } from './utils/terraformPars
 import { validateArchitecture } from './utils/azureArchitectureValidator';
 import './App.css';
 
-console.log('=== APP.JSX LOADING ===');
-console.log('Imports loaded successfully');
-
 function App() {
-  console.log('=== APP FUNCTION EXECUTING ===');
   const { user, refreshUser } = useAuth();
   const [items, setItems] = useState([]);
   const [connections, setConnections] = useState([]);
@@ -41,7 +46,20 @@ function App() {
   const [isValidationOpen, setIsValidationOpen] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState('');
-  const [upgradeFeature, setUpgradeFeature] = useState('');  const canvasRef = useRef(null);
+  const [upgradeFeature, setUpgradeFeature] = useState('');
+
+  // New feature state
+  const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
+  const [versionPanelOpen, setVersionPanelOpen] = useState(false);
+  const [presentationMode, setPresentationMode] = useState(false);
+  const [regionCompareOpen, setRegionCompareOpen] = useState(false);
+  const [myDiagramsOpen, setMyDiagramsOpen] = useState(false);
+
+  // Hooks
+  const undoRedo = useUndoRedo();
+  const versionHistory = useVersionHistory();
+
+  const canvasRef = useRef(null);
   // Tracks whether the current canvas session has already been counted as a diagram
   const diagramCountedThisSession = useRef(false);
   // Refresh user from DB on mount so banner shows correct counts immediately
@@ -67,34 +85,40 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Block snapshot/snipping tools for trial users
+  // Watermark replaces aggressive screenshot blocking for trial users
+  // (TrialWatermark component handles the visual overlay)
+
+  // Keyboard shortcuts: Undo (Ctrl+Z), Redo (Ctrl+Y/Ctrl+Shift+Z)
   useEffect(() => {
-    if (user?.subscriptionTier === 'trial') {
-      // Block PrintScreen
-      const blockPrintScreen = (e) => {
-        if (e.key === 'PrintScreen') {
-          e.preventDefault();
-          alert('Snapshots are disabled in trial mode. Upgrade to unlock this feature.');
-        }
-        // Block Ctrl+Shift+S (Windows Snip)
-        if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 's') {
-          e.preventDefault();
-          alert('Snipping is disabled in trial mode. Upgrade to unlock this feature.');
-        }
-      };
-      window.addEventListener('keydown', blockPrintScreen);
-      // Block right-click
-      const blockContextMenu = (e) => {
+    const handleKeyboard = (e) => {
+      // Undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
-        alert('Right-click is disabled in trial mode. Upgrade to unlock this feature.');
-      };
-      window.addEventListener('contextmenu', blockContextMenu);
-      return () => {
-        window.removeEventListener('keydown', blockPrintScreen);
-        window.removeEventListener('contextmenu', blockContextMenu);
-      };
-    }
-  }, [user]);  // isLoadingDiagram ref — when true, skip trial diagram limit (user is loading saved file)
+        const prev = undoRedo.undo();
+        if (prev) {
+          isLoadingDiagram.current = true;
+          setItems(prev.items);
+          setConnections(prev.connections);
+          setBoundaries(prev.boundaries);
+          isLoadingDiagram.current = false;
+        }
+      }
+      // Redo
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        const next = undoRedo.redo();
+        if (next) {
+          isLoadingDiagram.current = true;
+          setItems(next.items);
+          setConnections(next.connections);
+          setBoundaries(next.boundaries);
+          isLoadingDiagram.current = false;
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyboard);
+    return () => window.removeEventListener('keydown', handleKeyboard);
+  }, [undoRedo]);  // isLoadingDiagram ref — when true, skip trial diagram limit (user is loading saved file)
   const isLoadingDiagram = useRef(false);
 
   // Wrapper for setItems — blocks NEW drawing if trial diagram limit (3) reached.
@@ -130,6 +154,146 @@ function App() {
       diagramCountedThisSession.current = true;
       await recordDiagramCreation(user.id);
       await refreshUser(); // updates banner: 3/3 → 2/3 → 1/3 → 0/3
+    }
+  };
+
+  // Record undo/redo snapshot when canvas state changes (debounced)
+  const recordTimeout = useRef(null);
+  useEffect(() => {
+    if (recordTimeout.current) clearTimeout(recordTimeout.current);
+    recordTimeout.current = setTimeout(() => {
+      if (items.length > 0 || connections.length > 0) {
+        undoRedo.record({ items, connections, boundaries });
+      }
+    }, 500);
+    return () => clearTimeout(recordTimeout.current);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, connections, boundaries]);
+
+  // === NEW FEATURE HANDLERS ===
+
+  // Helper: Ask user to Replace or Add when canvas has items.
+  // Returns 'replace' | 'add' | null (cancelled).
+  // When canvas is empty, returns 'replace' silently.
+  const askReplaceOrAdd = (label = 'items') => {
+    if (items.length === 0) return 'replace';
+    const choice = window.prompt(
+      `Canvas already has ${items.length} services.\n\n` +
+      `Type R to Replace canvas with new ${label}\n` +
+      `Type A to Add new ${label} to existing canvas\n` +
+      `Press Cancel to abort`,
+      'A'
+    );
+    if (choice === null) return null;
+    const c = choice.trim().toUpperCase();
+    if (c === 'R' || c === 'REPLACE') return 'replace';
+    return 'add'; // default to add
+  };
+
+  // Helper: Merge new items onto canvas with X offset to avoid overlap
+  const addToCanvas = (newItems, newConnections, newBoundaries) => {
+    // Calculate offset: place new items to the right of existing ones
+    const maxX = items.reduce((max, i) => Math.max(max, i.x || 0), 0);
+    const offset = maxX > 0 ? maxX + 200 : 0;
+
+    const offsetItems = newItems.map(i => ({ ...i, x: (i.x || 0) + offset }));
+    isLoadingDiagram.current = true;
+    handleSetItems(prev => [...prev, ...offsetItems]);
+    setConnections(prev => [...prev, ...(newConnections || [])]);
+    if (newBoundaries && newBoundaries.length > 0) {
+      setBoundaries(prev => [...prev, ...newBoundaries]);
+    }
+    isLoadingDiagram.current = false;
+  };
+
+  // Template selection handler
+  const handleSelectTemplate = (template) => {
+    const mode = askReplaceOrAdd('template');
+    if (!mode) return;
+    if (mode === 'replace') {
+      isLoadingDiagram.current = true;
+      handleSetItems(template.items);
+      setConnections(template.connections || []);
+      setBoundaries(template.boundaries || []);
+      isLoadingDiagram.current = false;
+    } else {
+      addToCanvas(template.items, template.connections, template.boundaries);
+    }
+  };
+
+  // Version history handlers
+  const handleSaveVersion = (name) => {
+    versionHistory.saveVersion(name, { items, connections, boundaries });
+  };
+
+  const handleRestoreVersion = (versionId) => {
+    const state = versionHistory.restoreVersion(versionId);
+    if (state) {
+      isLoadingDiagram.current = true;
+      handleSetItems(state.items);
+      setConnections(state.connections);
+      setBoundaries(state.boundaries);
+      isLoadingDiagram.current = false;
+    }
+  };
+
+  // Undo/Redo button handlers
+  const handleUndo = () => {
+    const prev = undoRedo.undo();
+    if (prev) {
+      isLoadingDiagram.current = true;
+      setItems(prev.items);
+      setConnections(prev.connections);
+      setBoundaries(prev.boundaries);
+      isLoadingDiagram.current = false;
+    }
+  };
+
+  const handleRedo = () => {
+    const next = undoRedo.redo();
+    if (next) {
+      isLoadingDiagram.current = true;
+      setItems(next.items);
+      setConnections(next.connections);
+      setBoundaries(next.boundaries);
+      isLoadingDiagram.current = false;
+    }
+  };
+
+  // Bicep export handler
+  const handleExportBicep = () => {
+    if (user?.subscriptionTier === 'trial') {
+      setUpgradeReason('Bicep export is not available in trial version. Upgrade to Professional or Enterprise plan.');
+      setUpgradeFeature('Bicep Export');
+      setUpgradeModalOpen(true);
+      return;
+    }
+    if (items.length === 0) {
+      alert('No items on canvas to export! Please add Azure services first. ❌');
+      return;
+    }
+    const validation = getValidationResult();
+    if (showComplianceBlock(validation, 'Bicep')) return;
+    try {
+      const result = exportBicepFile(items, connections, boundaries, { region: selectedRegion });
+      alert(`✅ Bicep template exported!\n\n📁 ${result.filename}\n📊 ${result.itemCount} services`);
+    } catch (error) {
+      alert(`❌ Failed to export Bicep!\n\n${error.message}`);
+    }
+  };
+
+  // Cloud diagram load handler
+  const handleLoadCloudDiagram = (diagram) => {
+    const mode = askReplaceOrAdd('cloud diagram');
+    if (!mode) return;
+    if (mode === 'replace') {
+      isLoadingDiagram.current = true;
+      handleSetItems(diagram.items || []);
+      setConnections(diagram.connections || []);
+      setBoundaries(diagram.boundaries || []);
+      isLoadingDiagram.current = false;
+    } else {
+      addToCanvas(diagram.items || [], diagram.connections || [], diagram.boundaries || []);
     }
   };
 
@@ -214,11 +378,18 @@ function App() {
           if (!diagram.items || !Array.isArray(diagram.items)) {
             throw new Error('Invalid diagram file: missing or invalid items array');
           }
-            // Load the diagram — bypass trial limit (loading is not creating)
+
+          const mode = askReplaceOrAdd('diagram');
+          if (!mode) return;
+
           isLoadingDiagram.current = true;
-          handleSetItems(diagram.items || []);
-          setConnections(diagram.connections || []);
-          setBoundaries(diagram.boundaries || []);
+          if (mode === 'replace') {
+            handleSetItems(diagram.items || []);
+            setConnections(diagram.connections || []);
+            setBoundaries(diagram.boundaries || []);
+          } else {
+            addToCanvas(diagram.items || [], diagram.connections || [], diagram.boundaries || []);
+          }
           isLoadingDiagram.current = false;
 
           const itemCount = diagram.items.length;
@@ -256,11 +427,17 @@ function App() {
 
   // Called by TerraformPastePanel — result is already parsed by the panel
   const handlePasteTerraformImport = (result) => {
-    isLoadingDiagram.current = true;
-    handleSetItems(result.items);
-    setConnections(result.connections || []);
-    setBoundaries([]);
-    isLoadingDiagram.current = false;
+    const mode = askReplaceOrAdd('Terraform resources');
+    if (!mode) return;
+    if (mode === 'replace') {
+      isLoadingDiagram.current = true;
+      handleSetItems(result.items);
+      setConnections(result.connections || []);
+      setBoundaries(result.boundaries || []);
+      isLoadingDiagram.current = false;
+    } else {
+      addToCanvas(result.items, result.connections, result.boundaries || []);
+    }
   };
 
   const handleImportTerraform = () => {
@@ -283,13 +460,21 @@ function App() {
           if (result.items.length === 0) {
             alert('⚠️ No Azure resources found!');
             return;
-          }          // Import Terraform — bypass trial limit, set connections fresh to match item IDs
-          isLoadingDiagram.current = true;
-          handleSetItems(result.items);
-          setConnections(result.connections || []);
-          setBoundaries([]);
-          isLoadingDiagram.current = false;
-          alert(`✅ Imported ${result.items.length} Azure resources from Terraform!\n\n💰 Costs calculated from actual Azure pricing.`);
+          }
+
+          const mode = askReplaceOrAdd('Terraform resources');
+          if (!mode) return;
+
+          if (mode === 'replace') {
+            isLoadingDiagram.current = true;
+            handleSetItems(result.items);
+            setConnections(result.connections || []);
+            setBoundaries(result.boundaries || []);
+            isLoadingDiagram.current = false;
+          } else {
+            addToCanvas(result.items, result.connections || [], result.boundaries || []);
+          }
+          alert(`✅ ${mode === 'add' ? 'Added' : 'Imported'} ${result.items.length} Azure resources from Terraform!\n\n💰 Costs calculated from actual Azure pricing.`);
         } catch (error) {
           alert(`❌ Error: ${error.message}`);
         }
@@ -529,8 +714,11 @@ function App() {
       alert(`❌ Failed to export cost report!\n\n${error.message}`);
     }
   };
+  const isTrial = user?.subscriptionTier === 'trial' && !isAdminUser(user);
+
   return (
     <div className="app">
+      <TrialWatermark isTrial={isTrial} />
       <TrialBanner user={user} />      <ControlPanel
         onSave={handleSave}
         onLoad={handleLoad}
@@ -541,10 +729,20 @@ function App() {
         onExportPDF={handleExportPDF}
         onExportTerraform={handleExportTerraform}
         onExportARM={handleExportARM}
+        onExportBicep={handleExportBicep}
         onExportCostReport={handleExportCostReport}
         onImportTerraform={handleImportTerraform}
         onPasteTerraform={handlePasteTerraformImport}
-        isTrial={user?.subscriptionTier === 'trial' && !isAdminUser(user)}
+        onOpenTemplates={() => setTemplateGalleryOpen(true)}
+        onOpenVersions={() => setVersionPanelOpen(true)}
+        onOpenPresentation={() => setPresentationMode(true)}
+        onOpenRegionCompare={() => setRegionCompareOpen(true)}
+        onOpenMyDiagrams={() => setMyDiagramsOpen(true)}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={undoRedo.canUndo}
+        canRedo={undoRedo.canRedo}
+        isTrial={isTrial}
         onUpgrade={() => {
           setUpgradeReason('Terraform Paste is a Pro feature. Upgrade to paste HCL and generate diagrams instantly.');
           setUpgradeFeature('Terraform Paste');
@@ -566,7 +764,7 @@ function App() {
           boundaries={boundaries}
           setBoundaries={setBoundaries}
           canvasRef={canvasRef}
-          isTrial={user?.subscriptionTier === 'trial' && !isAdminUser(user)}
+          isTrial={isTrial}
         />
         <CostSummary 
           items={items} 
@@ -581,6 +779,42 @@ function App() {
         boundaries={boundaries}
         isOpen={isValidationOpen}
         onClose={() => setIsValidationOpen(false)}
+      />
+
+      {/* New Feature Modals */}
+      <TemplateGallery
+        isOpen={templateGalleryOpen}
+        onClose={() => setTemplateGalleryOpen(false)}
+        onSelectTemplate={handleSelectTemplate}
+      />
+      <VersionHistoryPanel
+        versions={versionHistory.versions}
+        onSave={handleSaveVersion}
+        onRestore={handleRestoreVersion}
+        onDelete={versionHistory.deleteVersion}
+        isOpen={versionPanelOpen}
+        onClose={() => setVersionPanelOpen(false)}
+      />
+      <PresentationMode
+        isOpen={presentationMode}
+        onClose={() => setPresentationMode(false)}
+        items={items}
+        connections={connections}
+        boundaries={boundaries}
+        canvasRef={canvasRef}
+      />
+      <RegionCompare
+        isOpen={regionCompareOpen}
+        onClose={() => setRegionCompareOpen(false)}
+        items={items}
+        currency={selectedCurrency}
+      />
+      <MyDiagrams
+        isOpen={myDiagramsOpen}
+        onClose={() => setMyDiagramsOpen(false)}
+        userId={user?.id}
+        currentDiagram={{ items, connections, boundaries }}
+        onLoadDiagram={handleLoadCloudDiagram}
       />
     </div>
   );

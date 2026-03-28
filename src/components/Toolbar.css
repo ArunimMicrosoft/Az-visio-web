@@ -53,41 +53,45 @@
 }
 
 .toolbar {
-  width: 200px;
-  min-width: 200px;
+  width: 180px;
+  min-width: 180px;
   background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
-  border-right: 2px solid #dee2e6;
+  border-right: 1px solid #e0e0e0;
   padding: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
-  transition: width 0.25s ease, min-width 0.25s ease;
+  box-shadow: 1px 0 6px rgba(0, 0, 0, 0.06);
+  transition: width 0.2s ease, min-width 0.2s ease;
   flex-shrink: 0;
   position: relative;
 }
 
-/* Collapsed state — icon-only strip */
+/* Collapsed state — thin strip */
 .toolbar.toolbar-collapsed {
-  width: 42px;
-  min-width: 42px;
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
   overflow: hidden;
+  background: #f0f0f0;
+  border-right: 1px solid #e0e0e0;
+  box-shadow: none;
 }
 
 /* Collapse toggle button */
 .toolbar-collapse-btn {
   position: absolute;
-  top: 8px;
-  right: 6px;
+  top: 6px;
+  right: 4px;
   z-index: 10;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   background: #0078D4;
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -97,11 +101,11 @@
 }
 .toolbar-collapse-btn:hover { background: #005a9e; }
 
-/* When collapsed, show collapse button centered */
+/* When collapsed, center the button */
 .toolbar.toolbar-collapsed .toolbar-collapse-btn {
   right: 50%;
   transform: translateX(50%);
-  top: 10px;
+  top: 8px;
 }
 
 .toolbar-header {
@@ -258,9 +262,9 @@
 
 .toolbar-icons {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 8px;
-  padding: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 6px;
+  padding: 8px;
   background: #f8f9fa;
 }
 
@@ -390,7 +394,7 @@
 /* Large Desktop - 1920px and above */
 @media (min-width: 1920px) {
   .toolbar {
-    width: 300px;
+    width: 220px;
   }
 
   .toolbar-header {

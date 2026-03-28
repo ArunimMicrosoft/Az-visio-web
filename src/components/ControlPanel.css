@@ -461,3 +461,92 @@
 }
 
 .terraform-import-btn { background: linear-gradient(135deg, #7B68EE 0%, #6A5ACD 100%); }
+
+/* === New Feature Button Styles === */
+
+.control-divider {
+  width: 1px;
+  height: 28px;
+  background: #d0d7de;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.control-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.undo-btn,
+.redo-btn {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: white;
+}
+
+.undo-btn:hover:not(:disabled),
+.redo-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.template-btn {
+  background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%);
+  color: white;
+}
+
+.template-btn:hover {
+  background: linear-gradient(135deg, #e8590c 0%, #d63384 100%);
+  box-shadow: 0 4px 12px rgba(253, 126, 20, 0.3);
+}
+
+.cloud-btn {
+  background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%);
+  color: white;
+}
+
+.cloud-btn:hover {
+  background: linear-gradient(135deg, #0aa2c0 0%, #087990 100%);
+  box-shadow: 0 4px 12px rgba(13, 202, 240, 0.3);
+}
+
+.version-btn {
+  background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+  color: white;
+}
+
+.version-btn:hover {
+  background: linear-gradient(135deg, #5a32a3 0%, #4a2885 100%);
+  box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+}
+
+.bicep-btn {
+  background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+  color: white;
+}
+
+.bicep-btn:hover {
+  background: linear-gradient(135deg, #106ebe 0%, #005a9e 100%);
+  box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+}
+
+.compare-btn {
+  background: linear-gradient(135deg, #20c997 0%, #198754 100%);
+  color: white;
+}
+
+.compare-btn:hover {
+  background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+  box-shadow: 0 4px 12px rgba(32, 201, 151, 0.3);
+}
+
+.present-btn {
+  background: linear-gradient(135deg, #343a40 0%, #212529 100%);
+  color: white;
+}
+
+.present-btn:hover {
+  background: linear-gradient(135deg, #212529 0%, #000 100%);
+  box-shadow: 0 4px 12px rgba(52, 58, 64, 0.3);
+}

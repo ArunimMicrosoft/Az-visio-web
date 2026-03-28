@@ -2,6 +2,7 @@
 // Handles authentication, user profiles, and database access
 
 import { createClient } from '@supabase/supabase-js';
+import { isAdminEmail } from './adminConfig';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -61,12 +62,7 @@ export async function supabaseSignUp(email, password, name) {
   if (data.user) {
     const now = new Date().toISOString();
     const trialExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    const ADMIN_EMAILS_SIGNUP = [
-      'arunimpandey2903@hotmail.com',
-      'demo@arunimitcaffe.com',
-      'admin@azuredesigner.com',
-    ];
-    const isAdminSignup = ADMIN_EMAILS_SIGNUP.includes(email.toLowerCase());
+    const isAdminSignup = isAdminEmail(email);
 
     const { error: profileError } = await supabase.from('profiles').upsert({
       id: data.user.id,

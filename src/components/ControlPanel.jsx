@@ -15,9 +15,19 @@ const ControlPanel = ({
   onExportPDF,
   onExportTerraform,
   onExportARM,
+  onExportBicep,
   onExportCostReport,
   onImportTerraform,
   onPasteTerraform,
+  onOpenTemplates,
+  onOpenVersions,
+  onOpenPresentation,
+  onOpenRegionCompare,
+  onOpenMyDiagrams,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
   isTrial,
   onUpgrade,
 }) => {
@@ -81,11 +91,34 @@ const ControlPanel = ({
       </div>
       
       <div className="control-buttons">
+        {/* Undo / Redo */}
+        <button className="control-btn undo-btn" onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)">
+          ↩️ Undo
+        </button>
+        <button className="control-btn redo-btn" onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Y)">
+          ↪️ Redo
+        </button>
+
+        <span className="control-divider" />
+
+        <button className="control-btn template-btn" onClick={onOpenTemplates} title="Load a pre-built architecture template">
+          📐 Templates
+        </button>
         <button className="control-btn save-btn" onClick={onSave} title="Save diagram to local file">
           💾 Save
         </button>        <button className="control-btn load-btn" onClick={onLoad} title="Load diagram from file">
           📂 Load
-        </button>        <button className="control-btn terraform-import-btn" onClick={onImportTerraform} title="Import Terraform file (.tf or .tf.json)">
+        </button>
+        <button className="control-btn cloud-btn" onClick={onOpenMyDiagrams} title="Save/load diagrams from cloud">
+          ☁️ My Diagrams
+        </button>
+        <button className="control-btn version-btn" onClick={onOpenVersions} title="Version history snapshots">
+          📋 Versions
+        </button>
+
+        <span className="control-divider" />
+
+        <button className="control-btn terraform-import-btn" onClick={onImportTerraform} title="Import Terraform file (.tf or .tf.json)">
           🏗️ Import TF
         </button>
         <TerraformPastePanel
@@ -96,6 +129,9 @@ const ControlPanel = ({
         <button className="control-btn validate-btn" onClick={onValidate} title="Validate architecture for deployment">
           ✅ Validate
         </button>
+
+        <span className="control-divider" />
+
         <button className="control-btn export-btn" onClick={onExport} title="Export as JSON">
           📤 JSON
         </button>
@@ -108,11 +144,23 @@ const ControlPanel = ({
         <button className="control-btn terraform-btn" onClick={onExportTerraform} title="Export Terraform configuration">
           🏗️ Terraform
         </button>
+        <button className="control-btn bicep-btn" onClick={onExportBicep} title="Export Bicep template">
+          🔷 Bicep
+        </button>
         <button className="control-btn arm-btn" onClick={onExportARM} title="Export ARM Template">
           📋 ARM
         </button>
         <button className="control-btn cost-btn" onClick={onExportCostReport} title="Export cost estimate report">
           💰 Cost
+        </button>
+
+        <span className="control-divider" />
+
+        <button className="control-btn compare-btn" onClick={onOpenRegionCompare} title="Compare costs across regions">
+          🌍 Compare
+        </button>
+        <button className="control-btn present-btn" onClick={onOpenPresentation} title="Full-screen presentation mode">
+          🖥️ Present
         </button>
         <button className="control-btn clear-btn" onClick={onClear} title="Clear canvas">
           🗑️ Clear

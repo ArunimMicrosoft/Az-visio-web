@@ -158,7 +158,7 @@ const LandingPage = () => {
               <p>Export your architecture in any format your team needs — from visual PNG/PDF to deployable IaC templates.</p>
               <ul className="feature-list">
                 <li>✓ PNG / PDF (print-ready)</li>
-                <li>✓ Terraform HCL & ARM templates</li>
+                <li>✓ Terraform HCL, Bicep & ARM templates</li>
                 <li>✓ JSON diagram (save & reload)</li>
               </ul>
             </div>
@@ -354,11 +354,11 @@ const LandingPage = () => {
               <div className="popular-badge">Most Popular</div>              <div className="pricing-header">
                 <h3 className="pricing-title">Professional</h3>
                 <div className="pricing-price">
-                  <span className="price-amount">$49</span>
+                  <span className="price-amount">$24</span>
                   <span className="price-period">/mo</span>
                 </div>
                 <div className="pricing-price-inr">
-                  <span className="price-amount-small">₹4,099</span>
+                  <span className="price-amount-small">₹2,000</span>
                   <span className="price-period-small">/mo</span>
                 </div>
                 <p className="pricing-description">For growing businesses</p>
@@ -366,7 +366,7 @@ const LandingPage = () => {
                 <li className="feature-item">✓ Up to 10,000 diagrams</li>
                 <li className="feature-item">✓ Unlimited workspaces</li>
                 <li className="feature-item">✓ Unlimited PNG exports</li>
-                <li className="feature-item">✓ PDF & Terraform exports</li>
+                <li className="feature-item">✓ PDF, Terraform & Bicep exports</li>
                 <li className="feature-item">✓ ARM template export</li>
                 <li className="feature-item">✓ Priority support</li>
               </ul>
@@ -382,11 +382,11 @@ const LandingPage = () => {
             <div className="pricing-card">              <div className="pricing-header">
                 <h3 className="pricing-title">Enterprise</h3>
                 <div className="pricing-price">
-                  <span className="price-amount">$199</span>
+                  <span className="price-amount">$80</span>
                   <span className="price-period">/mo</span>
                 </div>
                 <div className="pricing-price-inr">
-                  <span className="price-amount-small">₹16,649</span>
+                  <span className="price-amount-small">₹6,699</span>
                   <span className="price-period-small">/mo</span>
                 </div>
                 <p className="pricing-description">For large organizations</p>
@@ -416,6 +416,27 @@ const LandingPage = () => {
           <h2 className="cta-title">Ready to Design Your Azure Solution?</h2>
           <p className="cta-subtitle">Start designing Azure architectures visually</p>
           <Link to="/signup" className="btn-cta">Get Started Free</Link>
+        </div>
+      </section>
+
+      {/* Disclaimer Section */}
+      <section className="disclaimer-section">
+        <div className="section-container">
+          <div className="disclaimer-content">
+            <h4 className="disclaimer-title">Trademarks & Third-Party Services</h4>
+            <p className="disclaimer-text">
+              Microsoft, Azure, Azure Well-Architected Framework, Azure Retail Prices API, ARM Templates, and all Azure service names and icons are trademarks or registered trademarks of Microsoft Corporation. The Azure service icons used in this application are sourced from the <a href="https://learn.microsoft.com/en-us/azure/architecture/icons/" target="_blank" rel="noopener noreferrer">Microsoft Azure Architecture Icons</a> library and are used in accordance with Microsoft's usage guidelines for architectural diagram purposes.
+            </p>
+            <p className="disclaimer-text">
+              Terraform and HCL are trademarks of HashiCorp, Inc. This application parses and generates Terraform configurations using the <a href="https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs" target="_blank" rel="noopener noreferrer">azurerm provider</a> format.
+            </p>
+            <p className="disclaimer-text">
+              Cost estimates are provided via the <a href="https://learn.microsoft.com/en-us/rest/api/cost-management/retail-prices/azure-retail-prices" target="_blank" rel="noopener noreferrer">Azure Retail Prices API</a> and are approximate. Actual costs may vary based on usage, configuration, reserved instances, and enterprise agreements. This tool is not a substitute for the official <a href="https://azure.microsoft.com/en-us/pricing/calculator/" target="_blank" rel="noopener noreferrer">Azure Pricing Calculator</a>.
+            </p>
+            <p className="disclaimer-text">
+              Payment processing is handled by <a href="https://razorpay.com" target="_blank" rel="noopener noreferrer">Razorpay</a>. Authentication and data storage are powered by <a href="https://supabase.com" target="_blank" rel="noopener noreferrer">Supabase</a>. This application is not affiliated with, endorsed by, or sponsored by Microsoft Corporation, HashiCorp, Razorpay, or Supabase.
+            </p>
+          </div>
         </div>
       </section>
 

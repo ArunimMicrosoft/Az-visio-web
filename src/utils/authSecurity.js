@@ -4,19 +4,17 @@
 // DB writes go through Supabase 'profiles' table
 
 import { supabase } from './supabase';
+import { isAdminEmail } from './adminConfig';
 
 // ============================================================
 // Trial Management Functions
 // ============================================================
 
-// Admin/demo accounts — always treated as paid (full access, no trial limits)
-const ADMIN_EMAILS = ['arunimpandey2903@hotmail.com', 'demo@arunimitcaffe.com'];
-
 /**
  * Check if user is an admin/demo account
  */
 export function isAdminUser(user) {
-  return user && ADMIN_EMAILS.includes(user.email?.toLowerCase());
+  return user && isAdminEmail(user.email);
 }
 
 /**

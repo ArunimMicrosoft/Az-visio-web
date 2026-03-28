@@ -111,12 +111,12 @@ body {
 /* Large Desktop - 1920px and above */
 @media (min-width: 1920px) {
   .main-content > .toolbar {
-    width: 300px;
+    width: 220px;
   }
 
   .main-content > .cost-summary {
-    width: 380px;
-    max-width: 380px;
+    width: 300px;
+    max-width: 300px;
   }
 }
 

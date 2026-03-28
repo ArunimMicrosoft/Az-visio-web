@@ -8,6 +8,7 @@ import SignupPage from './pages/SignupPage';
 import PaymentPage from './pages/PaymentPage';
 import PaymentSuccess from './pages/PaymentSuccess';
 import AdminDashboard from './pages/AdminDashboard';
+import SharedDiagram from './pages/SharedDiagram';
 import App from './App';
 
 const AppWithAuth = () => {
@@ -19,6 +20,9 @@ const AppWithAuth = () => {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
+
+          {/* Shared diagram viewer (public, read-only) */}
+          <Route path="/shared/:shareId" element={<SharedDiagram />} />
             {/* Protected route - admin dashboard (admin role only) */}
           <Route 
             path="/admin" 

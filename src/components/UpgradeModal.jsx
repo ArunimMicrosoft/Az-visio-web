@@ -42,10 +42,10 @@ const UpgradeModal = ({ isOpen, onClose, reason, feature }) => {
               <div className="upgrade-badge">Most Popular</div>
               <h3>Professional</h3>
               <div className="upgrade-price">
-                <span className="price-main">$49</span>
+                <span className="price-main">$24</span>
                 <span className="price-sub">/mo</span>
               </div>
-              <div className="upgrade-price-inr">₹4,099/mo</div>
+              <div className="upgrade-price-inr">₹2,000/mo</div>
               <ul>
                 <li>✓ Unlimited diagrams</li>
                 <li>✓ All export formats</li>

@@ -722,8 +722,10 @@ const normalizeServiceType = (serviceType) => {
     'postgresqlflexibleserver': 'postgres',
     'mariadb': 'mariadb',
     'azuredatabaseformariadbservers': 'mariadb',    'redis': 'cache',
+    'cacheredis': 'cache',
     'cacheforredis': 'cache',
     'azurecacheforredis': 'cache',
+    'azuremanagedredis': 'cache',
     'azuresynapseanalytics': 'synapse',
     'synapse': 'synapse',
 
@@ -787,6 +789,7 @@ const normalizeServiceType = (serviceType) => {
 
     // ── Integration ───────────────────────────────────────────────────────────
     'servicebus': 'servicebus',
+    'azureservicebus': 'servicebus',
     'servicebusnamespaces': 'servicebus',
     'servicebusqueues': 'servicebus',
     'servicebustopics': 'servicebus',
@@ -796,6 +799,7 @@ const normalizeServiceType = (serviceType) => {
     'logicapps': 'logicapp',
     'logicapp': 'logicapp',
     'apimanagement': 'apim',
+    'apimanagementservices': 'apim',
     'apim': 'apim',
     'eventgridtopics': 'eventgrid',
     'eventgrid': 'eventgrid',

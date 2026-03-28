@@ -300,11 +300,12 @@ const parseTerraformHCL = (content) => {
     extractDependencies(body, item, resourceMap, connections, connectionSet);
   }
 
-  layoutItems(items);
+  const { boundaries } = layoutItems(items);
 
   return {
     items,
     connections,
+    boundaries: boundaries || [],
     metadata: {
       source: 'terraform',
       format: 'hcl',
@@ -360,11 +361,12 @@ const parseTerraformJSON = (content) => {
     }
   }
 
-  layoutItems(items);
+  const { boundaries } = layoutItems(items);
 
   return {
     items,
     connections,
+    boundaries: boundaries || [],
     metadata: {
       source: 'terraform',
       format: 'json',
@@ -387,8 +389,15 @@ const buildItem = (resourceType, resourceName, body, id) => {
     ? nameMatch[1].replace(/\$\{[^}]*\}/g, '').replace(/[-_]+/g, ' ').trim() || resourceName
     : resourceName.replace(/[-_]+/g, ' ');
 
+  // Extract resource_group_name reference for boundary grouping
+  const rgMatch = body.match(/resource_group_name\s*=\s*(?:azurerm_resource_group\.(\w+)\.name|"([^"]+)")/);
+  const rgRef = rgMatch ? (rgMatch[1] || rgMatch[2] || 'default') : 'default';
+
+  // Extract virtual_network_name reference for VNet boundary grouping
+  const vnetMatch = body.match(/virtual_network_name\s*=\s*(?:azurerm_virtual_network\.(\w+)\.name|"([^"]+)")/);
+  const vnetRef = vnetMatch ? (vnetMatch[1] || vnetMatch[2] || null) : null;
+
   if (!mapping) {
-    // Unknown type — still show with fallback icon so nothing is silently dropped
     return {
       id: `tf-${id}`,
       serviceType: 'unknown',
@@ -397,15 +406,13 @@ const buildItem = (resourceType, resourceName, body, id) => {
       label: resourceName,
       x: 0, y: 0,
       path: '/icons/general/10007-icon-service-Resource-Groups.svg',
-      metadata: { terraformType: resourceType, terraformName: resourceName, category: 'unknown' },
+      metadata: { terraformType: resourceType, terraformName: resourceName, category: 'unknown', rgRef, vnetRef },
     };
   }
 
   return {
     id: `tf-${id}`,
-    // serviceType is what Canvas + connectionValidator uses
     serviceType: mapping.serviceType,
-    // type mirrors serviceType (Canvas reads both)
     type: mapping.serviceType,
     name: displayName,
     label: resourceName,
@@ -417,6 +424,8 @@ const buildItem = (resourceType, resourceName, body, id) => {
       serviceType: mapping.serviceType,
       category: mapping.category,
       tfLabel: mapping.label,
+      rgRef,
+      vnetRef,
     },
   };
 };
@@ -540,69 +549,190 @@ const SERVICE_SORT_ORDER = {
 };
 
 const layoutItems = (items) => {
-  if (items.length === 0) return;
+  if (items.length === 0) return { boundaries: [] };
 
-  // Canvas card: ~120px wide × 130px tall
-  const CARD_W   = 120;
-  const CARD_H   = 130;
-  const COL_GAP  = 45;   // between items in same tier
-  const ROW_GAP  = 30;   // between rows
-  const MAX_ROWS = 5;    // before wrapping to second column within tier
+  const CARD_W = 130;
+  const CARD_H = 130;
+  const GAP    = 20;
+  const PAD    = 30;        // padding inside boundary
+  const HEADER = 45;        // space for boundary label bar
+  const RG_GAP = 50;        // gap between RG boundaries
+  const COLS   = 4;         // max items per row
 
-  const COL_STEP = CARD_W + COL_GAP;  // 165px
-  const ROW_STEP = CARD_H + ROW_GAP;  // 160px
+  // ── Step 1: Group items by resource group ──
+  const rgGroups = new Map(); // key: tf resource name → { label, items[], vnetGroups }
 
-  // FIXED tier x positions — tiers never overlap regardless of item count
-  // Each tier is allocated enough columns for up to 2 inner columns + gap
-  // Tier widths (in column slots): 0=1, 1=2, 2=2, 3=2, 4=2, 5=2
-  const TIER_X_PX = {
-    0:  80,   // Management  — 1 col
-    1:  320,  // Networking  — up to 2 cols (5+5 items)
-    2:  720,  // Compute     — up to 2 cols
-    3: 1080,  // Data        — up to 2 cols
-    4: 1440,  // Integration — up to 2 cols
-    5: 1800,  // Security    — up to 2 cols
+  for (const item of items) {
+    const rgRef = item.metadata?.rgRef || 'default';
+    const tfType = item.metadata?.terraformType || '';
+
+    // RGs become boundaries
+    if (tfType === 'azurerm_resource_group') {
+      if (!rgGroups.has(item.metadata.terraformName))
+        rgGroups.set(item.metadata.terraformName, { label: item.name, items: [], vnetGroups: new Map() });
+      else
+        rgGroups.get(item.metadata.terraformName).label = item.name;
+      continue;
+    }
+
+    // VNets become sub-boundaries inside their RG
+    if (tfType === 'azurerm_virtual_network') {
+      if (!rgGroups.has(rgRef)) rgGroups.set(rgRef, { label: rgRef, items: [], vnetGroups: new Map() });
+      const rg = rgGroups.get(rgRef);
+      if (!rg.vnetGroups.has(item.metadata.terraformName))
+        rg.vnetGroups.set(item.metadata.terraformName, { label: item.name, items: [] });
+      else
+        rg.vnetGroups.get(item.metadata.terraformName).label = item.name;
+      continue;
+    }
+
+    // Subnets go inside their VNet
+    if (tfType === 'azurerm_subnet') {
+      const vnetRef = item.metadata?.vnetRef;
+      if (vnetRef) {
+        if (!rgGroups.has(rgRef)) rgGroups.set(rgRef, { label: rgRef, items: [], vnetGroups: new Map() });
+        const rg = rgGroups.get(rgRef);
+        if (rg.vnetGroups.has(vnetRef)) {
+          rg.vnetGroups.get(vnetRef).items.push(item);
+          continue;
+        }
+      }
+      continue; // skip orphan subnets
+    }
+
+    // Regular resources
+    if (!rgGroups.has(rgRef)) rgGroups.set(rgRef, { label: rgRef, items: [], vnetGroups: new Map() });
+    const rg = rgGroups.get(rgRef);
+    const vnetRef = item.metadata?.vnetRef;
+    if (vnetRef && rg.vnetGroups.has(vnetRef)) {
+      rg.vnetGroups.get(vnetRef).items.push(item);
+    } else {
+      rg.items.push(item);
+    }
+  }
+
+  // Remove RG/VNet/Subnet icons from items array (they become boundaries)
+  const kept = items.filter(i => {
+    const t = i.metadata?.terraformType || '';
+    return t !== 'azurerm_resource_group' && t !== 'azurerm_virtual_network' && t !== 'azurerm_subnet';
+  });
+  items.length = 0;
+  items.push(...kept);
+
+  // ── Helper: grid size for N items ──
+  const gridSize = (n) => {
+    const cols = Math.min(n, COLS);
+    const rows = Math.ceil(n / COLS);
+    return {
+      w: cols * (CARD_W + GAP) - GAP,
+      h: rows * (CARD_H + GAP) - GAP,
+      cols, rows,
+    };
   };
 
-  // Group by tier
-  const tiers = new Map();
-  for (const item of items) {
-    const cat  = item.metadata?.category || 'unknown';
-    const tier = CATEGORY_TIER[cat] ?? 5;
-    if (!tiers.has(tier)) tiers.set(tier, []);
-    tiers.get(tier).push(item);
-  }
+  // ── Step 2: Position everything ──
+  const boundaries = [];
+  let curX = PAD;
+  let curY = PAD;
+  let rowMaxH = 0;
 
-  // Sort within each tier by WAF sub-order then name
-  for (const [, group] of tiers) {
-    group.sort((a, b) => {
-      const ao = SERVICE_SORT_ORDER[a.serviceType] ?? 99;
-      const bo = SERVICE_SORT_ORDER[b.serviceType] ?? 99;
-      if (ao !== bo) return ao - bo;
-      return (a.name || '').localeCompare(b.name || '');
+  for (const [rgKey, rg] of rgGroups) {
+    const hasVnets = rg.vnetGroups.size > 0;
+    const hasDirectItems = rg.items.length > 0;
+    const totalItems = rg.items.length + [...rg.vnetGroups.values()].reduce((s, v) => s + v.items.length, 0);
+    if (totalItems === 0 && !hasVnets) continue;
+
+    // Calculate content height inside this RG
+    let contentH = 0;
+    let contentW = 0;
+
+    // VNet sub-boundaries
+    const vnetLayouts = [];
+    for (const [vnetKey, vg] of rg.vnetGroups) {
+      if (vg.items.length === 0) {
+        // Empty VNet — show as small placeholder
+        vnetLayouts.push({ key: vnetKey, label: vg.label, items: vg.items, w: 200, h: 60 });
+        contentH += 60 + GAP;
+        contentW = Math.max(contentW, 200);
+      } else {
+        const g = gridSize(vg.items.length);
+        const vW = g.w + PAD * 2;
+        const vH = g.h + HEADER + PAD;
+        vnetLayouts.push({ key: vnetKey, label: vg.label, items: vg.items, w: vW, h: vH, grid: g });
+        contentH += vH + GAP;
+        contentW = Math.max(contentW, vW);
+      }
+    }
+
+    // Direct items (not in any VNet)
+    let directGrid = null;
+    if (hasDirectItems) {
+      directGrid = gridSize(rg.items.length);
+      contentH += directGrid.h + (hasVnets ? GAP : 0);
+      contentW = Math.max(contentW, directGrid.w);
+    }
+
+    const rgW = contentW + PAD * 2;
+    const rgH = contentH + HEADER + PAD * 2;
+
+    // Wrap to next row if too wide
+    if (curX + rgW > 2000 && curX > PAD) {
+      curX = PAD;
+      curY += rowMaxH + RG_GAP;
+      rowMaxH = 0;
+    }
+
+    // Create RG boundary
+    const rgBoundaryIdx = boundaries.length;
+    boundaries.push({
+      id: `boundary-rg-${rgKey}`,
+      type: 'resource-group',
+      label: rg.label || rgKey,
+      x: curX,
+      y: curY,
+      width: rgW,
+      height: rgH,
     });
+
+    // Position VNet sub-boundaries and their items
+    let innerY = curY + HEADER + PAD;
+    for (const vl of vnetLayouts) {
+      boundaries.push({
+        id: `boundary-vnet-${rgKey}-${vl.key}`,
+        type: 'virtual-network',
+        label: vl.label || vl.key,
+        x: curX + PAD,
+        y: innerY,
+        width: vl.w,
+        height: vl.h,
+      });
+
+      // Position items inside VNet
+      vl.items.forEach((item, i) => {
+        const col = i % COLS;
+        const row = Math.floor(i / COLS);
+        item.x = curX + PAD + PAD + col * (CARD_W + GAP);
+        item.y = innerY + HEADER + row * (CARD_H + GAP);
+      });
+
+      innerY += vl.h + GAP;
+    }
+
+    // Position direct RG items below VNets
+    if (hasDirectItems) {
+      rg.items.forEach((item, i) => {
+        const col = i % COLS;
+        const row = Math.floor(i / COLS);
+        item.x = curX + PAD + col * (CARD_W + GAP);
+        item.y = innerY + row * (CARD_H + GAP);
+      });
+    }
+
+    rowMaxH = Math.max(rowMaxH, rgH);
+    curX += rgW + RG_GAP;
   }
 
-  // Max height across all tiers — for vertical centering
-  const maxTierH = MAX_ROWS * ROW_STEP - ROW_GAP;
-
-  // Place each item
-  for (let t = 0; t <= 5; t++) {
-    const group = tiers.get(t);
-    if (!group?.length) continue;
-
-    const cols      = Math.ceil(group.length / MAX_ROWS);
-    const rowsInCol = Math.ceil(group.length / cols);
-    const tierH     = rowsInCol * ROW_STEP - ROW_GAP;
-    const topPad    = Math.max(0, Math.round((maxTierH - tierH) / 2));
-
-    group.forEach((item, idx) => {
-      const col = Math.floor(idx / rowsInCol);
-      const row = idx % rowsInCol;
-      item.x = TIER_X_PX[t] + col * COL_STEP;
-      item.y = 80 + topPad + row * ROW_STEP;
-    });
-  }
+  return { boundaries };
 };
 
 // ---------------------------------------------------------------------------

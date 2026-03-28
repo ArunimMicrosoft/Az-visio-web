@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './HelpOverlay.css';
 
 const HelpOverlay = () => {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   if (!isVisible) {
     return (

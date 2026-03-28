@@ -2,42 +2,45 @@
 
 .cost-summary {
   background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
-  border: 2px solid #dee2e6;
-  border-radius: 10px;
-  padding: 18px;
+  border: none;
+  border-left: 1px solid #e0e0e0;
+  border-radius: 0;
+  padding: 14px;
   margin: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.05);
-  width: 280px;
-  min-width: 280px;
+  box-shadow: -1px 0 6px rgba(0, 0, 0, 0.06);
+  width: 220px;
+  min-width: 220px;
   flex-shrink: 0;
   overflow-y: auto;
-  border-left: 2px solid #dee2e6;
-  border-radius: 0;
-  transition: width 0.25s ease, min-width 0.25s ease;
+  transition: width 0.2s ease, min-width 0.2s ease;
   position: relative;
 }
 
-/* Collapsed — icon-only strip */
+/* Collapsed — thin strip */
 .cost-summary.cost-summary-collapsed {
-  width: 42px;
-  min-width: 42px;
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
   padding: 0;
   overflow: hidden;
+  background: #f0f0f0;
+  border-left: 1px solid #e0e0e0;
+  box-shadow: none;
 }
 
 /* Collapse toggle button */
 .cost-collapse-btn {
   position: absolute;
-  top: 8px;
-  left: 6px;
+  top: 6px;
+  left: 4px;
   z-index: 10;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   background: #0078D4;
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -49,7 +52,7 @@
 .cost-summary.cost-summary-collapsed .cost-collapse-btn {
   left: 50%;
   transform: translateX(-50%);
-  top: 10px;
+  top: 8px;
 }
 
 /* Inner wrapper shown when not collapsed */
@@ -88,7 +91,7 @@
 
 .cost-header h3 {
   margin: 0;
-  font-size: 19px;
+  font-size: 15px;
   color: #0078D4;
   font-weight: 700;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -131,13 +134,15 @@
 
 .cost-selectors {
   display: flex;
-  gap: 8px;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 .region-selector,
 .currency-selector {
-  padding: 5px 10px;
+  padding: 3px 6px;
   border: 1px solid #dee2e6;
+  font-size: 11px;
   border-radius: 4px;
   background: #ffffff;
   font-size: 12px;
@@ -191,10 +196,10 @@
 
 .cost-value {
   display: block;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: bold;
   color: #333;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .cost-badge {
