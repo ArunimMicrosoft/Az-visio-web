@@ -31,77 +31,78 @@ const ForgotPassword = () => {
     <div className="auth-page">
       <div className="auth-container">
         <div className="auth-card">
-          <div className="auth-logo">
-            <div className="logo-icon">🔑</div>
-            <h1>Reset Password</h1>
-            <p className="tagline">Cloud Canvas Designer</p>
+          <div className="auth-header">
+            <div className="auth-logo">
+              <div className="logo-icon">🔑</div>
+              <h1>Cloud Canvas Designer</h1>
+              <p className="tagline">Design. Validate. Deploy.</p>
+            </div>
           </div>
 
-          {sent ? (
-            <div style={{ textAlign: 'center', padding: '20px 0' }}>
-              <div style={{ fontSize: '48px', marginBottom: '12px' }}>📧</div>
-              <h2 style={{ color: '#333', marginBottom: '8px' }}>Check Your Email</h2>
-              <p style={{ color: '#666', fontSize: '14px', lineHeight: 1.6 }}>
-                We sent a password reset link to <strong>{email}</strong>. 
-                Click the link in the email to set a new password.
+          <div className="auth-form-container">
+            {sent ? (
+              <>
+                <div className="auth-success-icon">📧</div>
+                <h2>Check Your Email</h2>
+                <p className="auth-subtitle">
+                  We sent a password reset link to <strong>{email}</strong>.
+                  Click the link in the email to set a new password.
+                </p>
+                <p className="auth-hint">
+                  Didn't receive it? Check your spam folder or try again.
+                </p>
+                <button
+                  className="auth-button primary"
+                  onClick={() => { setSent(false); setEmail(''); }}
+                >
+                  Try Again
+                </button>
+              </>
+            ) : (
+              <>
+                <h2>Reset Password</h2>
+                <p className="auth-subtitle">
+                  Enter your email address and we'll send you a link to reset your password.
+                </p>
+
+                {error && (
+                  <div className="auth-error">
+                    <span className="error-icon">⚠️</span>
+                    {error}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="auth-form">
+                  <div className="form-group">
+                    <label htmlFor="reset-email">Email Address</label>
+                    <input
+                      id="reset-email"
+                      type="email"
+                      placeholder="you@company.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={loading}
+                      autoFocus
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="auth-button primary"
+                    disabled={loading}
+                  >
+                    {loading ? 'Sending...' : 'Send Reset Link'}
+                  </button>
+                </form>
+              </>
+            )}
+
+            <div className="auth-footer">
+              <p>
+                <Link to="/login" className="auth-link">← Back to Sign In</Link>
               </p>
-              <p style={{ color: '#999', fontSize: '12px', marginTop: '16px' }}>
-                Didn't receive it? Check your spam folder or try again.
-              </p>
-              <button
-                onClick={() => { setSent(false); setEmail(''); }}
-                style={{
-                  marginTop: '16px', padding: '10px 24px', background: '#0078D4',
-                  color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer',
-                  fontSize: '14px', fontWeight: 600,
-                }}
-              >
-                Try Again
-              </button>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              {error && (
-                <div style={{
-                  background: '#fee', color: '#c00', padding: '10px 14px',
-                  borderRadius: '8px', fontSize: '13px', marginBottom: '16px',
-                  border: '1px solid #fcc',
-                }}>
-                  {error}
-                </div>
-              )}
-
-              <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px' }}>
-                Enter your email address and we'll send you a link to reset your password.
-              </p>
-
-              <div className="form-group">
-                <label htmlFor="email">Email Address</label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  autoFocus
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="auth-submit-btn"
-                disabled={loading}
-              >
-                {loading ? 'Sending...' : 'Send Reset Link'}
-              </button>
-            </form>
-          )}
-
-          <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            <Link to="/login" style={{ color: '#0078D4', textDecoration: 'none', fontSize: '14px' }}>
-              ← Back to Sign In
-            </Link>
           </div>
         </div>
 
