@@ -28,8 +28,12 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-container">
+    <div className="auth-container">
+      <div className="auth-background">
+        <div className="auth-pattern"></div>
+      </div>
+
+      <div className="auth-content">
         <div className="auth-card">
           <div className="auth-header">
             <div className="auth-logo">
@@ -105,11 +109,11 @@ const ForgotPassword = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="auth-branding">
-          <p>© 2026 Arunim's IT Café - Cloud Canvas Designer v1.0.0</p>
-          <Link to="/" className="auth-home-link">← Back to Home</Link>
-        </div>
+      <div className="auth-branding">
+        <p>© 2026 Arunim's IT Café - Cloud Canvas Designer v1.0.0</p>
+        <Link to="/" className="auth-home-link">← Back to Home</Link>
       </div>
     </div>
   );
