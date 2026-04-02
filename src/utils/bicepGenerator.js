@@ -46,7 +46,7 @@ function res(item){var s=(item.serviceType||item.type||'').toLowerCase();if(BICE
 function blk(item,v,m){var s=(item.serviceType||'').toLowerCase(),L=[];
 L.push("resource "+v+" '"+m.type+"@"+m.api+"' = {");L.push("  name: "+v+"Name");L.push("  location: location");
 if(m.kind)L.push("  kind: '"+m.kind+"'");
-if(m.skuName||m.sku){L.push("  sku: {");L.push("    name: '"+(m.skuName||m.sku)+"'");if(m.skuTier)L.push("    tier: '"+m.skuTier+"'");if(m.skuFamily)L.push("    family: '"+m.skuFamily+"'");if(m.skuCapacity!==undefined)L.push("    capacity: "+m.skuCapacity);L.push("  }");}
+var skipSku=s==='virtualmachine'||s==='vmscalesets'||s==='kubernetesservices'||s==='azurecosmosdb'||s==='sqldatabase'||s==='sqlserver'||s==='keyvaults';if(!skipSku&&(m.skuName||m.sku)){L.push("  sku: {");L.push("    name: '"+(m.skuName||m.sku)+"'");if(m.skuTier)L.push("    tier: '"+m.skuTier+"'");if(m.skuFamily)L.push("    family: '"+m.skuFamily+"'");if(m.skuCapacity!==undefined)L.push("    capacity: "+m.skuCapacity);L.push("  }");}
 L.push("  properties: {");
 if(s==='virtualmachine'){L.push("    hardwareProfile: { vmSize: '"+(m.sku||'Standard_D2s_v5')+"' }");L.push("    osProfile: { computerName: "+v+"Name, adminUsername: adminUsername, adminPassword: adminPassword }");L.push("    storageProfile: { imageReference: { publisher: 'Canonical', offer: '0001-com-ubuntu-server-jammy', sku: '22_04-lts-gen2', version: 'latest' }, osDisk: { createOption: 'FromImage' } }");L.push("    networkProfile: { networkInterfaces: [] }");}
 else if(s==='kubernetesservices'){L.push("    dnsPrefix: '"+v+"'");L.push("    agentPoolProfiles: [{ name: 'system', count: 3, vmSize: '"+(m.sku||'Standard_D4s_v5')+"', mode: 'System' }]");L.push("    identity: { type: 'SystemAssigned' }");}
@@ -75,3 +75,4 @@ export function exportBicepFile(items,connections,boundaries,options){
   var c=generateBicep(items,connections,boundaries,options||{});var b=new Blob([c],{type:'text/plain'});var u=URL.createObjectURL(b);var a=document.createElement('a');
   var t=new Date().toISOString().replace(/[:.]/g,'-').slice(0,-5);a.href=u;a.download='azure-architecture-'+t+'.bicep';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);
   return{filename:a.download,itemCount:items.length,connectionCount:connections.length};}
+
