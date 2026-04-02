@@ -300,7 +300,7 @@ const parseTerraformHCL = (content) => {
     extractDependencies(body, item, resourceMap, connections, connectionSet);
   }
 
-  const { boundaries } = layoutItems(items);
+  const { boundaries } = layoutItems(items, connections);
 
   return {
     items,
@@ -361,7 +361,7 @@ const parseTerraformJSON = (content) => {
     }
   }
 
-  const { boundaries } = layoutItems(items);
+  const { boundaries } = layoutItems(items, connections);
 
   return {
     items,
@@ -553,16 +553,16 @@ const SERVICE_SORT_ORDER = {
   applicationinsights: 3, loganalyticsworkspaces: 4, azuremonitor: 5,
 };
 
-const layoutItems = (items) => {
+const layoutItems = (items, connections) => {
   if (items.length === 0) return { boundaries: [] };
 
   const CARD_W = 130;
   const CARD_H = 130;
   const GAP    = 20;
-  const PAD    = 30;        // padding inside boundary
-  const HEADER = 45;        // space for boundary label bar
-  const RG_GAP = 50;        // gap between RG boundaries
-  const COLS   = 4;         // max items per row
+  const PAD    = 30;
+  const HEADER = 45;
+  const RG_GAP = 50;
+  const COLS   = 4;
 
   // ── Step 1: Group items by resource group ──
   const rgGroups = new Map(); // key: tf resource name → { label, items[], vnetGroups }
@@ -623,6 +623,14 @@ const layoutItems = (items) => {
   });
   items.length = 0;
   items.push(...kept);
+
+  // Remove connections that reference removed items (RG/VNet/Subnet)
+  if (connections) {
+    const itemIds = new Set(items.map(i => i.id));
+    const validConns = connections.filter(c => itemIds.has(c.from) && itemIds.has(c.to));
+    connections.length = 0;
+    connections.push(...validConns);
+  }
 
   // ── Helper: grid size for N items ──
   const gridSize = (n) => {
