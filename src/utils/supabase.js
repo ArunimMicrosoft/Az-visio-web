@@ -104,16 +104,38 @@ export async function supabaseSignUp(email, password, name) {
  */
 export async function writeAuditLog({ userId, email, event, details = null, ip = null }) {
   try {
+    // Capture device/browser info automatically
+    const deviceInfo = {
+      userAgent: navigator.userAgent || null,
+      platform: navigator.platform || null,
+      language: navigator.language || null,
+      screen: `${window.screen.width}x${window.screen.height}`,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
+    };
+
+    // Try to get IP address (non-blocking, best-effort)
+    let clientIp = ip;
+    if (!clientIp) {
+      try {
+        const resp = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(2000) });
+        if (resp.ok) { const d = await resp.json(); clientIp = d.ip; }
+      } catch (_) { /* ignore — IP is optional */ }
+    }
+
+    // Merge device info into details
+    const fullDetails = details
+      ? { ...(typeof details === 'string' ? { message: details } : details), device: deviceInfo }
+      : { device: deviceInfo };
+
     await supabase.from('audit_logs').insert({
       user_id: userId || null,
       email: email || null,
       event,
-      details: details ? JSON.stringify(details) : null,
-      ip_address: ip || null,
+      details: JSON.stringify(fullDetails),
+      ip_address: clientIp || null,
       created_at: new Date().toISOString(),
     });
   } catch (e) {
-    // Never throw — audit logging must never break the app
     console.warn('Audit log write failed (non-blocking):', e.message);
   }
 }

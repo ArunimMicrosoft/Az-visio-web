@@ -894,12 +894,23 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                           <td className="ad-audit-details">
                             {details && typeof details === 'object' ? (
                               <div className="ad-audit-detail-chips">
-                                {Object.entries(details).map(([k, v]) => (
+                                {Object.entries(details).filter(([k]) => k !== 'device').map(([k, v]) => (
                                   <span key={k} className="ad-audit-chip">
                                     <span className="ad-audit-chip-key">{k}:</span>
                                     <span className="ad-audit-chip-val">{String(v)}</span>
                                   </span>
                                 ))}
+                                {details.device && (
+                                  <details className="ad-device-details">
+                                    <summary className="ad-device-summary">🖥️ {details.device.platform || 'Device'} · {details.device.screen || ''}</summary>
+                                    <div className="ad-device-info">
+                                      {details.device.userAgent && <div className="ad-device-row" title={details.device.userAgent}>🌐 {details.device.userAgent.slice(0, 60)}…</div>}
+                                      {details.device.language && <div className="ad-device-row">🗣️ {details.device.language}</div>}
+                                      {details.device.timezone && <div className="ad-device-row">🕐 {details.device.timezone}</div>}
+                                      {details.device.screen && <div className="ad-device-row">📐 {details.device.screen}</div>}
+                                    </div>
+                                  </details>
+                                )}
                               </div>
                             ) : details ? (
                               <span className="ad-audit-chip-val">{String(details)}</span>

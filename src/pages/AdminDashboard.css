@@ -485,3 +485,10 @@
   .ad-search { min-width: 100%; }
   .ad-audit-stat { min-width: calc(50% - 6px); }
 }
+
+/* Device info in audit logs */
+.ad-device-details { margin-top: 4px; }
+.ad-device-summary { cursor: pointer; font-size: 11px; color: #6b7280; padding: 2px 6px; background: #f3f4f6; border-radius: 4px; display: inline-block; }
+.ad-device-summary:hover { background: #e5e7eb; }
+.ad-device-info { margin-top: 4px; padding: 6px 8px; background: #f9fafb; border-radius: 4px; border: 1px solid #e5e7eb; }
+.ad-device-row { font-size: 11px; color: #4b5563; padding: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
