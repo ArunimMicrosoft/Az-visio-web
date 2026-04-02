@@ -31,6 +31,9 @@ const AUDIT_EVENT_META = {
   USER_BANNED: { icon: '🔒', label: 'User Banned', color: '#dc2626', bg: '#fee2e2' },
   USER_UNBANNED: { icon: '🔓', label: 'User Unbanned', color: '#059669', bg: '#d1fae5' },
   COUNTERS_RESET: { icon: '🔄', label: 'Counters Reset', color: '#6b7280', bg: '#f3f4f6' },
+  SESSION_ACTIVE: { icon: '💻', label: 'Session Active', color: '#0891b2', bg: '#cffafe' },
+  PASSWORD_RESET_REQUESTED: { icon: '🔑', label: 'Password Reset', color: '#d97706', bg: '#fef3c7' },
+  PASSWORD_RESET_FAILED: { icon: '🔑', label: 'Reset Failed', color: '#ef4444', bg: '#fee2e2' },
 };
 
 function daysUntil(iso) {

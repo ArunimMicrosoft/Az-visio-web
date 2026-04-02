@@ -18,6 +18,7 @@ import TrialWatermark from './components/TrialWatermark';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { useVersionHistory } from './hooks/useVersionHistory';
 import { exportBicepFile } from './utils/bicepGenerator';
+import { writeAuditLog } from './utils/supabase';
 import { 
   exportJSON, 
   exportPNG, 
@@ -67,6 +68,22 @@ function App() {
     if (user?.id) {
       refreshUser();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Session heartbeat — captures device/IP info once per session for existing logged-in users
+  useEffect(() => {
+    if (!user?.id) return;
+    const heartbeatKey = 'ccd_heartbeat_' + user.id;
+    const lastBeat = sessionStorage.getItem(heartbeatKey);
+    if (lastBeat) return; // already sent this session
+    sessionStorage.setItem(heartbeatKey, Date.now().toString());
+    writeAuditLog({
+      userId: user.id,
+      email: user.email,
+      event: 'SESSION_ACTIVE',
+      details: { source: 'app_load' },
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
