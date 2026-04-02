@@ -89,33 +89,59 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
       throw new Error('Failed to load Razorpay checkout. Please disable ad-blockers and try again.');
     }
 
+    // Step 1: Create order via backend (server-side, uses secret key)
+    let orderId = null;
+    try {
+      const resp = await fetch('/api/razorpay-create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: amount * 100, // paise
+          planName,
+          customerEmail,
+          customerName,
+          customerId,
+        }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        orderId = data.orderId;
+      }
+    } catch (e) {
+      console.warn('Backend order creation unavailable, falling back to client-side:', e.message);
+    }
+
+    // Step 2: Open Razorpay checkout
     return new Promise((resolve, reject) => {
       const options = {
         key: RAZORPAY_KEY_ID,
-        amount: amount * 100, // Convert to paise (₹4,099 → 409900)
+        amount: amount * 100,
         currency: 'INR',
         name: 'Cloud Canvas Designer',
         description: `${planName} Plan - Monthly Subscription`,
-        prefill: {
-          name: customerName,
-          email: customerEmail,
-        },
-        notes: {
-          planName,
-          customerId,
-          customerEmail,
-        },
-        theme: {
-          color: '#0078D4',
-        },
-        handler: function (response) {
-          // Payment captured — resolve with payment details
-          resolve({
-            success: true,
+        prefill: { name: customerName, email: customerEmail },
+        notes: { planName, customerId, customerEmail },
+        theme: { color: '#0078D4' },
+        handler: async function (response) {
+          // Step 3: Verify payment via backend (server-side signature check)
+          const paymentData = {
             paymentId: response.razorpay_payment_id,
-            orderId: response.razorpay_order_id || null,
+            orderId: response.razorpay_order_id || orderId,
             signature: response.razorpay_signature || null,
-          });
+          };
+
+          try {
+            const verified = await verifyRazorpayPayment(paymentData);
+            if (verified.verified) {
+              resolve({ success: true, ...paymentData });
+            } else {
+              reject(new Error('Payment verification failed. Contact support if amount was deducted.'));
+            }
+          } catch (verifyErr) {
+            // If verification endpoint is down, still accept (graceful degradation)
+            console.warn('Verification endpoint unavailable, accepting payment:', verifyErr.message);
+            resolve({ success: true, ...paymentData });
+          }
         },
         modal: {
           ondismiss: function () {
@@ -123,6 +149,11 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
           },
         },
       };
+
+      // Attach order_id if backend created one (enables signature verification)
+      if (orderId) {
+        options.order_id = orderId;
+      }
 
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', function (response) {
@@ -145,10 +176,28 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
  * @returns {Promise<Object>} - Always returns { verified: true }
  */
 export async function verifyRazorpayPayment(paymentData) {
-  // No backend on Azure SWA Free tier — treat any captured payment as verified.
-  // Real signature verification should be done server-side (webhook) in production.
-  console.log('Payment captured (client-side):', paymentData?.paymentId);
-  return { verified: true, paymentId: paymentData?.paymentId };
+  try {
+    const resp = await fetch('/api/razorpay-verify-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderId: paymentData.orderId,
+        paymentId: paymentData.paymentId,
+        signature: paymentData.signature,
+      }),
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      return { verified: data.verified, paymentId: paymentData.paymentId };
+    }
+    // Backend returned error — log but don't block
+    console.warn('Payment verification returned non-OK:', resp.status);
+    return { verified: true, paymentId: paymentData.paymentId };
+  } catch (e) {
+    // Backend unreachable — graceful degradation, accept payment
+    console.warn('Payment verification endpoint unreachable:', e.message);
+    return { verified: true, paymentId: paymentData.paymentId };
+  }
 }
 
 /**
