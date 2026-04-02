@@ -390,8 +390,13 @@ const buildItem = (resourceType, resourceName, body, id) => {
     : resourceName.replace(/[-_]+/g, ' ');
 
   // Extract resource_group_name reference for boundary grouping
-  const rgMatch = body.match(/resource_group_name\s*=\s*(?:azurerm_resource_group\.(\w+)\.name|"([^"]+)")/);
-  const rgRef = rgMatch ? (rgMatch[1] || rgMatch[2] || 'default') : 'default';
+  const rgMatch = body.match(/resource_group_name\s*=\s*(?:azurerm_resource_group\.(\w+)\.name|"([^"]+)"|(\w+)\.name)/);
+  let rgRef = rgMatch ? (rgMatch[1] || rgMatch[2] || rgMatch[3] || 'default') : 'default';
+  // Fallback: check location = azurerm_resource_group.X.location
+  if (rgRef === 'default') {
+    const locMatch = body.match(/location\s*=\s*azurerm_resource_group\.(\w+)\.location/);
+    if (locMatch) rgRef = locMatch[1];
+  }
 
   // Extract virtual_network_name reference for VNet boundary grouping
   const vnetMatch = body.match(/virtual_network_name\s*=\s*(?:azurerm_virtual_network\.(\w+)\.name|"([^"]+)")/);
