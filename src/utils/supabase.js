@@ -111,15 +111,35 @@ export async function writeAuditLog({ userId, email, event, details = null, ip =
       language: navigator.language || null,
       screen: `${window.screen.width}x${window.screen.height}`,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
+      referrer: document.referrer || null,
+      online: navigator.onLine,
+      cookiesEnabled: navigator.cookieEnabled,
+      touchDevice: 'ontouchstart' in window,
+      deviceMemory: navigator.deviceMemory || null,
+      cpuCores: navigator.hardwareConcurrency || null,
+      colorDepth: window.screen.colorDepth || null,
+      pixelRatio: window.devicePixelRatio || null,
     };
 
     // Try to get IP address (non-blocking, best-effort)
     let clientIp = ip;
     if (!clientIp) {
       try {
-        const resp = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(2000) });
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 3000);
+        const resp = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+        clearTimeout(timer);
         if (resp.ok) { const d = await resp.json(); clientIp = d.ip; }
-      } catch (_) { /* ignore — IP is optional */ }
+      } catch (_) {
+        // Fallback API
+        try {
+          const controller2 = new AbortController();
+          const timer2 = setTimeout(() => controller2.abort(), 3000);
+          const resp2 = await fetch('https://api.seeip.org/jsonip', { signal: controller2.signal });
+          clearTimeout(timer2);
+          if (resp2.ok) { const d2 = await resp2.json(); clientIp = d2.ip; }
+        } catch (_2) { /* both failed — skip IP */ }
+      }
     }
 
     // Merge device info into details
