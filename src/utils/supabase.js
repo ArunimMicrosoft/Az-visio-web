@@ -124,21 +124,27 @@ export async function writeAuditLog({ userId, email, event, details = null, ip =
     // Try to get IP address (non-blocking, best-effort)
     let clientIp = ip;
     if (!clientIp) {
+      // Try Cloudflare trace (most reliable if DNS is on Cloudflare)
       try {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 3000);
-        const resp = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+        const resp = await fetch('https://1.1.1.1/cdn-cgi/trace', { signal: controller.signal });
         clearTimeout(timer);
-        if (resp.ok) { const d = await resp.json(); clientIp = d.ip; }
-      } catch (_) {
-        // Fallback API
+        if (resp.ok) {
+          const text = await resp.text();
+          const ipLine = text.split('\n').find(l => l.startsWith('ip='));
+          if (ipLine) clientIp = ipLine.split('=')[1];
+        }
+      } catch (_) {}
+      // Fallback: ipify
+      if (!clientIp) {
         try {
           const controller2 = new AbortController();
           const timer2 = setTimeout(() => controller2.abort(), 3000);
-          const resp2 = await fetch('https://api.seeip.org/jsonip', { signal: controller2.signal });
+          const resp2 = await fetch('https://api.ipify.org?format=json', { signal: controller2.signal });
           clearTimeout(timer2);
-          if (resp2.ok) { const d2 = await resp2.json(); clientIp = d2.ip; }
-        } catch (_2) { /* both failed — skip IP */ }
+          if (resp2.ok) { const d = await resp2.json(); clientIp = d.ip; }
+        } catch (_2) {}
       }
     }
 
