@@ -27,20 +27,18 @@ export function trackActive(userId) {
  */
 export function trackIncrement(userId, column) {
   if (!userId || !column) return;
-  // Use raw SQL increment to avoid race conditions
-  supabase.rpc('increment_profile_counter', { user_id: userId, counter_name: column })
-    .then(() => {})
-    .catch(() => {
-      // Fallback: read-then-write if RPC doesn't exist
-      supabase.from('profiles').select(column).eq('id', userId).single()
-        .then(({ data }) => {
-          if (data) {
-            const val = (data[column] || 0) + 1;
-            supabase.from('profiles').update({ [column]: val }).eq('id', userId)
-              .then(() => {}).catch(() => {});
-          }
-        }).catch(() => {});
-    });
+  // Read current value, then increment
+  supabase.from('profiles').select('*').eq('id', userId).single()
+    .then(({ data, error }) => {
+      if (error || !data) return;
+      const currentVal = data[column] || 0;
+      supabase.from('profiles')
+        .update({ [column]: currentVal + 1 })
+        .eq('id', userId)
+        .then(() => {})
+        .catch(() => {});
+    })
+    .catch(() => {});
 }
 
 /**
