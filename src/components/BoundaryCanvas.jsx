@@ -348,7 +348,7 @@ const BoundaryCanvas = ({ boundaries, setBoundaries, items, boundaryDrawMode, dr
               borderColor: boundary.color,
               borderStyle: borderStyle,
               borderWidth: isTextAnnotation ? '0' : '2px',
-              backgroundColor: isTextAnnotation ? boundary.color + '22' : 'transparent',
+              backgroundColor: isTextAnnotation ? boundary.color + '22' : boundary.color + '18',
               pointerEvents: 'auto',
               zIndex: editingBoundaryId === boundary.id ? 999 : 'auto'
             }}
