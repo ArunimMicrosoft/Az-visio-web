@@ -112,7 +112,7 @@ const ForgotPassword = () => {
       </div>
 
       <div className="auth-branding">
-        <p>© 2026 Arunim's IT Café - Cloud Canvas Designer v1.0.0</p>
+        <p>© 2026 Arunim's IT Café - Cloud Canvas Designer v2.5.0</p>
         <Link to="/" className="auth-home-link">← Back to Home</Link>
       </div>
     </div>

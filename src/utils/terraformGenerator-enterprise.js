@@ -69,7 +69,7 @@ const generateMainTF = (items, connections, orgStructure, timestamp) => {
   // Header with enterprise branding
   lines.push(`##############################################################################`);
   lines.push(`# Arunim's IT Caffe — Cloud Canvas Designer`);
-  lines.push(`# Version: v2.1.0 | Author: Arunim Pandey | ${timestamp}`);
+  lines.push(`# Version: v2.5.0 | Author: Arunim Pandey | ${timestamp}`);
   lines.push(`# Compliance: Enterprise Microsoft Azure Best Practices`);
   lines.push(`# Architecture: ${orgStructure.resourceGroups.length} Resource Groups, ${orgStructure.vnets.length} VNets`);
   lines.push(`# https://docs.microsoft.com/en-us/azure/architecture/framework/`);
