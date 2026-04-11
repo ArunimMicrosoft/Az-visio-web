@@ -34,10 +34,18 @@ export const AuthProvider = ({ children }) => {
 
         if (session?.user) {
           const profile = await getUserProfile(session.user.id);
+
+          // Block banned users on session restore
+          if (profile && profile.is_active === false) {
+            await supabase.auth.signOut();
+            setUser(null);
+            setIsLoading(false);
+            return;
+          }
+
           const appUser = profileToAppUser(session.user, profile);
           if (appUser) {
             setUser(appUser);
-            console.log('Session restored for user:', appUser.email);
           }
         } else {
           console.log('No existing session found');
@@ -80,6 +88,13 @@ export const AuthProvider = ({ children }) => {
 
       const data = await supabaseSignIn(email, password);
       const profile = await getUserProfile(data.user.id);
+
+      // Block banned users
+      if (profile && profile.is_active === false) {
+        await supabaseSignOut();
+        return { success: false, error: 'Your account has been suspended. Contact support for assistance.' };
+      }
+
       const appUser = profileToAppUser(data.user, profile);
       setUser(appUser);
       trackLogin(data.user.id);

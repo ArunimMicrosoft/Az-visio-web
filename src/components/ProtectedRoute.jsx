@@ -127,7 +127,7 @@ const TrialExpiredGate = ({ user }) => {
    • Otherwise      → render children
 ───────────────────────────────────────────────────────────────────────────── */
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
 
   if (isLoading) {
     return (
@@ -147,6 +147,47 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
   // Not logged in
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  // Banned user — force logout
+  if (user && user.isActive === false) {
+    return (
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 99999,
+        background: 'linear-gradient(135deg, #1a0000 0%, #4a0000 50%, #1a0000 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: "'Segoe UI', Arial, sans-serif",
+      }}>
+        <div style={{
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,59,48,0.3)',
+          borderRadius: '24px',
+          padding: '48px',
+          maxWidth: '460px',
+          width: '90%',
+          textAlign: 'center',
+          backdropFilter: 'blur(20px)',
+        }}>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>🚫</div>
+          <h1 style={{ color: '#ff6b6b', fontSize: '24px', fontWeight: 700, margin: '0 0 12px' }}>
+            Account Suspended
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', lineHeight: 1.6, margin: '0 0 32px' }}>
+            Your account has been suspended by an administrator. If you believe this is an error, please contact support.
+          </p>
+          <button
+            onClick={() => { logout(); }}
+            style={{
+              padding: '12px 32px', background: 'rgba(255,255,255,0.1)',
+              color: '#fff', border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: '10px', fontSize: '14px', cursor: 'pointer',
+            }}
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Admin-only route guard
   if (adminOnly && !isAdminUser(user) && user?.role !== 'admin') {
