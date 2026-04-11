@@ -297,8 +297,7 @@ export function profileToAppUser(supabaseUser, profile) {
   if (!profile) return null;
 
   // Admin/demo accounts always get enterprise tier regardless of DB value
-  const ADMIN_EMAILS = ['arunimpandey2903@hotmail.com', 'demo@arunimitcaffe.com'];
-  const isAdmin = ADMIN_EMAILS.includes((profile.email || supabaseUser.email || '').toLowerCase());
+  const isAdmin = isAdminEmail((profile.email || supabaseUser.email || ''));
 
   // Compute 30-day expiry from upgraded_at if subscription_expires_at column missing
   let subscriptionExpiresAt = profile.subscription_expires_at || null;
