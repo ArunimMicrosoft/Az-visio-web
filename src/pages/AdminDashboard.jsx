@@ -41,9 +41,11 @@ function daysUntil(iso) {
   return Math.ceil((new Date(iso) - Date.now()) / 86_400_000);
 }
 function addDays(iso, n) {
-  const d = iso ? new Date(iso) : new Date();
-  d.setDate(d.getDate() + parseInt(n, 10));
-  return d.toISOString();
+  const base = iso ? new Date(iso) : new Date();
+  // If the date is in the past, start from now instead
+  const start = base < new Date() ? new Date() : base;
+  start.setDate(start.getDate() + parseInt(n, 10));
+  return start.toISOString();
 }
 function fmtDateTime(iso) {
   if (!iso) return '—';
