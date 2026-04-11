@@ -9,6 +9,7 @@ import {
   onAuthStateChange,
   supabase,
 } from '../utils/supabase';
+import { trackLogin } from '../utils/activityTracker';
 
 const AuthContext = createContext(null);
 
@@ -81,6 +82,7 @@ export const AuthProvider = ({ children }) => {
       const profile = await getUserProfile(data.user.id);
       const appUser = profileToAppUser(data.user, profile);
       setUser(appUser);
+      trackLogin(data.user.id);
 
       return { success: true, user: appUser };
     } catch (error) {

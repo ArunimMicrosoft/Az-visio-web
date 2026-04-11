@@ -1,6 +1,7 @@
 // My Diagrams — cloud-saved diagrams dashboard
 import React, { useState, useEffect } from 'react';
 import { listUserDiagrams, saveDiagramToCloud, loadDiagramFromCloud, deleteDiagramFromCloud, renameDiagram } from '../utils/diagramStorage';
+import { trackCloudSave } from '../utils/activityTracker';
 import './MyDiagrams.css';
 
 const MyDiagrams = ({ isOpen, onClose, userId, currentDiagram, onLoadDiagram, onSaveComplete }) => {
@@ -47,6 +48,7 @@ const MyDiagrams = ({ isOpen, onClose, userId, currentDiagram, onLoadDiagram, on
       });
       setSaveName('');
       await fetchDiagrams();
+      trackCloudSave(userId);
       if (onSaveComplete) onSaveComplete(saved);
     } catch (err) {
       setError('Failed to save. Check that the diagrams table exists in Supabase.');

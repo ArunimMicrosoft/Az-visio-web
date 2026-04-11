@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase, writeAuditLog } from '../utils/supabase';
+import { saveAdminNote } from '../utils/activityTracker';
 import { ADMIN_EMAILS } from '../utils/adminConfig';
 import './AdminDashboard.css';
 
@@ -348,6 +349,18 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleSaveNote = async (u) => {
+    try {
+      await saveAdminNote(u.id, inputVal);
+      await loadUsers();
+      showFlash('success', `✅ Note saved for ${u.email}`);
+      setModal(null);
+      setInputVal('');
+    } catch (e) {
+      showFlash('error', e.message);
+    }
+  };
+
   const exportCSV = () => {
     const h = ['Email', 'Name', 'Role', 'Plan', 'Trial Expires', 'Sub Expires', 'PNG Used', 'Diagrams', 'Active', 'Joined'];
     const rows = users.map((u) => [
@@ -627,6 +640,9 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                     <Th k="trial_exports_used" label="PNG" />
                     <Th k="diagrams_created" label="Diagrams" />
                     <Th k="is_active" label="Status" />
+                    <Th k="last_active_at" label="Last Active" />
+                    <Th k="login_count" label="Logins" />
+                    <Th k="total_exports" label="Exports" />
                     <Th k="created_at" label="Joined" />
                     <th>Actions</th>
                   </tr>
@@ -681,6 +697,11 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                             {u.is_active !== false ? '● Active' : '● Banned'}
                           </span>
                         </td>
+                        <td className="ad-center" title={u.last_active_at ? new Date(u.last_active_at).toLocaleString('en-IN') : ''}>
+                          {u.last_active_at ? new Date(u.last_active_at).toLocaleDateString('en-IN') : '—'}
+                        </td>
+                        <td className="ad-center">{u.login_count || 0}</td>
+                        <td className="ad-center">{u.total_exports || 0}</td>
                         <td>
                           {u.created_at ? new Date(u.created_at).toLocaleDateString('en-IN') : '—'}
                         </td>
@@ -739,6 +760,16 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                                 onClick={() => handleBanToggle(u)}
                               >
                                 {u.is_active !== false ? '🔒 Ban' : '🔓 Unban'}
+                              </button>
+                              <button
+                                className="ad-act ad-act-note"
+                                title="Admin notes"
+                                onClick={() => {
+                                  setModal({ type: 'adminNote', u });
+                                  setInputVal(u.admin_notes || '');
+                                }}
+                              >
+                                📝 Note
                               </button>
                             </div>
                           )}
@@ -1092,6 +1123,29 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                   ))}
                 </div>
                 <div className="ad-modal-footer">
+                  <button className="ad-btn ad-btn-outline" onClick={() => setModal(null)}>
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+
+            {modal.type === 'adminNote' && (
+              <>
+                <h3>📝 Admin Notes</h3>
+                <p className="ad-modal-email">{modal.u.email}</p>
+                <textarea
+                  className="ad-modal-input"
+                  style={{ minHeight: '120px', resize: 'vertical', fontFamily: 'inherit' }}
+                  value={inputVal}
+                  onChange={(e) => setInputVal(e.target.value)}
+                  placeholder="Add notes about this user (e.g., enterprise inquiry, bug report, suspicious activity)..."
+                  autoFocus
+                />
+                <div className="ad-modal-footer">
+                  <button className="ad-btn ad-btn-primary" onClick={() => handleSaveNote(modal.u)}>
+                    💾 Save Note
+                  </button>
                   <button className="ad-btn ad-btn-outline" onClick={() => setModal(null)}>
                     Cancel
                   </button>

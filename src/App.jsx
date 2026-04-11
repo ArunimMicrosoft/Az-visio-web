@@ -19,6 +19,7 @@ import { useUndoRedo } from './hooks/useUndoRedo';
 import { useVersionHistory } from './hooks/useVersionHistory';
 import { exportBicepFile } from './utils/bicepGenerator';
 import { writeAuditLog } from './utils/supabase';
+import { trackActive, trackExport, trackTemplateUsed, trackValidation, trackReferral } from './utils/activityTracker';
 import { 
   exportJSON, 
   exportPNG, 
@@ -78,6 +79,8 @@ function App() {
     const lastBeat = sessionStorage.getItem(heartbeatKey);
     if (lastBeat) return; // already sent this session
     sessionStorage.setItem(heartbeatKey, Date.now().toString());
+    trackActive(user.id);
+    trackReferral(user.id);
     writeAuditLog({
       userId: user.id,
       email: user.email,
@@ -227,6 +230,7 @@ function App() {
   const handleSelectTemplate = (template) => {
     const mode = askReplaceOrAdd('template');
     if (!mode) return;
+    trackTemplateUsed(user?.id);
     if (mode === 'replace') {
       isLoadingDiagram.current = true;
       handleSetItems(template.items);
@@ -293,6 +297,7 @@ function App() {
     if (showComplianceBlock(validation, 'Bicep')) return;
     try {
       const result = exportBicepFile(items, connections, boundaries, { region: selectedRegion });
+      trackExport(user?.id, 'bicep');
       alert(`✅ Bicep template exported!\n\n📁 ${result.filename}\n📊 ${result.itemCount} services`);
     } catch (error) {
       alert(`❌ Failed to export Bicep!\n\n${error.message}`);
@@ -319,6 +324,7 @@ function App() {
       alert('⚠️ Canvas is empty! Add Azure services to validate the architecture.');
       return;
     }
+    trackValidation(user?.id);
     setIsValidationOpen(true);
   };
 
@@ -601,7 +607,7 @@ function App() {
       await countDiagramIfTrial(); // counts diagram session (3→2→1→0) on first export
       await recordPNGExport(user.id);
       await refreshUser(); // sync updated counts from DB → banner
-      
+      trackExport(user?.id, 'png');
       alert(`✅ PNG exported successfully!\n\n📁 ${result.filename}\n📐 ${result.dimensions.width}×${result.dimensions.height}px\n🔬 ${result.dpi} DPI (${result.dpiSetting})\n📊 ${(result.size / 1024).toFixed(1)} KB`);
     } catch (error) {
       console.error('Error exporting PNG:', error);
@@ -638,7 +644,7 @@ function App() {
         version: '2.0.0',
         timestamp: new Date().toISOString(),
       });
-      
+      trackExport(user?.id, 'pdf');
       alert(`✅ PDF exported successfully!\n\n📁 ${result.filename}\n📄 ${result.pages} pages\n📊 ${result.itemCount} services, ${result.connectionCount} connections`);
     } catch (error) {
       console.error('Error exporting PDF:', error);
@@ -669,7 +675,7 @@ function App() {
         version: '2.0.0',
         timestamp: new Date().toISOString(),
       });
-      
+      trackExport(user?.id, 'terraform');
       alert(`✅ Terraform configuration exported!\n\n📦 Downloaded: ${result.files[0]}\n\nContains: main.tf · variables.tf · outputs.tf · terraform.tfvars · README.md\n\n📊 ${result.itemCount} services, ${result.connectionCount} connections`);
     } catch (error) {
       console.error('Error exporting Terraform:', error);
@@ -700,7 +706,7 @@ function App() {
         version: '2.0.0',
         timestamp: new Date().toISOString(),
       });
-      
+      trackExport(user?.id, 'arm');
       alert(`✅ ARM Template exported successfully!\n\n📦 Files generated:\n${result.files.map(f => `  • ${f}`).join('\n')}\n\n📊 ${result.itemCount} services, ${result.connectionCount} connections`);
     } catch (error) {
       console.error('Error exporting ARM Template:', error);
