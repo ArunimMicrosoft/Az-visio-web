@@ -363,7 +363,7 @@
   border-style: dashed !important;
   border-width: 2px !important;
   border-color: #00BCF2 !important;
-  background: rgba(0, 188, 242, 0.03) !important;
+  background: rgba(0, 188, 242, 0.05) !important;
   border-radius: 6px;
 }
 
@@ -372,7 +372,7 @@
   border-style: solid !important;
   border-width: 3px !important;
   border-color: #008272 !important;
-  background: rgba(0, 130, 114, 0.03) !important;
+  background: rgba(0, 130, 114, 0.06) !important;
   border-radius: 10px;
 }
 
@@ -381,7 +381,7 @@
   border-style: solid !important;
   border-width: 3px !important;
   border-color: #0078D4 !important;
-  background: rgba(0, 120, 212, 0.03) !important;
+  background: rgba(0, 120, 212, 0.06) !important;
   border-radius: 10px;
 }
 
@@ -390,7 +390,7 @@
   border-style: solid !important;
   border-width: 4px !important;
   border-color: #5C2D91 !important;
-  background: rgba(92, 45, 145, 0.03) !important;
+  background: rgba(92, 45, 145, 0.06) !important;
   border-radius: 12px;
 }
 
@@ -399,7 +399,7 @@
   border-style: solid !important;
   border-width: 4px !important;
   border-color: #FF6C37 !important;
-  background: rgba(255, 108, 55, 0.03) !important;
+  background: rgba(255, 108, 55, 0.06) !important;
   border-radius: 16px;
 }
 
