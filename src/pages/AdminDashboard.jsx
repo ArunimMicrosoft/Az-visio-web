@@ -961,13 +961,15 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                   </tbody>
                 </table>
 
-                {totalAuditPages > 1 && (
+                {totalAuditPages >= 1 && (
                   <div className="ad-audit-pagination">
                     <span className="ad-audit-page-info">
-                      Showing {auditPage * AUDIT_PAGE_SIZE - AUDIT_PAGE_SIZE + 1}–
+                      Showing {filteredAuditLogs.length === 0 ? 0 : (auditPage - 1) * AUDIT_PAGE_SIZE + 1}–
                       {Math.min(auditPage * AUDIT_PAGE_SIZE, filteredAuditLogs.length)} of{' '}
                       {filteredAuditLogs.length} events
+                      {totalAuditPages > 1 && ` · Page ${auditPage} of ${totalAuditPages}`}
                     </span>
+                    {totalAuditPages > 1 && (
                     <div className="ad-audit-page-btns">
                       <button
                         className="ad-btn ad-btn-outline ad-page-btn"
@@ -1013,6 +1015,7 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                         »
                       </button>
                     </div>
+                    )}
                   </div>
                 )}
               </>
