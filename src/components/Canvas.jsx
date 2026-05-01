@@ -5,6 +5,7 @@ import './Canvas.css';
 
 const Canvas = ({ items, setItems, connections, setConnections, boundaries, setBoundaries, canvasRef, isTrial }) => {
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItems, setSelectedItems] = useState(new Set());
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [connectingFrom, setConnectingFrom] = useState(null);
@@ -206,6 +207,25 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
 
   const startDragging = (e, item) => {
     e.stopPropagation();
+    
+    // Ctrl+click toggles multi-select without starting drag
+    if (e.ctrlKey && !connectionMode) {
+      setSelectedItems(prev => {
+        const next = new Set(prev);
+        if (next.has(item.id)) next.delete(item.id);
+        else next.add(item.id);
+        return next;
+      });
+      setSelectedItem(item.id);
+      return;
+    }
+
+    // If item is part of multi-selection, drag all selected
+    if (!selectedItems.has(item.id)) {
+      // Clicking without Ctrl on unselected item — clear multi-select, select just this one
+      setSelectedItems(new Set([item.id]));
+    }
+    
     setSelectedItem(item.id);
     setIsDragging(true);
     const rect = activeCanvasRef.current.getBoundingClientRect();
@@ -213,8 +233,8 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
     const scrollTop = containerRef.current.scrollTop;
     
     setDragOffset({
-      x: e.clientX - rect.left + scrollLeft - item.x,
-      y: e.clientY - rect.top + scrollTop - item.y,
+      x: (e.clientX - rect.left + scrollLeft) / zoom - item.x,
+      y: (e.clientY - rect.top + scrollTop) / zoom - item.y,
     });
   };
 
@@ -237,11 +257,19 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
     });
 
     if (isDragging && selectedItem) {
-      const x = (e.clientX - rect.left + scrollLeft) / zoom - dragOffset.x;
-      const y = (e.clientY - rect.top + scrollTop) / zoom - dragOffset.y;
+      const newX = (e.clientX - rect.left + scrollLeft) / zoom - dragOffset.x;
+      const newY = (e.clientY - rect.top + scrollTop) / zoom - dragOffset.y;
+      
+      const draggedItem = items.find(i => i.id === selectedItem);
+      if (!draggedItem) return;
+      const dx = newX - draggedItem.x;
+      const dy = newY - draggedItem.y;
 
+      // Move all selected items (or just the one if no multi-select)
+      const toMove = selectedItems.size > 1 && selectedItems.has(selectedItem) ? selectedItems : new Set([selectedItem]);
+      
       setItems(items.map(item =>
-        item.id === selectedItem ? { ...item, x, y } : item
+        toMove.has(item.id) ? { ...item, x: item.x + dx, y: item.y + dy } : item
       ));
     }
   };
@@ -262,15 +290,16 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
   };
 
   const handleCanvasClick = (e) => {
-    // Only cancel connection mode if the click was directly on the canvas background,
-    // NOT on a canvas item (items stop propagation in their own handlers)
-    if (connectionMode) {
-      // Check if click target is the canvas itself (not an item or child)
-      const isCanvasBackground = e.target === activeCanvasRef.current || 
-        e.target.classList.contains('canvas') ||
-        e.target.classList.contains('boundary-layer') ||
-        e.target.closest('.connections-svg');
-      if (isCanvasBackground) {
+    // Click on empty canvas — clear multi-select
+    const isCanvasBackground = e.target === activeCanvasRef.current || 
+      e.target.classList.contains('canvas') ||
+      e.target.classList.contains('boundary-layer') ||
+      e.target.closest('.connections-svg');
+    
+    if (isCanvasBackground) {
+      setSelectedItems(new Set());
+      setSelectedItem(null);
+      if (connectionMode) {
         setConnectionMode(false);
         setConnectingFrom(null);
       }
@@ -335,14 +364,20 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
   };
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Delete' && selectedItem && !editingItemId) {
-        setItems(prevItems => prevItems.filter(item => item.id !== selectedItem));
-        setConnections(prevConns => prevConns.filter(conn => conn.from !== selectedItem && conn.to !== selectedItem));
+      if (e.key === 'Delete' && (selectedItem || selectedItems.size > 0) && !editingItemId) {
+        const toDelete = selectedItems.size > 0 ? selectedItems : new Set([selectedItem]);
+        setItems(prevItems => prevItems.filter(item => !toDelete.has(item.id)));
+        setConnections(prevConns => prevConns.filter(conn => !toDelete.has(conn.from) && !toDelete.has(conn.to)));
         setSelectedItem(null);
+        setSelectedItems(new Set());
       }
       if (e.key === 'Escape' && connectionMode) {
         setConnectionMode(false);
         setConnectingFrom(null);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a' && !editingItemId) {
+        e.preventDefault();
+        setSelectedItems(new Set(items.map(i => i.id)));
       }
       if (e.key === ' ' && !editingItemId) {
         e.preventDefault();
@@ -610,7 +645,7 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
           return (
             <div
               key={item.id}
-              className={`canvas-item ${selectedItem === item.id ? 'selected' : ''} ${connectionClass}`}
+              className={`canvas-item ${selectedItem === item.id || selectedItems.has(item.id) ? 'selected' : ''} ${connectionClass}`}
               style={{
                 left: `${item.x}px`,
                 top: `${item.y}px`,
@@ -654,7 +689,7 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
                   {targetStatus === 'valid' ? '✓' : targetStatus === 'warning' ? '⚠' : '✗'}
                 </span>
               )}
-              {selectedItem === item.id && !connectionMode && (
+              {(selectedItem === item.id || selectedItems.has(item.id)) && !connectionMode && (
                 <button
                   className="delete-btn"
                   onClick={() => handleDeleteItem(item.id)}
