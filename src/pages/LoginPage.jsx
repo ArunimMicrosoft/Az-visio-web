@@ -140,19 +140,6 @@ const LoginPage = () => {
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>            <div className="auth-divider">
-              <span>or</span>
-            </div>
-            
-            <button 
-              type="button" 
-              className="auth-button demo"
-              onClick={handleDemoLogin}
-              disabled={isLoading}
-            >
-              <span className="demo-icon">🚀</span>
-              Try Demo Account
-            </button>
-            
             <div className="auth-footer">
               <p>
                 <Link to="/forgot-password" className="auth-link">Forgot your password?</Link>
