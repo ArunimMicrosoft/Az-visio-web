@@ -823,3 +823,56 @@
 }
 
 /* END OF FILE - No duplicate CSS below this line */
+
+/* Zoom Controls */
+.zoom-controls {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  padding: 4px 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.zoom-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.zoom-btn:hover {
+  background: #e8e8e8;
+}
+
+.zoom-level {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  min-width: 40px;
+  text-align: center;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.zoom-level:hover {
+  background: #f0f0f0;
+}

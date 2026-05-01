@@ -15,6 +15,7 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [editingItemId, setEditingItemId] = useState(null);
   const [editingName, setEditingName] = useState('');
+  const [zoom, setZoom] = useState(1);
   const localCanvasRef = useRef(null);
   const containerRef = useRef(null);
   const inputRef = useRef(null);
@@ -38,8 +39,8 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
       const scrollLeft = containerRef.current.scrollLeft;
       const scrollTop = containerRef.current.scrollTop;
       
-      const x = e.clientX - rect.left + scrollLeft;
-      const y = e.clientY - rect.top + scrollTop;
+      const x = (e.clientX - rect.left + scrollLeft) / zoom;
+      const y = (e.clientY - rect.top + scrollTop) / zoom;
 
       const newItem = {
         ...icon,
@@ -397,9 +398,15 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
         )}
       </div>
 
-      <div ref={containerRef} className="canvas-container">        <div
+      <div ref={containerRef} className="canvas-container" onWheel={(e) => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          setZoom(z => Math.min(3, Math.max(0.25, z + (e.deltaY < 0 ? 0.1 : -0.1))));
+        }
+      }}>        <div
           ref={activeCanvasRef}
           className={`canvas${isTrial ? ' canvas-trial' : ''}`}
+          style={{ transform: `scale(${zoom})`, transformOrigin: '0 0' }}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           onMouseMove={handleMouseMove}
@@ -636,6 +643,14 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
         {/* (watermark is pure CSS — see .canvas.trial-watermark-active::after) */}
         </div>
       </div>
+
+      {/* Zoom Controls */}
+      <div className="zoom-controls">
+        <button className="zoom-btn" onClick={() => setZoom(z => Math.min(3, z + 0.15))} title="Zoom In">+</button>
+        <span className="zoom-level" title="Click to reset" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</span>
+        <button className="zoom-btn" onClick={() => setZoom(z => Math.max(0.25, z - 0.15))} title="Zoom Out">−</button>
+      </div>
+
     </div>
   );
 };
