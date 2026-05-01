@@ -30,6 +30,7 @@ import {
 } from './utils/enterpriseExporter';
 import { 
   canExportPNG, 
+  canExportIaC,
   recordPNGExport, 
   recordDiagramCreation,
   isAdminUser
@@ -283,8 +284,8 @@ function App() {
 
   // Bicep export handler
   const handleExportBicep = () => {
-    if (user?.subscriptionTier === 'trial') {
-      setUpgradeReason('Bicep export is not available in trial version. Upgrade to Professional or Enterprise plan.');
+    if (!canExportIaC(user)) {
+      setUpgradeReason('Bicep export requires Professional or Enterprise plan.');
       setUpgradeFeature('Bicep Export');
       setUpgradeModalOpen(true);
       return;
@@ -616,7 +617,7 @@ function App() {
   };
   
   const handleExportPDF = async () => {
-    // Trial users cannot export PDF
+    // Trial users cannot export PDF (starter+ can)
     if (user?.subscriptionTier === 'trial') {
       setUpgradeReason('PDF export is not available in trial version. Upgrade to Professional or Enterprise plan.');
       setUpgradeFeature('PDF Export');
@@ -652,9 +653,8 @@ function App() {
     }
   };
   const handleExportTerraform = async () => {
-    // Trial users cannot export Terraform
-    if (user?.subscriptionTier === 'trial') {
-      setUpgradeReason('Terraform export is not available in trial version. Upgrade to Professional or Enterprise plan.');
+    if (!canExportIaC(user)) {
+      setUpgradeReason('Terraform export requires Professional or Enterprise plan.');
       setUpgradeFeature('Terraform Export');
       setUpgradeModalOpen(true);
       return;
@@ -683,9 +683,8 @@ function App() {
     }
   };
   const handleExportARM = async () => {
-    // Trial users cannot export ARM
-    if (user?.subscriptionTier === 'trial') {
-      setUpgradeReason('ARM Template export is not available in trial version. Upgrade to Professional or Enterprise plan.');
+    if (!canExportIaC(user)) {
+      setUpgradeReason('ARM Template export requires Professional or Enterprise plan.');
       setUpgradeFeature('ARM Template Export');
       setUpgradeModalOpen(true);
       return;
@@ -714,9 +713,8 @@ function App() {
     }  };
   
   const handleExportCostReport = async () => {
-    // Trial users cannot export Cost Report
-    if (user?.subscriptionTier === 'trial') {
-      setUpgradeReason('Cost Report export is not available in trial version. Upgrade to Professional or Enterprise plan.');
+    if (!canExportIaC(user)) {
+      setUpgradeReason('Cost Report export requires Professional or Enterprise plan.');
       setUpgradeFeature('Cost Report Export');
       setUpgradeModalOpen(true);
       return;
@@ -737,7 +735,7 @@ function App() {
       alert(`❌ Failed to export cost report!\n\n${error.message}`);
     }
   };
-  const isTrial = user?.subscriptionTier === 'trial' && !isAdminUser(user);
+  const isTrial = (user?.subscriptionTier === 'trial') && !isAdminUser(user);
 
   return (
     <div className="app">

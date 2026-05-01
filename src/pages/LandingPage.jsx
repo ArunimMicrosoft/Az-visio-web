@@ -327,26 +327,54 @@ const LandingPage = () => {
           </div>
 
           <div className="pricing-grid">
+            {/* Trial Plan */}
+            <div className="pricing-card">              <div className="pricing-header">
+                <h3 className="pricing-title">Trial</h3>
+                <div className="pricing-price">
+                  <span className="price-amount">$0</span>
+                  <span className="price-period">/7 days</span>
+                </div>
+                <div className="pricing-price-inr">
+                  <span className="price-amount-small">₹0</span>
+                  <span className="price-period-small">/7 days</span>
+                </div>
+                <p className="pricing-description">Try free, no credit card needed</p>
+              </div>              <ul className="pricing-features">
+                <li className="feature-item">✓ 3 diagrams</li>
+                <li className="feature-item">✓ 5 PNG exports</li>
+                <li className="feature-item">✓ WAF validation</li>
+                <li className="feature-item">✓ Cost estimation</li>
+                <li className="feature-item">✗ PDF / IaC exports</li>
+              </ul>
+              <Link to="/signup" className="btn-pricing btn-pricing-outline">Start Free Trial</Link>
+            </div>
+
             {/* Starter Plan */}
             <div className="pricing-card">              <div className="pricing-header">
                 <h3 className="pricing-title">Starter</h3>
                 <div className="pricing-price">
-                  <span className="price-amount">$0</span>
+                  <span className="price-amount">$6</span>
                   <span className="price-period">/mo</span>
                 </div>
                 <div className="pricing-price-inr">
-                  <span className="price-amount-small">₹0</span>
+                  <span className="price-amount-small">₹499</span>
                   <span className="price-period-small">/mo</span>
                 </div>
-                <p className="pricing-description">Try free for 7 days, no credit card needed</p>
+                <p className="pricing-description">For individual architects</p>
               </div>              <ul className="pricing-features">
-                <li className="feature-item">✓ 7-day free trial</li>
-                <li className="feature-item">✓ Up to 3 diagrams</li>
-                <li className="feature-item">✓ 5 PNG exports</li>
-                <li className="feature-item">✓ Drag-and-drop canvas</li>
-                <li className="feature-item">✓ Real-time cost estimates</li>
+                <li className="feature-item">✓ 25 diagrams</li>
+                <li className="feature-item">✓ 50 PNG exports</li>
+                <li className="feature-item">✓ PDF export</li>
+                <li className="feature-item">✓ Cloud save (10)</li>
+                <li className="feature-item">✓ No watermark</li>
+                <li className="feature-item">✓ Share links</li>
               </ul>
-              <Link to="/signup" className="btn-pricing btn-pricing-outline">Get Started</Link>
+              <button
+                className="btn-pricing btn-pricing-outline"
+                onClick={() => window.location.href = '/payment?plan=starter'}
+              >
+                Get Starter
+              </button>
             </div>
 
             {/* Professional Plan - Most Popular */}
@@ -363,11 +391,11 @@ const LandingPage = () => {
                 </div>
                 <p className="pricing-description">For growing businesses</p>
               </div>              <ul className="pricing-features">
-                <li className="feature-item">✓ Up to 10,000 diagrams</li>
-                <li className="feature-item">✓ Unlimited workspaces</li>
-                <li className="feature-item">✓ Unlimited PNG exports</li>
-                <li className="feature-item">✓ PDF, Terraform & Bicep exports</li>
+                <li className="feature-item">✓ Unlimited diagrams</li>
+                <li className="feature-item">✓ Unlimited exports</li>
+                <li className="feature-item">✓ Terraform & Bicep export</li>
                 <li className="feature-item">✓ ARM template export</li>
+                <li className="feature-item">✓ TF paste & import</li>
                 <li className="feature-item">✓ Priority support</li>
               </ul>
               <button 

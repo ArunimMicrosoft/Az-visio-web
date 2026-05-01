@@ -32,10 +32,28 @@ const UpgradeModal = ({ isOpen, onClose, reason, feature }) => {
                 <li>✓ 7 days access</li>
                 <li>✓ 5 PNG exports</li>
                 <li>✓ 3 diagrams max</li>
-                <li>✗ SVG/PDF export</li>
-                <li>✗ JSON export</li>
-                <li>✗ Unlimited diagrams</li>
+                <li>✗ PDF export</li>
+                <li>✗ IaC exports</li>
               </ul>
+            </div>
+
+            <div className="upgrade-column upgrade-starter">
+              <h3>Starter</h3>
+              <div className="upgrade-price">
+                <span className="price-main">$6</span>
+                <span className="price-sub">/mo</span>
+              </div>
+              <div className="upgrade-price-inr">₹499/mo</div>
+              <ul>
+                <li>✓ 25 diagrams</li>
+                <li>✓ 50 PNG exports</li>
+                <li>✓ PDF export</li>
+                <li>✓ No watermark</li>
+                <li>✓ Share links</li>
+              </ul>
+              <button onClick={() => handleUpgrade('starter')} className="upgrade-btn-starter">
+                Get Starter
+              </button>
             </div>
 
             <div className="upgrade-column upgrade-pro">
@@ -47,11 +65,11 @@ const UpgradeModal = ({ isOpen, onClose, reason, feature }) => {
               </div>
               <div className="upgrade-price-inr">₹2,000/mo</div>
               <ul>
-                <li>✓ Unlimited diagrams</li>
-                <li>✓ All export formats</li>
-                <li>✓ Advanced analytics</li>
+                <li>✓ Unlimited everything</li>
+                <li>✓ Terraform & Bicep</li>
+                <li>✓ ARM templates</li>
+                <li>✓ TF paste & import</li>
                 <li>✓ Priority support</li>
-                <li>✓ Custom domains</li>
               </ul>
               <button onClick={() => handleUpgrade('professional')} className="upgrade-btn-pro">
                 Upgrade to Pro

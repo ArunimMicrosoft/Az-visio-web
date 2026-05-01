@@ -52,22 +52,49 @@ export function getTrialStatus(user) {
  * Check if user can export PNG (pure function)
  */
 export function canExportPNG(user) {
+  if (isAdminUser(user)) return { allowed: true, unlimited: true };
   const trialStatus = getTrialStatus(user);
-  if (!trialStatus.isTrial) return { allowed: true, unlimited: true };
-  if (trialStatus.isHardExpired) return { allowed: false, reason: 'Trial expired. Please upgrade to continue.', requiresUpgrade: true };
-  if (trialStatus.exportsRemaining <= 0) return { allowed: false, reason: 'PNG export limit reached (5/5). Upgrade for unlimited exports.', requiresUpgrade: true };
-  return { allowed: true, remaining: trialStatus.exportsRemaining, isGracePeriod: trialStatus.isGracePeriod };
+  if (trialStatus.isTrial) {
+    if (trialStatus.isHardExpired) return { allowed: false, reason: 'Trial expired. Please upgrade to continue.', requiresUpgrade: true };
+    if (trialStatus.exportsRemaining <= 0) return { allowed: false, reason: 'PNG export limit reached (5/5). Upgrade for unlimited exports.', requiresUpgrade: true };
+    return { allowed: true, remaining: trialStatus.exportsRemaining };
+  }
+  // Starter: 50 PNG exports
+  if (user?.subscriptionTier === 'starter') {
+    const used = user.trialExportsUsed || 0;
+    if (used >= 50) return { allowed: false, reason: 'Starter PNG limit reached (50/50). Upgrade to Professional for unlimited.', requiresUpgrade: true };
+    return { allowed: true, remaining: 50 - used };
+  }
+  return { allowed: true, unlimited: true };
 }
 
 /**
  * Check if user can create a new diagram (pure function)
  */
 export function canCreateDiagram(user) {
+  if (isAdminUser(user)) return { allowed: true, unlimited: true };
   const trialStatus = getTrialStatus(user);
-  if (!trialStatus.isTrial) return { allowed: true, unlimited: true };
-  if (trialStatus.isHardExpired) return { allowed: false, reason: 'Trial expired. Please upgrade to continue.', requiresUpgrade: true };
-  if (trialStatus.diagramsRemaining <= 0) return { allowed: false, reason: 'Diagram limit reached (3/3). Upgrade for unlimited diagrams.', requiresUpgrade: true };
-  return { allowed: true, remaining: trialStatus.diagramsRemaining, isGracePeriod: trialStatus.isGracePeriod };
+  if (trialStatus.isTrial) {
+    if (trialStatus.isHardExpired) return { allowed: false, reason: 'Trial expired. Please upgrade to continue.', requiresUpgrade: true };
+    if (trialStatus.diagramsRemaining <= 0) return { allowed: false, reason: 'Diagram limit reached (3/3). Upgrade for unlimited diagrams.', requiresUpgrade: true };
+    return { allowed: true, remaining: trialStatus.diagramsRemaining };
+  }
+  // Starter: 25 diagrams
+  if (user?.subscriptionTier === 'starter') {
+    const used = user.diagramsCreated || 0;
+    if (used >= 25) return { allowed: false, reason: 'Starter diagram limit reached (25/25). Upgrade to Professional for unlimited.', requiresUpgrade: true };
+    return { allowed: true, remaining: 25 - used };
+  }
+  return { allowed: true, unlimited: true };
+}
+
+/**
+ * Check if user can use IaC exports (Terraform/Bicep/ARM) — Professional+ only
+ */
+export function canExportIaC(user) {
+  if (isAdminUser(user)) return true;
+  const tier = user?.subscriptionTier || 'trial';
+  return tier === 'professional' || tier === 'enterprise';
 }
 
 // ============================================================
