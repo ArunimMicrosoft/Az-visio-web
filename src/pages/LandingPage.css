@@ -14,11 +14,21 @@
 
 /* Navigation */
 .landing-hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #2563eb 70%, #0891b2 100%);
+  background: linear-gradient(135deg, #020617 0%, #0f172a 20%, #1e3a8a 50%, #1d4ed8 75%, #0891b2 100%);
   color: white;
-  min-height: 90vh;
+  min-height: 92vh;
   position: relative;
   overflow: hidden;
+  animation: heroShimmer 8s ease-in-out infinite alternate;
+}
+
+@keyframes heroShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+.landing-hero {
+  background-size: 200% 200%;
 }
 
 .landing-hero::before {
@@ -87,6 +97,12 @@
 .brand-logo {
   width: 40px;
   height: 40px;
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 
 .landing-nav-actions {
@@ -238,10 +254,17 @@
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #FFD700, #FFA500, #FF6B6B);
+  background: linear-gradient(135deg, #fbbf24, #f59e0b, #ef4444, #ec4899);
+  background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: gradientShift 4s ease-in-out infinite alternate;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
 }
 
 .hero-subtitle {
@@ -300,13 +323,16 @@
 
 .btn-hero-primary {
   background: white;
-  color: #0078D4;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  color: #1e3a8a;
+  box-shadow: 0 4px 20px rgba(255,255,255,0.2), 0 0 40px rgba(255,255,255,0.1);
+  font-weight: 800;
+  letter-spacing: -0.3px;
 }
 
 .btn-hero-primary:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 30px rgba(255,255,255,0.3), 0 0 60px rgba(255,255,255,0.15);
+  background: #f0f9ff;
 }
 
 .btn-hero-secondary {
@@ -356,17 +382,20 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
   padding: 0.75rem 1.5rem;
   border-radius: 50px;
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.15);
   transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .hero-feature-item:hover {
-  background: rgba(255,255,255,0.25);
-  transform: translateY(-3px);
+  background: rgba(255,255,255,0.18);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+  border-color: rgba(255,255,255,0.3);
 }
 
 .hero-feature-icon {
@@ -385,14 +414,15 @@
   justify-content: center;
   gap: 3rem;
   margin-top: 3rem;
-  padding: 2rem;
-  background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.2);
+  padding: 2rem 2.5rem;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(16px);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.12);
   max-width: 800px;
   margin-left: auto;
   margin-right: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
 }
 
 .stat-item {
@@ -554,17 +584,19 @@
 .feature-card {
   background: white;
   padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   align-self: start;
+  border: 1px solid #f0f0f0;
 }
 
 .feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  border-color: #e0e7ff;
 }
 
 .feature-icon {
@@ -658,20 +690,21 @@
 }
 
 .service-category {
-  background: linear-gradient(135deg, #0078D4, #00BCF2);
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
   color: white;
   padding: 2rem 1.5rem;
-  border-radius: 12px;
+  border-radius: 16px;
   text-align: center;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  transition: all 0.3s ease;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
 .service-category:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0,120,212,0.3);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 16px 40px rgba(30,58,138,0.4);
 }
 
 .category-icon {
@@ -765,17 +798,20 @@
 }
 
 .waf-pillar {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
   padding: 2rem 1.5rem;
   text-align: center;
-  transition: transform 0.2s, background 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
 }
 
 .waf-pillar:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   background: rgba(255,255,255,0.1);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+  border-color: rgba(255,255,255,0.2);
 }
 
 .waf-pillar-icon {
@@ -927,20 +963,20 @@
 
 .pricing-card {
   background: white;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 2.5rem 2rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
-  border: 2px solid #e9ecef;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #f0f0f0;
   display: flex;
   flex-direction: column;
   position: relative;
 }
 
 .pricing-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(0,120,212,0.15);
-  border-color: #0078D4;
+  transform: translateY(-10px);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.12);
+  border-color: #e0e7ff;
 }
 
 .pricing-card-popular {
