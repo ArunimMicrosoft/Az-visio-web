@@ -139,7 +139,7 @@ const LoginPage = () => {
               >
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </button>
-            </form>            <div className="auth-divider">
+            </form>
             <div className="auth-footer">
               <p>
                 <Link to="/forgot-password" className="auth-link">Forgot your password?</Link>
