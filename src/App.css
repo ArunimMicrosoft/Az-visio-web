@@ -47,6 +47,11 @@ body {
   margin: 0;
 }
 
+.main-content > .cost-summary.cost-summary-collapsed {
+  flex-shrink: 1;
+  overflow: hidden;
+}
+
 /* Boundary Toolbar positioning in layout */
 .main-content > .boundary-toolbar {
   width: 240px;

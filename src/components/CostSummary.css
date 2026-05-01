@@ -18,11 +18,11 @@
 
 /* Collapsed — thin strip */
 .cost-summary.cost-summary-collapsed {
-  width: 36px;
-  min-width: 36px;
-  max-width: 36px;
-  padding: 0;
-  overflow: hidden;
+  width: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
   background: #f0f0f0;
   border-left: 1px solid #e0e0e0;
   box-shadow: none;

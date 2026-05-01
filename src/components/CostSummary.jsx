@@ -99,9 +99,20 @@ const CostSummary = ({ items, onRegionChange, onCurrencyChange, useRealTimeAPI =
 
   if (!costData || items.length === 0) {
     return (
-      <div className="cost-summary empty">
-        <div className="cost-icon">💰</div>
-        <p>Add services to see cost estimate</p>
+      <div className={`cost-summary empty${isCollapsed ? ' cost-summary-collapsed' : ''}`}>
+        <button
+          className="cost-collapse-btn"
+          onClick={() => setIsCollapsed(c => !c)}
+          title={isCollapsed ? 'Expand cost panel' : 'Collapse cost panel'}
+        >
+          {isCollapsed ? '◀' : '▶'}
+        </button>
+        {!isCollapsed && (
+          <>
+            <div className="cost-icon">💰</div>
+            <p>Add services to see cost estimate</p>
+          </>
+        )}
       </div>
     );
   }
