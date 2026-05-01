@@ -876,3 +876,20 @@
 .zoom-level:hover {
   background: #f0f0f0;
 }
+
+/* Canvas Panning */
+.canvas.canvas-panning {
+  cursor: grab !important;
+}
+
+.canvas.canvas-panning * {
+  cursor: grab !important;
+}
+
+.canvas.canvas-panning:active {
+  cursor: grabbing !important;
+}
+
+.canvas.canvas-panning:active * {
+  cursor: grabbing !important;
+}

@@ -16,6 +16,9 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
   const [editingItemId, setEditingItemId] = useState(null);
   const [editingName, setEditingName] = useState('');
   const [zoom, setZoom] = useState(1);
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [spaceHeld, setSpaceHeld] = useState(false);
   const localCanvasRef = useRef(null);
   const containerRef = useRef(null);
   const inputRef = useRef(null);
@@ -216,18 +219,26 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
   };
 
   const handleMouseMove = (e) => {
+    // Canvas panning (Space+drag or middle mouse)
+    if (isPanning && containerRef.current) {
+      containerRef.current.scrollLeft -= (e.clientX - panStart.x);
+      containerRef.current.scrollTop -= (e.clientY - panStart.y);
+      setPanStart({ x: e.clientX, y: e.clientY });
+      return;
+    }
+
     const rect = activeCanvasRef.current.getBoundingClientRect();
     const scrollLeft = containerRef.current.scrollLeft;
     const scrollTop = containerRef.current.scrollTop;
     
     setMousePos({
-      x: e.clientX - rect.left + scrollLeft,
-      y: e.clientY - rect.top + scrollTop
+      x: (e.clientX - rect.left + scrollLeft) / zoom,
+      y: (e.clientY - rect.top + scrollTop) / zoom
     });
 
     if (isDragging && selectedItem) {
-      const x = e.clientX - rect.left + scrollLeft - dragOffset.x;
-      const y = e.clientY - rect.top + scrollTop - dragOffset.y;
+      const x = (e.clientX - rect.left + scrollLeft) / zoom - dragOffset.x;
+      const y = (e.clientY - rect.top + scrollTop) / zoom - dragOffset.y;
 
       setItems(items.map(item =>
         item.id === selectedItem ? { ...item, x, y } : item
@@ -236,6 +247,10 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
   };
 
   const handleMouseUp = (e) => {
+    if (isPanning) {
+      setIsPanning(false);
+      return;
+    }
     if (connectionMode && connectingFrom) {
       const targetItem = items.find(item => item.id === connectingFrom);
       if (targetItem) {
@@ -329,12 +344,24 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
         setConnectionMode(false);
         setConnectingFrom(null);
       }
+      if (e.key === ' ' && !editingItemId) {
+        e.preventDefault();
+        setSpaceHeld(true);
+      }
+    };
+    const handleKeyUp = (e) => {
+      if (e.key === ' ') {
+        setSpaceHeld(false);
+        setIsPanning(false);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     };
   }, [selectedItem, setItems, setConnections, connectionMode, activeCanvasRef, editingItemId]);
 
@@ -405,12 +432,20 @@ const Canvas = ({ items, setItems, connections, setConnections, boundaries, setB
         }
       }}>        <div
           ref={activeCanvasRef}
-          className={`canvas${isTrial ? ' canvas-trial' : ''}`}
+          className={`canvas${isTrial ? ' canvas-trial' : ''}${spaceHeld ? ' canvas-panning' : ''}`}
           style={{ transform: `scale(${zoom})`, transformOrigin: '0 0' }}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
+          onMouseDown={(e) => {
+            // Middle mouse button or Space+click = start panning
+            if (e.button === 1 || spaceHeld) {
+              e.preventDefault();
+              setIsPanning(true);
+              setPanStart({ x: e.clientX, y: e.clientY });
+            }
+          }}
           onClick={handleCanvasClick}
         >{/* Boundary Layer - INSIDE canvas so it shares coordinate system */}
           <BoundaryCanvas
