@@ -97,6 +97,18 @@ export function canExportIaC(user) {
   return tier === 'professional' || tier === 'enterprise';
 }
 
+/**
+ * Check minimum tier required for a feature
+ * Tier order: trial < starter < professional < enterprise
+ */
+export function hasTier(user, minTier) {
+  if (isAdminUser(user)) return true;
+  const order = { trial: 0, starter: 1, professional: 2, enterprise: 3 };
+  const userTier = order[user?.subscriptionTier || 'trial'] || 0;
+  const required = order[minTier] || 0;
+  return userTier >= required;
+}
+
 // ============================================================
 // DB Write Functions (Supabase)
 // ============================================================

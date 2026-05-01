@@ -31,6 +31,7 @@ import {
 import { 
   canExportPNG, 
   canExportIaC,
+  hasTier,
   recordPNGExport, 
   recordDiagramCreation,
   isAdminUser
@@ -736,6 +737,7 @@ function App() {
     }
   };
   const isTrial = (user?.subscriptionTier === 'trial') && !isAdminUser(user);
+  const isStarterPlus = hasTier(user, 'starter');
 
   return (
     <div className="app">
@@ -755,17 +757,29 @@ function App() {
         onImportTerraform={handleImportTerraform}
         onPasteTerraform={handlePasteTerraformImport}
         onOpenTemplates={() => setTemplateGalleryOpen(true)}
-        onOpenVersions={() => setVersionPanelOpen(true)}
-        onOpenPresentation={() => setPresentationMode(true)}
-        onOpenRegionCompare={() => setRegionCompareOpen(true)}
-        onOpenMyDiagrams={() => setMyDiagramsOpen(true)}
+        onOpenVersions={() => {
+          if (!isStarterPlus) { setUpgradeReason('Version History requires Starter plan or above.'); setUpgradeFeature('Version History'); setUpgradeModalOpen(true); return; }
+          setVersionPanelOpen(true);
+        }}
+        onOpenPresentation={() => {
+          if (!isStarterPlus) { setUpgradeReason('Presentation Mode requires Starter plan or above.'); setUpgradeFeature('Presentation Mode'); setUpgradeModalOpen(true); return; }
+          setPresentationMode(true);
+        }}
+        onOpenRegionCompare={() => {
+          if (!isStarterPlus) { setUpgradeReason('Region Compare requires Starter plan or above.'); setUpgradeFeature('Region Compare'); setUpgradeModalOpen(true); return; }
+          setRegionCompareOpen(true);
+        }}
+        onOpenMyDiagrams={() => {
+          if (!isStarterPlus) { setUpgradeReason('Cloud Diagrams requires Starter plan or above.'); setUpgradeFeature('Cloud Diagrams'); setUpgradeModalOpen(true); return; }
+          setMyDiagramsOpen(true);
+        }}
         onUndo={handleUndo}
         onRedo={handleRedo}
         canUndo={undoRedo.canUndo}
         canRedo={undoRedo.canRedo}
-        isTrial={isTrial}
+        isTrial={!hasTier(user, 'professional')}
         onUpgrade={() => {
-          setUpgradeReason('Terraform Paste is a Pro feature. Upgrade to paste HCL and generate diagrams instantly.');
+          setUpgradeReason('Terraform Paste requires Professional plan. Upgrade to paste HCL and generate diagrams instantly.');
           setUpgradeFeature('Terraform Paste');
           setUpgradeModalOpen(true);
         }}
@@ -836,6 +850,7 @@ function App() {
         userId={user?.id}
         currentDiagram={{ items, connections, boundaries }}
         onLoadDiagram={handleLoadCloudDiagram}
+        subscriptionTier={user?.subscriptionTier}
       />
     </div>
   );

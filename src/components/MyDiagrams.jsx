@@ -4,7 +4,7 @@ import { listUserDiagrams, saveDiagramToCloud, loadDiagramFromCloud, deleteDiagr
 import { trackCloudSave } from '../utils/activityTracker';
 import './MyDiagrams.css';
 
-const MyDiagrams = ({ isOpen, onClose, userId, currentDiagram, onLoadDiagram, onSaveComplete }) => {
+const MyDiagrams = ({ isOpen, onClose, userId, currentDiagram, onLoadDiagram, onSaveComplete, subscriptionTier }) => {
   const [diagrams, setDiagrams] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saveName, setSaveName] = useState('');
@@ -37,6 +37,11 @@ const MyDiagrams = ({ isOpen, onClose, userId, currentDiagram, onLoadDiagram, on
   const handleSave = async () => {
     if (!currentDiagram || currentDiagram.items.length === 0) {
       setError('Canvas is empty — add services before saving.');
+      return;
+    }
+    // Starter: max 10 cloud saves
+    if (subscriptionTier === 'starter' && diagrams.length >= 10) {
+      setError('Starter plan allows up to 10 cloud diagrams. Upgrade to Professional for unlimited.');
       return;
     }
     setSaving(true);
