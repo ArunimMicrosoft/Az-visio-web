@@ -20,6 +20,7 @@ const LandingPage = () => {
               <span className="brand-tagline">Powered by Arunim's IT Café</span>
             </div>
           </div>          <div className="landing-nav-actions">
+            <Link to="/blog" className="btn-secondary" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)' }}>Learn</Link>
             {isLoading ? (
               <div className="btn-secondary" style={{ opacity: 0.6, cursor: 'wait' }}>Loading...</div>
             ) : (

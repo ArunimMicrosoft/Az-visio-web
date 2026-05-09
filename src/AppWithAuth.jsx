@@ -10,6 +10,8 @@ import PaymentPage from './pages/PaymentPage';
 import PaymentSuccess from './pages/PaymentSuccess';
 import AdminDashboard from './pages/AdminDashboard';
 import SharedDiagram from './pages/SharedDiagram';
+import Blog from './pages/Blog';
+import BlogArticle from './pages/BlogArticle';
 import App from './App';
 
 const AppWithAuth = () => {
@@ -25,6 +27,10 @@ const AppWithAuth = () => {
 
           {/* Shared diagram viewer (public, read-only) */}
           <Route path="/shared/:shareId" element={<SharedDiagram />} />
+
+          {/* Blog / Learn center (public) */}
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogArticle />} />
             {/* Protected route - admin dashboard (admin role only) */}
           <Route 
             path="/admin" 
