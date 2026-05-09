@@ -1,6 +1,16 @@
 // Azure architecture blog articles
 // Static content — no CMS, no backend needed. Add articles to the array below.
 
+// Per-category color palette used across cards and article accents
+export const categoryColors = {
+  'Best Practices': { bg: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', solid: '#6366f1', tint: '#eef2ff' },
+  'Networking':     { bg: 'linear-gradient(135deg, #0891b2 0%, #06b6d4 100%)', solid: '#0891b2', tint: '#ecfeff' },
+  'DevOps':         { bg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', solid: '#ef4444', tint: '#fef2f2' },
+  'Compute':        { bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', solid: '#059669', tint: '#ecfdf5' },
+  'Cost':           { bg: 'linear-gradient(135deg, #f59e0b 0%, #eab308 100%)', solid: '#d97706', tint: '#fffbeb' },
+  'Security':       { bg: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)', solid: '#be185d', tint: '#fdf2f8' },
+};
+
 export const blogArticles = [
   {
     slug: 'well-architected-framework-5-pillars',
