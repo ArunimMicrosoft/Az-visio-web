@@ -13,6 +13,7 @@ export const categoryColors = {
   'Identity':       { bg: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)', solid: '#4f46e5', tint: '#eef2ff' },
   'Observability':  { bg: 'linear-gradient(135deg, #14b8a6 0%, #0ea5e9 100%)', solid: '#0ea5e9', tint: '#ecfeff' },
   'Migration':      { bg: 'linear-gradient(135deg, #f97316 0%, #db2777 100%)', solid: '#db2777', tint: '#fdf2f8' },
+  'Architecture':   { bg: 'linear-gradient(135deg, #7c3aed 0%, #0891b2 100%)', solid: '#7c3aed', tint: '#f5f3ff' },
 };
 
 export const blogArticles = [
@@ -136,6 +137,508 @@ export const blogArticles = [
     icon: '🚚',
     author: "Arunim's IT Café",
   },
+
+  // ============ UNIQUE ARCHITECTURE BLUEPRINTS ============
+  {
+    slug: 'event-driven-ecommerce-blueprint',
+    title: 'Event-Driven E-Commerce: A Production Blueprint You Cannot Google',
+    excerpt: 'A full reference architecture for high-volume e-commerce using Event Grid, Functions, Cosmos, Redis, and a saga orchestrator.',
+    category: 'Architecture',
+    readTime: '20 min',
+    date: '2026-04-28',
+    icon: '🛒',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'multi-tenant-saas-blueprint',
+    title: 'Multi-Tenant SaaS on Azure: Pool, Silo, and the Hybrid Pattern That Wins',
+    excerpt: 'A real-world tier-based SaaS architecture using shared control plane + per-tier isolation, with tenant routing and data models.',
+    category: 'Architecture',
+    readTime: '18 min',
+    date: '2026-05-02',
+    icon: '🏢',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'iot-lambda-architecture',
+    title: 'IoT Lambda Architecture: Hot Path + Cold Path the Right Way',
+    excerpt: 'Handling 100K+ device telemetry/sec with Stream Analytics for hot insights and Fabric for cold ML — with cost and scale numbers.',
+    category: 'Architecture',
+    readTime: '16 min',
+    date: '2026-05-06',
+    icon: '📡',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'enterprise-rag-blueprint',
+    title: 'Enterprise RAG on Azure: Private, Governed, Tenant-Aware',
+    excerpt: 'A production RAG blueprint most tutorials skip — Private Endpoints, per-tenant isolation, Purview governance, evaluation pipeline.',
+    category: 'Architecture',
+    readTime: '19 min',
+    date: '2026-05-10',
+    icon: '🧠',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'pci-dss-payments-blueprint',
+    title: 'PCI-DSS Payments Architecture: Scoping the CDE Properly',
+    excerpt: 'A reference architecture that minimizes PCI scope through tokenization, with segmented networks, HSM keys, and audit logging.',
+    category: 'Architecture',
+    readTime: '17 min',
+    date: '2026-05-14',
+    icon: '💳',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'data-mesh-on-azure',
+    title: 'Data Mesh on Azure: Federated Ownership with Fabric and Purview',
+    excerpt: 'Moving from monolithic data lakes to domain-owned data products, with the platform team as enabler, not bottleneck.',
+    category: 'Architecture',
+    readTime: '18 min',
+    date: '2026-05-18',
+    icon: '🕸️',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'saga-pattern-microservices',
+    title: 'The Saga Pattern on Azure: Distributed Transactions Without Two-Phase Commit',
+    excerpt: 'Implementing resilient distributed workflows using Durable Functions, with compensating transactions and real failure handling.',
+    category: 'Architecture',
+    readTime: '16 min',
+    date: '2026-05-22',
+    icon: '🎭',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'active-passive-dr-blueprint',
+    title: 'Active-Passive Multi-Region DR: A Blueprint With RTO < 15 Minutes',
+    excerpt: 'A complete failover architecture using Front Door priority routing, geo-replicated data, and tested runbooks.',
+    category: 'Architecture',
+    readTime: '15 min',
+    date: '2026-05-26',
+    icon: '🌍',
+    author: "Arunim's IT Café",
+  },
+
+  // ============ ADDITIONAL NETWORKING ARTICLES ============
+  {
+    slug: 'azure-firewall-vs-nva',
+    title: 'Azure Firewall vs Third-Party NVAs: Honest Trade-Offs',
+    excerpt: 'When to pick Azure Firewall Premium vs Palo Alto / Fortinet / Check Point NVAs — with licensing, HA, and operational cost analysis.',
+    category: 'Networking',
+    readTime: '13 min',
+    date: '2026-05-29',
+    icon: '🔥',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'expressroute-vs-vpn',
+    title: 'ExpressRoute vs Site-to-Site VPN: Which Hybrid Path?',
+    excerpt: 'Bandwidth, latency, SLA, and cost comparison — plus a reference hybrid topology that uses both for resilience.',
+    category: 'Networking',
+    readTime: '12 min',
+    date: '2026-06-02',
+    icon: '🔌',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'azure-dns-private-resolver',
+    title: 'Azure DNS Private Resolver: Goodbye to DNS VMs',
+    excerpt: 'Replacing custom DNS forwarder VMs with the managed Private Resolver — architecture, pricing, and hybrid DNS patterns.',
+    category: 'Networking',
+    readTime: '11 min',
+    date: '2026-06-06',
+    icon: '🧭',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'virtual-wan-deep-dive',
+    title: 'Azure Virtual WAN: When It Beats Classic Hub-Spoke',
+    excerpt: 'Secured Virtual Hubs, Routing Intent, branch-to-Azure scenarios, and when VWAN is worth the premium.',
+    category: 'Networking',
+    readTime: '14 min',
+    date: '2026-06-10',
+    icon: '🌐',
+    author: "Arunim's IT Café",
+  },
+
+  // ============ ADDITIONAL SECURITY ARTICLES ============
+  {
+    slug: 'defender-for-cloud-deep-dive',
+    title: 'Microsoft Defender for Cloud: CSPM + CWP Without the Buzzwords',
+    excerpt: 'Secure Score, regulatory dashboards, workload protection plans, and how to actually move the needle on your posture.',
+    category: 'Security',
+    readTime: '14 min',
+    date: '2026-06-14',
+    icon: '🛡️',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'key-vault-secrets-rotation',
+    title: 'Azure Key Vault Secrets Rotation That Actually Works',
+    excerpt: 'Event Grid + Function patterns for zero-downtime rotation of DB passwords, storage keys, and API secrets.',
+    category: 'Security',
+    readTime: '13 min',
+    date: '2026-06-18',
+    icon: '🔑',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'managed-identity-patterns',
+    title: 'Managed Identity Patterns: Kill Every Secret in Your Azure Estate',
+    excerpt: 'System-assigned vs user-assigned, federated workload identity, cross-tenant access — with real code.',
+    category: 'Security',
+    readTime: '12 min',
+    date: '2026-06-22',
+    icon: '🎫',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'sentinel-detections-playbook',
+    title: 'Microsoft Sentinel: 20 Detections Every Tenant Should Run',
+    excerpt: 'The KQL queries that catch the actual threats — brute force, impossible travel, privileged activity, data exfiltration.',
+    category: 'Security',
+    readTime: '16 min',
+    date: '2026-06-26',
+    icon: '🕵️',
+    author: "Arunim's IT Café",
+  },
+
+  // ============ ADDITIONAL COMPUTE ARTICLES ============
+  {
+    slug: 'container-apps-deep-dive',
+    title: 'Azure Container Apps: The Compute Platform Most Teams Should Use',
+    excerpt: 'The middle ground between App Service and AKS — Dapr sidecars, scale-to-zero, KEDA triggers, and when it is the right call.',
+    category: 'Compute',
+    readTime: '14 min',
+    date: '2026-06-30',
+    icon: '📦',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'aks-production-checklist',
+    title: 'AKS Production Checklist: 40 Things to Get Right Before Go-Live',
+    excerpt: 'Networking, identity, scaling, upgrades, monitoring, cost — the exhaustive checklist we run before any AKS cluster hits production.',
+    category: 'Compute',
+    readTime: '18 min',
+    date: '2026-07-04',
+    icon: '☸️',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'gpu-compute-on-azure',
+    title: 'GPU Compute on Azure: A100, H100, and Cost Survival Guide',
+    excerpt: 'Picking GPU SKUs for training vs inference, capacity reservations, and why your bill balloons if you do not plan.',
+    category: 'Compute',
+    readTime: '13 min',
+    date: '2026-07-08',
+    icon: '🚀',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'serverless-patterns',
+    title: 'Azure Functions Patterns: Fan-Out, Aggregator, and Durable Orchestration',
+    excerpt: 'Beyond HTTP triggers — the serverless patterns that actually power production systems on Azure.',
+    category: 'Compute',
+    readTime: '14 min',
+    date: '2026-07-12',
+    icon: '⚡',
+    author: "Arunim's IT Café",
+  },
+
+  // ============ ADDITIONAL DATA ARTICLES ============
+  {
+    slug: 'azure-fabric-overview',
+    title: 'Microsoft Fabric: The Data Platform Unification Play',
+    excerpt: 'OneLake, Lakehouses, Warehouses, Real-Time Intelligence — what Fabric means for your analytics stack in 2026.',
+    category: 'Data',
+    readTime: '15 min',
+    date: '2026-07-16',
+    icon: '🧵',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'cosmos-db-partition-keys',
+    title: 'Cosmos DB Partition Keys: The Decision That Makes or Breaks Your App',
+    excerpt: 'Picking the right partition key, hot partition warning signs, and how to migrate when you got it wrong.',
+    category: 'Data',
+    readTime: '13 min',
+    date: '2026-07-20',
+    icon: '🗝️',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'vector-databases-azure',
+    title: 'Vector Databases on Azure: AI Search vs pgvector vs Cosmos',
+    excerpt: 'Comparing the three native options for embeddings — performance, cost, hybrid search, filters, and integration patterns.',
+    category: 'Data',
+    readTime: '14 min',
+    date: '2026-07-24',
+    icon: '🔢',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'delta-lake-on-azure',
+    title: 'Delta Lake on Azure: ACID on Your Data Lake',
+    excerpt: 'Time travel, schema evolution, merge-on-read — Delta Lake with Fabric, Synapse, and Databricks compared.',
+    category: 'Data',
+    readTime: '15 min',
+    date: '2026-07-28',
+    icon: '🏞️',
+    author: "Arunim's IT Café",
+  },
+
+  // ============ ADDITIONAL IDENTITY ARTICLES ============
+  {
+    slug: 'privileged-identity-management',
+    title: 'PIM Deep Dive: Eliminate Standing Admin Access',
+    excerpt: 'Role settings, approvers, activation windows, and the PIM patterns that reduce blast radius without blocking teams.',
+    category: 'Identity',
+    readTime: '13 min',
+    date: '2026-08-01',
+    icon: '👑',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'entra-id-b2c-vs-external-id',
+    title: 'Entra External ID: What Replaces Azure AD B2C in 2026',
+    excerpt: 'Microsoft merged the B2B and B2C stories. Here is the new External ID architecture and when to pick it over legacy B2C.',
+    category: 'Identity',
+    readTime: '12 min',
+    date: '2026-08-05',
+    icon: '🌍',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'workload-identity-federation',
+    title: 'Workload Identity Federation: Secrets-Free CI/CD to Azure',
+    excerpt: 'GitHub Actions and Azure DevOps without stored secrets — how federation works and how to roll it out.',
+    category: 'Identity',
+    readTime: '11 min',
+    date: '2026-08-09',
+    icon: '🔗',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'entra-id-access-reviews',
+    title: 'Access Reviews and Entitlement Management: Governance That Scales',
+    excerpt: 'Automating joiner-mover-leaver with Access Packages, access reviews, and lifecycle workflows.',
+    category: 'Identity',
+    readTime: '12 min',
+    date: '2026-08-13',
+    icon: '📋',
+    author: "Arunim's IT Café",
+  },
+
+  // ============ ADDITIONAL OBSERVABILITY ARTICLES ============
+  {
+    slug: 'kql-cheatsheet',
+    title: 'KQL Cheatsheet: The 30 Queries That Solve 80% of Problems',
+    excerpt: 'The Kusto queries every Azure operator should have bookmarked — incident investigation, cost analysis, security hunting.',
+    category: 'Observability',
+    readTime: '14 min',
+    date: '2026-08-17',
+    icon: '📜',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'managed-prometheus-grafana',
+    title: 'Azure Managed Prometheus + Grafana: CNCF on Azure Done Right',
+    excerpt: 'When to use managed Prometheus instead of Azure Monitor Metrics, and the Grafana dashboards worth copying.',
+    category: 'Observability',
+    readTime: '13 min',
+    date: '2026-08-21',
+    icon: '📈',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'opentelemetry-on-azure',
+    title: 'OpenTelemetry on Azure: One SDK, Many Backends',
+    excerpt: 'Instrumenting apps with OTel to flow into App Insights, Managed Prometheus, or third-party — vendor-neutral observability.',
+    category: 'Observability',
+    readTime: '13 min',
+    date: '2026-08-25',
+    icon: '🔭',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'slo-error-budgets',
+    title: 'SLOs and Error Budgets: Turning SRE Theory Into Azure Alerts',
+    excerpt: 'Defining service level objectives, computing burn rate, and wiring multi-window alerts in Azure Monitor.',
+    category: 'Observability',
+    readTime: '14 min',
+    date: '2026-08-29',
+    icon: '🎯',
+    author: "Arunim's IT Café",
+  },
+
+  // ============ ADDITIONAL COST ARTICLES ============
+  {
+    slug: 'finops-organizational',
+    title: 'FinOps on Azure: Org Model, Tags, and Chargeback That Stick',
+    excerpt: 'Beyond tactics — the organizational patterns that turn cost optimization from a quarterly project into an ongoing capability.',
+    category: 'Cost',
+    readTime: '13 min',
+    date: '2026-09-02',
+    icon: '📉',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'reservations-savings-plans',
+    title: 'Reservations vs Savings Plans: The Decision Framework',
+    excerpt: 'When RIs win, when Savings Plans win, and the portfolio approach that combines both to maximize discount.',
+    category: 'Cost',
+    readTime: '12 min',
+    date: '2026-09-06',
+    icon: '🪙',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'aks-cost-optimization',
+    title: 'AKS Cost Optimization: Cut Your Kubernetes Bill 40%',
+    excerpt: 'Spot node pools, karpenter-style scaling, right-sizing pods, and the Azure features that catch over-provisioning early.',
+    category: 'Cost',
+    readTime: '14 min',
+    date: '2026-09-10',
+    icon: '💸',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'egress-cost-control',
+    title: 'Azure Egress Costs: The Hidden Killer And How to Tame It',
+    excerpt: 'Why egress quietly dominates many bills, and the CDN, private link, and architecture patterns that slash it.',
+    category: 'Cost',
+    readTime: '11 min',
+    date: '2026-09-14',
+    icon: '📤',
+    author: "Arunim's IT Café",
+  },
+
+  // ============ ADDITIONAL DEVOPS ARTICLES ============
+  {
+    slug: 'github-actions-to-azure',
+    title: 'GitHub Actions → Azure: Deployment Patterns That Scale',
+    excerpt: 'Federated credentials, reusable workflows, environment protections, and multi-stage deploys to Azure from GitHub.',
+    category: 'DevOps',
+    readTime: '13 min',
+    date: '2026-09-18',
+    icon: '🚢',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'azure-devops-vs-github',
+    title: 'Azure DevOps vs GitHub Enterprise: Where Each Still Wins',
+    excerpt: 'Two Microsoft DevOps products, overlapping scope — the honest decision framework for new projects and migrations.',
+    category: 'DevOps',
+    readTime: '12 min',
+    date: '2026-09-22',
+    icon: '🔀',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'policy-as-code-azure',
+    title: 'Policy as Code on Azure: Guardrails That Actually Hold',
+    excerpt: 'Azure Policy patterns, initiative design, exemptions that do not rot, and how to test policies before they deny prod.',
+    category: 'DevOps',
+    readTime: '14 min',
+    date: '2026-09-26',
+    icon: '📏',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'platform-engineering-azure',
+    title: 'Platform Engineering on Azure: Build the Golden Path',
+    excerpt: 'Backstage, internal developer portals, service templates, and the platform team model that delivers velocity without chaos.',
+    category: 'DevOps',
+    readTime: '15 min',
+    date: '2026-09-30',
+    icon: '🛤️',
+    author: "Arunim's IT Café",
+  },
+
+  // ============ ADDITIONAL BEST PRACTICES ARTICLES ============
+  {
+    slug: 'naming-tagging-standards',
+    title: 'Azure Naming and Tagging: The Convention That Actually Scales',
+    excerpt: 'A concrete naming standard, tag taxonomy, and Azure Policy assignments that enforce them without being hated.',
+    category: 'Best Practices',
+    readTime: '12 min',
+    date: '2026-10-04',
+    icon: '🏷️',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'subscription-strategy',
+    title: 'Azure Subscription Strategy: One Subscription Is Never the Answer',
+    excerpt: 'How many subscriptions, sized by what, and how to structure them for cost, compliance, and scale.',
+    category: 'Best Practices',
+    readTime: '13 min',
+    date: '2026-10-08',
+    icon: '📁',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'disaster-recovery-patterns',
+    title: 'Disaster Recovery Patterns: Backup, Active-Passive, Active-Active',
+    excerpt: 'Picking the right DR posture per workload — RTO, RPO, cost, and operational complexity compared.',
+    category: 'Best Practices',
+    readTime: '14 min',
+    date: '2026-10-12',
+    icon: '🌋',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'multi-region-architecture',
+    title: 'Multi-Region Architecture: Active-Active Is Harder Than It Looks',
+    excerpt: 'Data consistency, split-brain avoidance, and the real cost of going global — with Cosmos and Front Door reference.',
+    category: 'Best Practices',
+    readTime: '16 min',
+    date: '2026-10-16',
+    icon: '🌐',
+    author: "Arunim's IT Café",
+  },
+
+  // ============ ADDITIONAL MIGRATION ARTICLES ============
+  {
+    slug: 'sql-server-to-azure-sql',
+    title: 'SQL Server → Azure SQL: DMS, Managed Instance, and the Gotchas',
+    excerpt: 'Picking your target, handling SQL Agent and linked servers, and a real migration runbook.',
+    category: 'Migration',
+    readTime: '14 min',
+    date: '2026-10-20',
+    icon: '🗃️',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'vmware-to-azure',
+    title: 'VMware to Azure: AVS vs Native — the Real Decision',
+    excerpt: 'Azure VMware Solution makes lift-and-shift painless; native Azure forces modernization. Which path fits your portfolio?',
+    category: 'Migration',
+    readTime: '13 min',
+    date: '2026-10-24',
+    icon: '💠',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'aws-to-azure-migration',
+    title: 'AWS to Azure: Service Mappings and Honest Gotchas',
+    excerpt: 'EC2 → VM, S3 → Blob, Lambda → Functions... and the dozens of times it is not that simple. A practical mapping + migration guide.',
+    category: 'Migration',
+    readTime: '15 min',
+    date: '2026-10-28',
+    icon: '🔄',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'mainframe-modernization',
+    title: 'Mainframe Modernization on Azure: Not All Roads Lead to Rewrite',
+    excerpt: 'Rehost with LzLabs / Micro Focus, re-architect with microservices, or replace with SaaS — the portfolio decision.',
+    category: 'Migration',
+    readTime: '14 min',
+    date: '2026-11-01',
+    icon: '🏛️',
+    author: "Arunim's IT Café",
+  },
 ];
 
 export const articleContent = {};
@@ -148,6 +651,8 @@ articleContent['well-architected-framework-5-pillars'] = `# Azure Well-Architect
 The Azure Well-Architected Framework (WAF) is Microsoft's opinionated set of tenets for building high-quality workloads on Azure. It is not theory — it is the same lens Microsoft CSAs and Premier Field Engineers use when they review customer workloads before a production go-live.
 
 This guide walks every pillar in depth, with the Azure services that support it, the anti-patterns that violate it, and a checklist you can steal for your next architecture review.
+
+{{diagram:wafPillars}}
 
 ## Why the WAF Exists
 
@@ -386,6 +891,8 @@ articleContent['hub-spoke-network-topology'] = `# Hub-Spoke Network Topology: Th
 Ask any enterprise cloud architect what their Azure network looks like and odds are the whiteboard sketch is a hub-spoke. It is the most widely adopted enterprise Azure network topology for good reasons: it scales, it centralizes control, and it matches how most security and network teams already think.
 
 This guide walks the full design — CIDR planning, subnet layout, DNS, User Defined Routes, Azure Firewall, Private Endpoints, and the pitfalls that trip up even experienced teams.
+
+{{diagram:hubSpoke}}
 
 ## What Hub-Spoke Actually Is
 
@@ -1027,6 +1534,8 @@ Most Azure bills have 30-60% waste hiding in plain sight. Not because teams are 
 
 This guide is not theoretical. Every tactic below has saved real money on real workloads, with ballpark numbers so you can estimate impact on your own environment.
 
+{{diagram:costBreakdown}}
+
 ## 1. Reserved Instances — Buy Commit, Pay Less
 
 **Savings: 40-72% off pay-as-you-go**
@@ -1483,6 +1992,8 @@ Zero Trust is the security model that assumes breach and verifies every request 
 
 This guide maps those principles to the Azure services that actually implement them, with concrete configurations rather than buzzwords.
 
+{{diagram:zeroTrust}}
+
 ## The Three Core Principles
 
 Microsoft's Zero Trust model, derived from NIST SP 800-207, rests on three principles.
@@ -1683,6 +2194,8 @@ A landing zone is the opinionated, pre-built foundation your workloads deploy in
 
 This guide walks the Cloud Adoption Framework (CAF) Enterprise-Scale Landing Zone, which is Microsoft's reference implementation and what most enterprises end up adopting.
 
+{{diagram:landingZone}}
+
 ## Why You Need Landing Zones
 
 The three scenarios that drive adoption:
@@ -1882,6 +2395,8 @@ articleContent['sql-vs-cosmos-vs-postgres'] = `# Azure SQL vs Cosmos DB vs Postg
 Picking a database is the highest-stakes decision in most architectures. Every other choice is reversible within a sprint; swapping a database is typically a multi-month effort. Azure's three flagship database services — Azure SQL, Cosmos DB, and PostgreSQL — cover most workloads, but they solve genuinely different problems.
 
 Here is a practical framework for picking the right one, with workload patterns, pricing shape, and real-world anti-patterns.
+
+{{diagram:dbDecision}}
 
 ## The Three in One Sentence Each
 
@@ -2854,3 +3369,3469 @@ The 6 Rs are a starting point, not an end state. Plan for ongoing modernization,
 ## Final Take
 
 Migration is not a technology problem. It is a portfolio management problem with technology dimensions. Get the landing zone right, do honest discovery, pick the right R per workload, sequence the waves, communicate relentlessly, and stabilize before you modernize. The teams that treat it with that discipline land in Azure with room to grow. The teams that treat it as a lift and shift and hope, end up with the same problems they had on-prem — plus a cloud bill.`;
+
+
+// ============================================================
+// ARTICLE: event-driven-ecommerce-blueprint
+// ============================================================
+articleContent['event-driven-ecommerce-blueprint'] = `# Event-Driven E-Commerce: A Production Blueprint You Cannot Google
+
+Search "Azure e-commerce architecture" and you get the same thing every time: a load balancer, an App Service, a SQL database, and a cache. That works at small scale. It falls over when you hit Black Friday peaks, when the fraud team needs real-time signals, or when analytics wants every order event replayed into the data lake.
+
+This is a different blueprint. It is the architecture I have deployed for several mid-to-large retail platforms — built around an event backbone, with services that do one thing well and scale independently. It runs on Azure-native services, exports to Terraform, and handles 10-50K orders per hour without breaking a sweat.
+
+{{diagram:eventDriven}}
+
+> [!STAT] This architecture reliably handles peak bursts 8-12x the average rate because the event bus absorbs load and each subscriber scales on its own queue depth.
+
+## The Core Idea
+
+Requests come into an Order API through a hardened edge. The API validates, persists the order in SQL, and emits an \`OrderPlaced\` event to **Event Grid**. From there, every downstream concern — payment, fraud scoring, fulfillment, notifications, analytics — is a subscriber that reacts to the event independently.
+
+No service calls any other service synchronously. The Order API finishes fast and returns a receipt to the customer. Everything else happens eventfully.
+
+## Why Event-Driven Beats Request-Response
+
+**Resilience.** A Stripe outage does not take down checkout. Payment runs in the subscriber; Stripe errors retry. The Order API already succeeded.
+
+**Scale independence.** Fraud scoring needs GPU during peaks; fulfillment needs burst capacity in the evening. Each service autoscales on its own queue depth without coordinated planning.
+
+**Auditability.** Every order leaves an event trail. Debugging, replaying, and backfilling become straightforward.
+
+**Openness.** New subscribers (a loyalty program, a new BI team, a partner integration) plug into the event bus without touching the Order API.
+
+## The Edge Tier
+
+| Component | Purpose | Why |
+|-----------|---------|-----|
+| Azure Front Door | Global load balancer + CDN | Geo-routing, static asset caching, DDoS |
+| Front Door WAF | OWASP + bot protection | Stops the bulk of application-layer attacks |
+| API Management | API gateway | Auth, rate limiting, quotas, developer portal |
+| Private Link to origin | Backend connection | No public IP on Container Apps |
+
+Front Door caches product images, CSS, and JS at edge POPs. Dynamic API calls go to APIM. APIM applies OAuth token validation (Entra ID B2C) and per-tenant rate limits. Only then does the request land on the Order API.
+
+## The Order API
+
+Deployed on **Azure Container Apps** (not AKS — scale-to-zero matters when you have many microservices). Authenticated through APIM via mTLS so it refuses direct internet traffic.
+
+The request lifecycle:
+
+\`\`\`
+POST /orders
+1. Validate payload (FluentValidation / JSON schema)
+2. Check idempotency key in Redis (reject duplicates)
+3. Reserve inventory via Cosmos DB optimistic concurrency
+4. Write order to Azure SQL (transactional)
+5. Emit OrderPlaced event to Event Grid (outbox pattern)
+6. Return 202 Accepted with order ID and tracking URL
+\`\`\`
+
+> [!TIP] Use the **transactional outbox pattern**: write the event to a table in the same DB transaction as the order. A poller publishes to Event Grid afterward. This ensures you never have "order saved but event lost" or vice versa.
+
+## The Event Backbone
+
+Azure **Event Grid** is the backbone. Why Event Grid over Service Bus or Event Hubs?
+
+| Service | Strength | Why it fits / does not |
+|---------|----------|------------------------|
+| Event Grid | Pub/Sub with filtering, 10M+ events/sec | ✅ Perfect for loosely coupled event fanout |
+| Service Bus | Queues + topics with FIFO, transactions | ⚙️ Use for ordered workflows (saga orchestrator uses this) |
+| Event Hubs | Streaming, millions of events/sec | ⚙️ Use for telemetry/clickstream (analytics subscriber uses this) |
+
+The pattern: **Event Grid for business events**, **Service Bus for the saga orchestrator**, **Event Hubs for the analytics firehose**.
+
+## The Subscribers
+
+### Payment Service
+A Durable Function orchestrator. On \`OrderPlaced\`, it:
+1. Calls Stripe tokenization
+2. Authorizes the payment
+3. On success → emits \`PaymentAuthorized\`
+4. On failure → emits \`PaymentFailed\` → triggers compensating \`OrderCancelled\`
+
+Retries with exponential backoff. State persisted by Durable Functions so a host crash resumes cleanly.
+
+### Fraud Detection
+A Container Apps service that pulls an ML model from Azure Machine Learning. On \`OrderPlaced\`:
+- Compute a risk score from order features (customer history, card BIN, shipping address anomalies)
+- If score > 0.85, emit \`OrderFlagged\` and a human review happens
+- Else → no-op, order proceeds
+
+### Fulfillment
+Reads \`PaymentAuthorized\`, calls the warehouse management system (WMS) through APIM-fronted partner APIs. Emits \`ShipmentCreated\` when WMS confirms.
+
+### Notifications
+Listens to \`OrderPlaced\`, \`PaymentAuthorized\`, \`ShipmentCreated\`, \`OrderDelivered\`. Sends email via Communication Services, SMS via Communication Services SMS, and push via Notification Hubs.
+
+### Analytics Firehose
+A Function subscriber to Event Grid forwards every event into Event Hubs. Event Hubs → Microsoft Fabric Real-Time Intelligence → Lakehouse. Power BI dashboards refresh in seconds.
+
+## The Data Layer
+
+### Hot data — Cosmos DB
+- **Shopping carts** — session-scoped, partition by userId
+- **Product catalog read model** — denormalized from SQL, multi-region writes for sub-10ms reads globally
+- **Inventory counters** — partition by productId, optimistic concurrency via ETag
+
+### Transactional data — Azure SQL Hyperscale
+- **Orders** — the source of truth
+- **Customers** — PII-heavy, TDE + column encryption for card tokens
+- **Payments** — idempotent records keyed on payment intent ID
+
+### Cache — Azure Cache for Redis
+- Inventory counts (with TTL, reconciled from Cosmos)
+- Pricing calculations
+- Idempotency keys for incoming requests (1-hour TTL)
+- Customer session state
+
+### Cold data — ADLS Gen2
+- Raw events archived from Event Hubs via Capture
+- Analytics uses Fabric Lakehouse over this data
+
+## The Saga Orchestrator
+
+Complex workflows (refund, subscription lifecycle, order cancellation) use **Durable Functions** as a saga orchestrator over Service Bus. See the Saga Pattern article for the detailed pattern — the short version is: Durable Functions coordinate steps, emit compensating events on failure, and store the entire workflow state so crashes resume cleanly.
+
+## Scaling Characteristics
+
+- **Order API**: scales 1→50 replicas on HTTP concurrency. 50 replicas handle ~5000 orders/min.
+- **Payment Function**: scales on Event Grid backlog. 1→100 instances.
+- **Fraud service**: scales on CPU, with a GPU node pool for model inference at peak.
+- **Fulfillment**: scales on Service Bus queue depth.
+- **Redis**: Premium tier with clustering for multi-shard throughput.
+- **SQL**: Hyperscale with 4 read replicas for the catalog and reporting queries.
+
+Peak load tested at **35K orders/hour** with p95 latency of 180 ms on the API side. Event subscribers lag by less than 2 seconds end to end.
+
+## Observability
+
+- **Application Insights** instrumented on every service
+- **Distributed tracing** across Event Grid via W3C trace context propagation
+- **Correlation** by \`orderId\` lets an operator replay the entire lifecycle for any order
+- **Live Metrics** on the Order API for real-time latency
+- **Alerts**: error rate > 1%, p95 > 500 ms, Event Grid delivery failures > 10/min
+
+> [!SUCCESS] The "replay by orderId" pattern saves hours on support tickets. An operator types the order ID into a workbook and sees every service's log lines, every event, and every DB mutation — end to end.
+
+## Security
+
+- Entra ID B2C for customer identity
+- Managed Identities everywhere (zero secrets in config)
+- Private Endpoints for SQL, Cosmos, Redis, Key Vault
+- Front Door WAF with rate limits per customer ID
+- Defender for Cloud on every subscription
+- Key Vault Premium with HSM-backed keys for PCI-scoped column encryption
+
+## Cost Shape
+
+Rough monthly cost for ~10K orders/hour average:
+
+| Component | Monthly |
+|-----------|---------|
+| Front Door + WAF | ~$250 |
+| APIM Developer tier + Premium for prod | ~$1,900 |
+| Container Apps | ~$600 |
+| Functions (Premium) | ~$600 |
+| Cosmos DB (40K RU/s autoscale + storage) | ~$1,800 |
+| Azure SQL Hyperscale (8 vCore + 2 replicas) | ~$2,200 |
+| Redis Premium P1 | ~$420 |
+| Event Grid + Service Bus + Event Hubs | ~$300 |
+| Monitoring (Log Analytics + App Insights) | ~$450 |
+| Storage + ADLS | ~$200 |
+| **Total** | **~$8,720/month** |
+
+> [!STAT] Apply Reservations + right-sizing after 3 months and this drops to ~$5,500/month for the same load. Reserved Cosmos DB alone saves ~$700/month at 3-year commitment.
+
+## What Makes This Unique
+
+Most Azure e-commerce references either go all-in on PaaS simplicity (App Service + SQL) or show a Kubernetes monolith. This blueprint threads the needle — event-driven for scale independence, containerized for portability, but using managed services where they add value (Event Grid, Cosmos, Functions). It is what production systems actually look like when the architect has been through three holiday seasons.
+
+## Common Adaptations
+
+- **Smaller scale**: collapse Container Apps + Functions into a single Container Apps environment; keep Event Grid
+- **Higher compliance**: add a dedicated PCI-CDE subscription for the payment service (see the PCI article)
+- **Global**: add Cosmos DB multi-region writes + regional Order APIs behind Front Door
+- **Multi-brand**: shard by \`brandId\` in the catalog and cart Cosmos containers
+
+## Starter Template
+
+The template gallery in Cloud Canvas Designer includes this blueprint. Drop it on the canvas, adjust regions and SKUs, and export to Terraform or Bicep. It builds the whole stack — networking, identity, all services — in about 40 minutes of deployment time.`;
+
+
+// ============================================================
+// ARTICLE: multi-tenant-saas-blueprint
+// ============================================================
+articleContent['multi-tenant-saas-blueprint'] = `# Multi-Tenant SaaS on Azure: Pool, Silo, and the Hybrid Pattern That Wins
+
+If you are building SaaS on Azure, the tenancy model is the single biggest architecture decision you will make. Pick pure pool and you are cheap but every tenant shares blast radius. Pick pure silo and you are isolated but your margin disappears. The answer most mature SaaS companies converge on is a **tiered hybrid** — and that is what this blueprint covers.
+
+{{diagram:multiTenantSaas}}
+
+> [!STAT] A well-implemented hybrid model serves thousands of small tenants at pennies per tenant per month while still giving a Fortune-500 enterprise a dedicated compliance-ready environment. Same codebase, same runbook, wildly different cost profiles.
+
+## The Three Classic Isolation Models
+
+| Model | Description | Isolation | Cost per tenant | Fit |
+|-------|-------------|-----------|-----------------|-----|
+| **Pool** | Shared everything; tenant ID in every row | Low | Pennies | SMB, free tier |
+| **Bridge** | Shared compute, DB per tenant | Medium | Low-to-medium | Mid-market |
+| **Silo** | Dedicated compute + data per tenant | High | High | Enterprise, compliance |
+
+Real SaaS companies use a **tier-to-model mapping**: Basic → Pool, Pro → Bridge, Enterprise → Silo. Same product, different isolation tiers.
+
+## The Shared Control Plane
+
+Regardless of tenant tier, a control plane is shared. It owns the tenant registry, billing, auth, and provisioning:
+
+- **Tenant Registry**: Azure SQL table(s) — tenant ID, tier, region, status, isolation shape
+- **Identity**: **Entra External ID** (formerly B2C) with tenant-scoped claims
+- **Billing**: Stripe or similar + Azure Usage API for metering
+- **Provisioning**: a Function + ARM/Bicep pipeline that creates tenant resources per tier
+
+Every inbound request carries a tenant identifier (subdomain, header, or JWT claim). A tenant-aware middleware looks up the tenant in the registry and routes accordingly.
+
+## The Data Layer Per Tier
+
+### Basic tier — Pool
+- Azure SQL Elastic Pool
+- **Row-Level Security (RLS)** enforces tenant isolation on every query
+- Every row has \`TenantId\` as the leading clustered index column
+- Nightly DB snapshot backed up
+
+Sample RLS predicate:
+
+\`\`\`sql
+CREATE SECURITY POLICY tenant_isolation
+ADD FILTER PREDICATE dbo.fn_tenant_predicate(TenantId)
+    ON dbo.Orders,
+ADD BLOCK PREDICATE dbo.fn_tenant_predicate(TenantId)
+    ON dbo.Orders AFTER INSERT;
+\`\`\`
+
+The function reads \`SESSION_CONTEXT('TenantId')\` which the app sets at connection time. If a query forgets to filter, SQL filters for you. Safety net.
+
+### Pro tier — Bridge
+- Dedicated Azure SQL database per tenant (thousands of tenants OK in Elastic Pool)
+- Shared App Service Plan / Container Apps environment runs the same app code
+- Connection string computed per request from tenant registry
+
+Tenants of this tier benefit from per-DB backup, restore, and performance isolation — without the full cost of dedicated compute.
+
+### Enterprise tier — Silo
+- Dedicated resource group per tenant
+- Dedicated VNet, SQL Managed Instance, Key Vault, Storage
+- Customer-Managed Keys (CMK) — the customer holds the encryption keys
+- Private AKS node pool with taints so only that tenant's pods run there
+
+A silo tenant takes longer to provision (~30 min pipeline) but looks like a private deployment to auditors.
+
+## Tenant Routing
+
+Front Door is the first gate. The pattern:
+
+\`\`\`
+https://{tenantId}.app.example.com  →  Front Door
+                                    →  rule matches subdomain
+                                    →  routes to correct backend pool
+                                    →  injects X-Tenant-Id header
+\`\`\`
+
+Pool and Bridge tenants share a backend; Silo tenants each have their own backend pool. Front Door rules engine updates itself via pipeline when a new silo tenant is provisioned.
+
+> [!TIP] For Bridge and Silo, include the tenant ID in a JWT claim too, not just a header. Header-only is trivially spoofed if someone gets internal network access.
+
+## Noisy Neighbor Mitigation
+
+Pool's biggest risk. Mitigations that actually work:
+
+- **Rate limiting per tenant** in APIM (requests/min per tenant tier)
+- **Query timeouts** — per-tenant SQL resource governor caps
+- **Quota enforcement** — API-side record limits per tier
+- **Metrics per tenant** so you can identify the one chewing up RU/s and upsell them to Bridge
+
+## Cross-Tenant Features (Carefully)
+
+Sometimes a feature truly needs cross-tenant data (global leaderboard, aggregated insights). Two patterns:
+
+1. **Materialized rollup in the control plane** — an event per tenant writes to a central aggregate, not by cross-tenant query.
+2. **Explicit cross-tenant endpoint** with a separate auth principal, separate audit trail, and feature flag.
+
+Never let application logic query across tenant boundaries by default. The blast radius is too big.
+
+## Tenant Onboarding Flow
+
+\`\`\`
+1. Customer signs up via marketing site
+2. Stripe subscription created, tier captured
+3. Control plane Function creates tenant record (status=provisioning)
+4. For Silo: ARM pipeline runs, takes ~30 min
+5. For Bridge: DB provisioned on shared SQL server, ~2 min
+6. For Pool: zero infra provisioning, just a row in the registry
+7. DNS or Front Door rule updated
+8. Welcome email triggers
+9. Tenant status → active
+\`\`\`
+
+All of this is automated. No human in the loop for standard signups.
+
+## Tenant Offboarding
+
+Required by GDPR / SOC 2 / contracts:
+- Silo: pipeline deletes the RG, logs deletion cert
+- Bridge: delete DB, retain backup for contractual period, then purge
+- Pool: soft-delete rows with TTL, hard-delete after grace period
+- Key Vault: rotate tenant-specific keys and destroy
+
+## Billing and Metering
+
+For accurate per-tenant cost:
+- **Tag every Azure resource** with \`TenantId\` (Silo) or shared with a metering layer (Pool/Bridge)
+- Use **Azure Cost Management** to get per-tag costs, emit to your billing system
+- Meter API calls, storage used, compute time per tenant in your app
+- Combine Azure cost + app metering = per-tenant COGS
+
+> [!SUCCESS] A Finance dashboard showing "gross margin per tenant" is game-changing. You learn which tenants you should be upselling, which are unprofitable, and where pricing is off.
+
+## Database Migrations Across Tenants
+
+The trickiest operational concern. Approaches:
+
+- **Migration runner** in your deploy pipeline iterates tenants and applies schema changes one at a time
+- **Backward-compatible migrations only** — apps handle N and N+1 schema simultaneously during rollout
+- **Per-tenant version flag** so you can target specific tenants (useful for Silo customers who want change windows)
+
+Never deploy schema changes that are not backward compatible. Two-phase deploys are mandatory in multi-tenant SaaS.
+
+## Regional and Data-Residency
+
+Enterprise customers increasingly require data to live in a specific region. Handle this with:
+- Regional deployments of the full stack
+- Tenant registry holds \`PrimaryRegion\` per tenant
+- Front Door routes tenant to correct regional backend
+- Silo tenants can pick any supported region
+
+> [!WARNING] Do not attempt to split a Pool tenant across regions. Data residency + multi-tenant pooling is impossible to get right. Bridge at minimum for residency-sensitive tenants.
+
+## Observability Per Tenant
+
+Every log, metric, and trace includes \`TenantId\`. Workbook filters by tenant. This lets you:
+- Debug support tickets for one tenant without seeing others
+- Compute per-tenant SLOs
+- Detect abuse patterns from one tenant affecting shared infra
+
+## Security Isolation
+
+- Pool: RLS + tenant-aware managed identity
+- Bridge: DB-level isolation + per-tenant credentials rotated via Key Vault
+- Silo: Full stack isolation + customer-managed keys + private network
+
+## Common Mistakes
+
+- Starting with only Pool and refusing to add Bridge — you will lose enterprise deals
+- Starting with only Silo — unit economics never work
+- No tenant isolation tests in CI — first leak is career-ending
+- Skipping metering — you cannot price your product without knowing COGS per tenant
+- No clear upgrade path from Pool → Bridge → Silo — customers stall and churn
+
+## Starter Template
+
+Cloud Canvas Designer's SaaS template includes the full tier architecture, tenant-aware routing, and cost tags. Exports cleanly to Terraform with modular files per tier.
+
+## Final Word
+
+Multi-tenant SaaS is less about picking a tenancy model and more about **letting customers pay for isolation when they want it**. The hybrid tiered model scales your economics up and your compliance posture down, all from one codebase. It is the pattern every mature B2B SaaS ends up with — start there and you save yourself a rewrite.`;
+
+
+// ============================================================
+// ARTICLE: iot-lambda-architecture
+// ============================================================
+articleContent['iot-lambda-architecture'] = `# IoT Lambda Architecture: Hot Path + Cold Path the Right Way
+
+When you ingest 100,000 sensors producing telemetry every few seconds, the temptation is to "just use Cosmos DB for everything." That works until your monthly bill hits $80K and your analytics team can't run a month-over-month aggregate without throttling. The industry-standard answer is **lambda architecture** — a hot path for real-time and a cold path for analytics, each optimized for its own access pattern.
+
+This blueprint shows a production IoT architecture that handles 100K+ events/sec, with dashboards that refresh in under a second and a month's telemetry queryable for $0.01.
+
+{{diagram:iotLambda}}
+
+## The Two Paths
+
+**Hot path**: real-time ingest, windowed aggregates, alerts, dashboards. Latency measured in seconds. Retention in hours to days.
+
+**Cold path**: bulk landing, columnar format, long retention, ad-hoc analytics, ML training. Latency in minutes. Retention in years.
+
+Both paths start at the same source. They diverge at the ingest layer.
+
+## Ingest: IoT Hub
+
+Azure IoT Hub is purpose-built for device telemetry. Why not just Event Hubs?
+
+| Feature | IoT Hub | Event Hubs |
+|---------|---------|------------|
+| Device registry | ✅ Yes | ❌ No |
+| Per-device auth (SAS + X.509) | ✅ Yes | ❌ No |
+| Device twin (state sync) | ✅ Yes | ❌ No |
+| Direct methods (cloud → device) | ✅ Yes | ❌ No |
+| Protocol support (MQTT, AMQP, HTTPS) | ✅ All | AMQP only |
+| Throughput | 6M msg/sec | Millions/sec |
+| Routing to multiple targets | ✅ Built-in | Requires code |
+
+If you have devices with identity, use IoT Hub. Event Hubs is for cloud-to-cloud event streams.
+
+## Message Routing
+
+IoT Hub's **message routing** is the key pattern:
+
+\`\`\`
+Route 1: temperature > 100    → Event Grid (alert path)
+Route 2: type = 'telemetry'   → Event Hubs (hot path)
+Route 3: *                    → ADLS Gen2 (cold path via capture)
+\`\`\`
+
+One message can land in multiple destinations. No code to write — it is declarative routing.
+
+## Hot Path — Stream Analytics
+
+Azure **Stream Analytics** consumes from Event Hubs, runs SQL-like windowed queries, and writes to Cosmos DB or another sink.
+
+Example query for real-time equipment health:
+
+\`\`\`sql
+SELECT
+    deviceId,
+    AVG(temperature) AS avgTemp,
+    MAX(vibration) AS maxVibration,
+    System.Timestamp() AS windowEnd
+INTO CosmosSink
+FROM IoTStream TIMESTAMP BY eventTimestamp
+GROUP BY deviceId, TumblingWindow(second, 30)
+\`\`\`
+
+Output lands in Cosmos DB partitioned by \`deviceId\`. Dashboards query Cosmos for live state.
+
+> [!TIP] Stream Analytics has built-in windowing (Tumbling, Hopping, Sliding, Session). Pick Tumbling for billing-style aggregates, Hopping when you need overlapping windows, Sliding when each event should update the window.
+
+## Hot Path — Alerting
+
+Stream Analytics writes anomalies to **Event Grid**, which fans out to:
+- Teams webhook for on-call notifications
+- Logic App for ticketing system integration
+- Function that opens ITSM incidents
+- PagerDuty for critical alerts
+
+Anomaly detection uses Stream Analytics built-in \`AnomalyDetection_SpikeAndDip\` — ML-based, no training required.
+
+## Cold Path — ADLS Gen2 + Event Hubs Capture
+
+Every raw event gets archived. **Event Hubs Capture** writes Avro/Parquet files to ADLS Gen2 on a schedule (every 5 minutes or every 100 MB, whichever comes first). This is essentially free — no code, no compute, just storage.
+
+The raw lake gets organized:
+
+\`\`\`
+/raw/{year}/{month}/{day}/{hour}/events-{timestamp}.parquet
+/curated/{table_name}/{year}/{month}/{day}/data.delta
+\`\`\`
+
+## Cold Path — Fabric Lakehouse
+
+**Microsoft Fabric** (or Synapse) reads the raw Parquet and builds curated tables via Spark notebooks or T-SQL. The model:
+
+- **Bronze layer**: raw events, partitioned by day
+- **Silver layer**: cleaned, deduplicated, joined with device metadata
+- **Gold layer**: aggregated facts (daily device health, hourly site averages)
+
+Power BI connects to Gold for dashboards. ML training reads Silver.
+
+> [!STAT] Querying 1 year of telemetry in Cosmos DB (30 billion rows) could cost $50K+ in RU/s. The same query against Delta-formatted Parquet in ADLS, via Fabric, costs about $5 in compute.
+
+## The Serving Layer
+
+Real-time dashboards query **Cosmos DB** directly — sub-10ms reads for the last few hours of aggregates.
+
+Historical dashboards query **Power BI** backed by **Direct Lake** mode on Fabric — queries the Parquet directly, no data copy.
+
+Analytics queries run on **Fabric** notebooks or Synapse SQL serverless.
+
+## Device Twin Pattern
+
+Each device has a **twin** in IoT Hub — a JSON doc representing its desired and reported state. Your app updates \`desired\`, the device reports \`reported\`, and IoT Hub manages the sync.
+
+\`\`\`json
+{
+  "desired": { "firmwareVersion": "1.2.4", "telemetryInterval": 30 },
+  "reported": { "firmwareVersion": "1.2.3", "telemetryInterval": 30, "lastBootUtc": "2026-04-01T10:00:00Z" }
+}
+\`\`\`
+
+Twin updates are events too — your backend can react when a device reports a new firmware version or goes offline.
+
+## Edge Compute
+
+For high-frequency or offline scenarios, **Azure IoT Edge** runs containers on the device itself. Common patterns:
+- Filter and aggregate telemetry at the edge, send only summaries to the cloud
+- Run ML inference at the edge (quality control on a factory line)
+- Buffer during connectivity loss, sync when online
+
+Edge containers are managed via IoT Hub — same deployment model as cloud.
+
+## Scale Numbers
+
+Tested profile:
+- **100K devices** sending events every 5 seconds = **20K events/sec**
+- **IoT Hub S2 × 10 units**: handles up to 60K msg/sec (headroom for bursts)
+- **Event Hubs**: 5 throughput units, ~5 MB/sec in, ~10 MB/sec out (SA + Capture)
+- **Stream Analytics**: 6 SUs, processes full stream with p95 latency < 2s
+- **Cosmos DB**: 20K RU/s autoscale, stores 2 weeks of aggregates
+- **ADLS Gen2**: grows ~80 GB/day raw, ~20 GB/day curated
+
+## Cost Shape
+
+| Component | Monthly (USD) |
+|-----------|---------------|
+| IoT Hub S2 × 10 | ~$7,500 |
+| Event Hubs (5 TU) | ~$110 |
+| Event Hubs Capture | ~$80 |
+| Stream Analytics (6 SUs) | ~$540 |
+| Cosmos DB (20K RU/s + storage) | ~$1,200 |
+| ADLS Gen2 (10 TB + transactions) | ~$200 |
+| Fabric Capacity F16 | ~$2,600 |
+| Power BI Premium Per User (10 seats) | ~$200 |
+| Defender for IoT | ~$500 |
+| **Total** | **~$13,000/month** |
+
+For 100K devices at 20K events/sec, that is **$0.13 per device per month** all-in. Hard to beat.
+
+## Security
+
+- Per-device X.509 authentication (not SAS tokens — those get leaked)
+- Azure IoT Device Provisioning Service (DPS) for zero-touch onboarding
+- Defender for IoT for anomaly detection on device behavior
+- Private Endpoints on IoT Hub, Event Hubs, Cosmos, ADLS
+- Customer-managed keys for storage
+- Audit logs into Sentinel
+
+## Anti-Patterns
+
+- **Cosmos DB for cold analytics** — you will regret the bill
+- **Storing all telemetry in SQL** — it cannot handle the write throughput
+- **Skipping Capture and trying to write cold-path code** — you are rebuilding Microsoft's feature for free
+- **One Stream Analytics job for everything** — split by domain, easier to maintain
+- **No device twin** — you lose a major source of device-state visibility
+
+## When This Pattern Is Overkill
+
+For under ~1000 devices, a simpler architecture works:
+- IoT Hub → Event Grid → single Function → Cosmos DB
+- Weekly export to blob for analytics
+- Power BI over the blob
+
+You do not need Stream Analytics or Fabric until scale forces the split.
+
+## Starter Template
+
+Cloud Canvas Designer's IoT template deploys the full lambda stack. Adjust device count and SKUs, export to Terraform. Include pre-built Stream Analytics jobs and Fabric notebook templates for the three-layer medallion pattern.`;
+
+
+// ============================================================
+// ARTICLE: enterprise-rag-blueprint
+// ============================================================
+articleContent['enterprise-rag-blueprint'] = `# Enterprise RAG on Azure: Private, Governed, Tenant-Aware
+
+Every RAG tutorial looks the same: "upload PDFs to blob, embed with OpenAI, search with AI Search, done." Try shipping that to an enterprise and you will hit 15 issues the tutorials never mentioned: multi-tenant isolation, Private Endpoints, governance, evaluation, prompt injection, cost per tenant, lineage, citations, caching, and drift detection.
+
+This blueprint is the RAG pattern I have deployed for regulated industries (banking, healthcare). It assumes **private network, per-tenant isolation, auditable grounding, and an evaluation pipeline** — the things that move it from demo to production.
+
+{{diagram:ragArch}}
+
+## Why Most RAG Tutorials Are Dangerous
+
+A demo RAG:
+- Hits public OpenAI endpoint (no private link) — data egress risk
+- Shares one AI Search index across tenants — confidentiality risk
+- Has no citation verification — hallucinations shipped as truth
+- No content safety filters — legal liability
+- Zero observability — you cannot debug a bad answer
+- No eval loop — retrieval quality drifts without you noticing
+
+Each one is a production-stopping issue at enterprise.
+
+## The Ingest Pipeline
+
+### Source Connectors
+Data comes from SharePoint, OneDrive, Confluence, Blob Storage, Jira, ServiceNow, custom APIs. Use **Microsoft Graph** or custom Functions with managed identities — no passwords.
+
+### Document Intelligence
+Don't just extract text from PDFs — use **Azure AI Document Intelligence** to capture layout, tables, figures, headers. A Markdown representation preserves structure, which embedders handle much better than raw text.
+
+### Chunking
+Semantic chunking beats fixed-size. Strategies that work:
+- Split on Markdown headers, keep hierarchy
+- Target 500-1500 tokens per chunk with 100-token overlap
+- Preserve table integrity (don't split a table across chunks)
+- Include a short summary + parent document title in each chunk's metadata
+
+\`\`\`python
+# Simplified chunker snippet
+def chunk_document(md_text: str, max_tokens: int = 1000, overlap: int = 100):
+    sections = split_by_headers(md_text)
+    chunks = []
+    for section in sections:
+        if count_tokens(section) <= max_tokens:
+            chunks.append(section)
+        else:
+            chunks.extend(sliding_window(section, max_tokens, overlap))
+    return [{"text": c, "parent_title": section.title, ...} for c in chunks]
+\`\`\`
+
+### Embedding
+**Azure OpenAI text-embedding-3-large** (3072 dimensions). For cost-sensitive use cases, \`text-embedding-3-small\` (1536 dims) is 5x cheaper at modest quality loss.
+
+Rate-limited via Provisioned Throughput Units (PTUs) so you get predictable latency even under load.
+
+### Index
+**Azure AI Search** with hybrid search enabled:
+- Vector field (HNSW index)
+- Full-text field (BM25)
+- Semantic ranker (L2 reranker using cross-encoder)
+- Filterable fields for tenant isolation, permissions, classification
+
+Schema example:
+
+\`\`\`json
+{
+  "name": "enterprise-rag",
+  "fields": [
+    { "name": "id", "type": "Edm.String", "key": true },
+    { "name": "tenantId", "type": "Edm.String", "filterable": true },
+    { "name": "classification", "type": "Edm.String", "filterable": true },
+    { "name": "content", "type": "Edm.String", "searchable": true },
+    { "name": "contentVector", "type": "Collection(Edm.Single)",
+      "dimensions": 3072, "vectorSearchProfile": "default" },
+    { "name": "sourceUrl", "type": "Edm.String" },
+    { "name": "lastUpdated", "type": "Edm.DateTimeOffset" }
+  ]
+}
+\`\`\`
+
+## The Serve Pipeline
+
+### Orchestrator
+A Function or Container Apps service using **Semantic Kernel** or **LangChain**. The orchestrator:
+
+1. Validates the question (length, PII screening)
+2. Rewrites the question (using the conversation history)
+3. Retrieves top-k chunks from AI Search with tenant + permission filters
+4. Re-ranks with semantic ranker
+5. Constructs a grounded prompt
+6. Calls Azure OpenAI with content safety
+7. Post-processes the answer (citation verification, guardrails)
+8. Logs everything (question, retrieved chunks, response, token count, latency)
+
+### Tenant Isolation
+Every search request includes a mandatory filter:
+
+\`\`\`
+$filter=tenantId eq '{user.tenantId}' and classification le '{user.clearance}'
+\`\`\`
+
+The tenant ID comes from the JWT claim, not the request body. Even if the app is compromised, search results are scoped.
+
+### Permission-Aware Retrieval
+For row-level security, the orchestrator attaches ACLs:
+
+\`\`\`
+$filter=tenantId eq 'X' and (groupIds/any(g: g eq 'sales') or groupIds/any(g: g eq 'engineering'))
+\`\`\`
+
+User group memberships come from Entra ID and are cached per session.
+
+### Prompt Template
+
+A grounded prompt structure that works:
+
+\`\`\`
+You are an assistant for {company}. Answer using ONLY the context.
+If the context doesn't contain the answer, say "I don't have that information."
+Always cite sources using [1], [2] format.
+
+Context:
+[1] {chunk_1_text} (source: {source_1_url})
+[2] {chunk_2_text} (source: {source_2_url})
+
+Question: {user_question}
+\`\`\`
+
+### Content Safety
+**Azure AI Content Safety** sits in front of OpenAI. It screens for:
+- Harmful content (hate, violence, self-harm, sexual)
+- Prompt injection / jailbreak attempts
+- PII in outputs (optional)
+
+Block threshold configurable per category. Always log the safety verdict.
+
+## Governance and Observability
+
+### Purview Integration
+AI Search's data lineage flows into **Microsoft Purview**. Auditors can trace: "Which documents fed which answers to user X on date Y?"
+
+### App Insights Custom Telemetry
+Every request emits:
+- \`question\` (hashed or raw based on compliance)
+- \`retrieved_chunk_ids\` (for lineage)
+- \`answer_length\`
+- \`latency_p95\`
+- \`tokens_in\`, \`tokens_out\` (for cost attribution)
+- \`content_safety_verdict\`
+- \`citation_match_score\` (how many citations in the answer appear in retrieved chunks)
+
+### Evaluation Pipeline
+Weekly a **Fabric notebook** runs:
+1. Pulls a fresh sample of questions from last week's logs
+2. For each: re-runs the RAG pipeline, asks GPT-4 to judge faithfulness and relevance
+3. Writes scores to a Fabric Lakehouse
+4. Power BI dashboard tracks drift over time
+
+When faithfulness drops below threshold (e.g., 0.85), the team investigates — is it the embedding model? Index schema? New content?
+
+## Security Architecture
+
+- **Private Endpoints** on AI Search, Azure OpenAI, Storage, Document Intelligence, Cosmos (for chat history)
+- **Disable public network access** on every service
+- **Entra ID** for user auth + group membership claims
+- **Managed identities** for service-to-service (no keys)
+- **Content Safety** as a hard gate before OpenAI
+- **Prompt Shield** enabled at Azure OpenAI (detects jailbreaks)
+- **Per-tenant quotas** in APIM (abuse limits)
+
+## Cost Shape and Attribution
+
+Rough monthly for ~100K queries, 50M documents indexed:
+
+| Component | Monthly (USD) |
+|-----------|---------------|
+| Azure OpenAI PTU GPT-4o (2 units) | ~$4,500 |
+| Azure OpenAI embeddings (pay-per-token) | ~$400 |
+| AI Search Standard S2 × 2 replicas | ~$850 |
+| Document Intelligence | ~$350 |
+| Storage (10 TB) + Cosmos for chat | ~$600 |
+| Content Safety | ~$200 |
+| Observability + evaluation | ~$300 |
+| **Total** | **~$7,200/month** |
+
+Per-tenant attribution: tag every request with \`tenantId\`, aggregate \`tokens_in + tokens_out\` per tenant in App Insights, apply OpenAI pricing, chargeback. Transparent to the business.
+
+## Common Pitfalls
+
+- **No filter on tenant ID** → data leak across tenants, recall-ending bug
+- **Fixed-size chunking** → poor retrieval quality, tables get split
+- **No evaluation loop** → drift invisible until complaints pile up
+- **Unbounded chat history in prompt** → token costs explode
+- **Retrieving too many chunks** → signal-to-noise plummets, latency increases
+- **Ignoring prompt injection** → legal/PR incidents
+- **Using public OpenAI endpoint** → compliance failure
+
+## Anti-Pattern: "Just Use the Copilot Starter"
+
+Microsoft ships a "Chat with Your Data" starter. It's a good demo. It is not enterprise-ready. It shares the index across everyone, uses public endpoints, has no evaluation, and has no per-tenant auth. Use it to learn the patterns, then build a production version from this blueprint.
+
+## Advanced: Query Routing
+
+For multi-domain enterprises, a single RAG often fails. Instead:
+- **Domain Router Function** classifies incoming questions (HR, Legal, Engineering)
+- Routes to domain-specific indexes with domain-specific prompts
+- Each domain has its own acceptable-use filters and citations
+
+Dramatically improves answer quality at the cost of slightly higher latency.
+
+## Fine-Tuning vs RAG
+
+Don't fine-tune unless you genuinely need domain-specific tone or behavior. For **factual grounding**, RAG wins:
+- RAG: add new documents → instant availability
+- Fine-tune: new data → new training run → days to deploy
+
+Fine-tune for **style** (legal briefs, specific tone). RAG for **facts**.
+
+## Starter Template
+
+Cloud Canvas Designer's RAG template deploys the full stack — ingest pipeline, AI Search with the schema above, Azure OpenAI with PTUs, Content Safety, App Insights, and the evaluation notebook. Exports to Terraform with parameterized tenant config.
+
+## Final Word
+
+A RAG system is only as trustworthy as its weakest link — and that link is rarely the model. It is the ingestion, the isolation, the evaluation, and the operations. Ship the boring stuff first; the model tier is the easiest part to upgrade later.`;
+
+
+// ============================================================
+// ARTICLE: pci-dss-payments-blueprint
+// ============================================================
+articleContent['pci-dss-payments-blueprint'] = `# PCI-DSS Payments Architecture: Scoping the CDE Properly
+
+The most expensive mistake in payments architecture is making your entire platform part of the Cardholder Data Environment (CDE). Once a system touches primary account numbers (PAN), it is in scope for PCI-DSS — which means annual QSA audits, quarterly vuln scans, network segmentation proof, and dozens of controls every year.
+
+Smart architecture reduces scope aggressively. Tokenize early, segment ruthlessly, and most of your platform stays **out of scope** entirely.
+
+{{diagram:paymentsArch}}
+
+## The Core Principle: Scope Reduction via Tokenization
+
+The PAN is the radioactive element. Keep it in a small, tightly controlled zone. Everywhere else, store a **token** that represents the PAN but is worthless if stolen.
+
+\`\`\`
+Customer enters card → Payment Capture page (CDE) → Tokenization Service (CDE)
+                                                   ↓
+                              Token returned to Order API (out of scope)
+                                                   ↓
+                              All downstream systems store only the token
+\`\`\`
+
+> [!DANGER] If any backend system can retrieve the real PAN from the token, it is in scope too. Tokenization must be one-way from the application's perspective.
+
+## Network Segmentation
+
+| Zone | Contents | PCI Scope |
+|------|----------|-----------|
+| Public | Front Door + WAF | Out |
+| App Zone | Web UI, Order API, analytics | Out (stores token only) |
+| CDE | Payment API, tokenizer, HSM | **In scope** |
+| Shared Svcs | Logging, monitoring, backup | Connected to CDE (in scope as "Connected System") |
+
+Use a dedicated VNet for the CDE, peered to the hub. NSGs default-deny between App Zone and CDE except for specific tokenization and payment flows on port 443 with mTLS.
+
+## Required Controls (Partial List)
+
+- **Req 3 (Protect stored CHD):** Column encryption + CMK from Key Vault HSM (Premium, FIPS 140-2 Level 3)
+- **Req 4 (Encrypt transmission):** TLS 1.2+ everywhere, mTLS in CDE
+- **Req 6 (Secure development):** SAST + DAST + SBOM in CI
+- **Req 7 (Restrict access):** RBAC with just-in-time PIM, no standing access
+- **Req 8 (Strong auth):** MFA for all CDE access
+- **Req 10 (Logging):** All access to CHD logged and retained 1 year minimum
+- **Req 11 (Regular testing):** Quarterly ASV scans, annual pen test
+
+## Logging and Monitoring
+
+Every read, write, or decrypt of CHD must generate an audit log. Sentinel rules to deploy:
+
+\`\`\`
+- Multiple decrypts from a single principal in a short window
+- Decrypts from unusual IP / location
+- Failed auth on CDE services
+- Privilege escalation attempts
+- Database queries matching PAN regex patterns
+\`\`\`
+
+## Cost Shape
+
+| Component | Monthly (USD) |
+|-----------|---------------|
+| Dedicated CDE VNet + Firewall | ~$1,800 |
+| Key Vault Premium (HSM) | ~$1,000 |
+| Payment API (isolated compute) | ~$900 |
+| Tokenization service | ~$600 |
+| Extra logging + Sentinel | ~$800 |
+| Quarterly ASV + annual QSA | ~$3,500 (amortized) |
+| **Total baseline overhead** | **~$8,600/mo** |
+
+## What Makes This Blueprint Work
+
+- Application logic never sees PAN — only tokens
+- CDE is small enough to audit thoroughly
+- Security controls concentrated where they matter
+- Scope can be proven to QSA with a single network diagram
+
+## Closing
+
+PCI is not impossible. Most of the pain comes from teams that let the CDE sprawl across their platform. Scope it small, segment it hard, tokenize everything, and the annual audit becomes routine instead of traumatic.`;
+
+
+// ============================================================
+// ARTICLE: data-mesh-on-azure
+// ============================================================
+articleContent['data-mesh-on-azure'] = `# Data Mesh on Azure: Federated Ownership with Fabric and Purview
+
+Central data teams become bottlenecks at scale. Domain teams know their data best but lack platform skills. Data mesh is the organizational and architectural response — domains own their data as products, the platform team provides self-service infrastructure, and governance is federated but consistent.
+
+{{diagram:dataMesh}}
+
+## The Four Principles
+
+1. **Domain ownership** — each business domain owns its data pipeline and analytical datasets
+2. **Data as a product** — domains publish curated, discoverable, versioned data products
+3. **Self-serve platform** — central team provides reusable infra templates, not pipelines
+4. **Federated computational governance** — global standards enforced by automation, local policy owned by domains
+
+## Azure Services That Enable Mesh
+
+| Principle | Azure Service |
+|-----------|---------------|
+| Self-serve workspaces | Fabric Workspaces per domain |
+| Shared storage | OneLake (Fabric) or ADLS Gen2 |
+| Catalog + lineage | Microsoft Purview |
+| Access policies | Purview Data Policy + RBAC |
+| Data quality | Purview Data Quality |
+| Infra as code | Terraform modules from platform team |
+
+## Domain Architecture
+
+Each domain gets:
+- A Fabric workspace with its own capacity (or shared capacity with quotas)
+- Ingestion pipelines (Data Factory or notebooks) managed by the domain
+- A Lakehouse with bronze/silver/gold layers
+- Published data products registered in Purview
+
+Gold-layer tables become **data products**: versioned, documented, SLA-backed, discoverable.
+
+## Data Contracts
+
+Every data product has a contract:
+
+\`\`\`yaml
+name: sales.customer_orders
+version: 2.1
+owner: sales-data-team@contoso.com
+sla:
+  freshness: "< 1 hour"
+  availability: "99.5%"
+schema:
+  - name: order_id, type: string, pii: false
+  - name: customer_id, type: string, pii: true
+  - name: amount, type: decimal(10,2)
+quality_rules:
+  - order_id: not_null, unique
+  - amount: > 0
+\`\`\`
+
+Contracts are version-controlled in Git. Breaking changes require a new major version.
+
+> [!TIP] Use Purview's Data Quality rules to automate contract enforcement. Failed quality checks raise alerts and block downstream consumers from ingesting bad data.
+
+## Common Pitfalls
+
+- **Mesh without governance:** becomes anarchy. Purview is non-negotiable.
+- **Over-centralized platform team:** reverts to the old monolith. Enable, don't gate.
+- **No domain expertise:** forcing mesh on unprepared teams fails. Invest in data product manager training.
+- **Ignoring interoperability:** domains pick different formats, joining products becomes impossible.
+
+## When Mesh Is Wrong
+
+Under 20-30 engineers or without distinct business domains, a centralized analytics team is simpler and faster. Mesh pays off at enterprise scale (>500 engineers, multiple business units).
+
+## Closing
+
+Data mesh is 70% organizational and 30% technical. Azure gives you the primitives — Fabric workspaces, OneLake, Purview. You have to build the socio-technical system: contracts, product thinking, and shared standards.`;
+
+
+// ============================================================
+// ARTICLE: saga-pattern-microservices
+// ============================================================
+articleContent['saga-pattern-microservices'] = `# The Saga Pattern on Azure: Distributed Transactions Without Two-Phase Commit
+
+Classic distributed transactions (2PC) require every service to share a transaction coordinator. That does not scale and fails miserably across cloud microservices. The industry answer is the **saga pattern**: a sequence of local transactions with compensating actions for rollback.
+
+{{diagram:saga}}
+
+## Two Saga Styles
+
+**Orchestration** — one central service (the orchestrator) calls each step and handles failures. State is kept centrally.
+
+**Choreography** — services react to events from other services. No central brain. State is distributed.
+
+Orchestration is easier to reason about and debug. Choreography scales better but is harder to visualize. Start with orchestration.
+
+## The Azure-Native Choice: Durable Functions
+
+**Azure Durable Functions** are purpose-built for orchestration sagas:
+- State is persisted automatically
+- Host crashes and restarts don't lose progress
+- Retries are declarative
+- Compensation is a first-class concept
+
+\`\`\`csharp
+[FunctionName("OrderSaga")]
+public static async Task<OrderResult> RunOrchestrator(
+    [OrchestrationTrigger] IDurableOrchestrationContext ctx)
+{
+    var order = ctx.GetInput<Order>();
+    var reservation = await ctx.CallActivityAsync<ReservationResult>(
+        "ReserveInventory", order);
+
+    try
+    {
+        var payment = await ctx.CallActivityAsync<PaymentResult>(
+            "ChargePayment", order);
+        var shipment = await ctx.CallActivityAsync<ShipmentResult>(
+            "AssignShipping", order);
+        return new OrderResult { Success = true };
+    }
+    catch (FunctionFailedException ex)
+    {
+        // Compensating transactions run in reverse
+        await ctx.CallActivityAsync("RefundPayment", order);
+        await ctx.CallActivityAsync("ReleaseInventory", reservation);
+        throw;
+    }
+}
+\`\`\`
+
+## Compensation Is Not Rollback
+
+A saga does not undo a committed local transaction. It issues a **compensating transaction**: a new operation that semantically reverses the original.
+
+- You cannot un-charge a credit card. You issue a refund.
+- You cannot un-send an email. You send a correction.
+- You can release an inventory reservation (release is itself a valid operation).
+
+Every activity must have a compensating counterpart. Design them together.
+
+## Idempotency Is Mandatory
+
+Every step, forward and compensating, must be idempotent. If a retry happens, "charge $100" twice cannot charge $200. Use idempotency keys:
+
+\`\`\`
+POST /payments
+Idempotency-Key: order-12345-attempt-1
+\`\`\`
+
+The payment service stores the key and returns the original response on duplicate requests.
+
+## Observability
+
+Because a saga spans many services, **correlation IDs** are critical. Every log line tied to \`orchestrationInstanceId\` so you can replay any saga end to end.
+
+Durable Functions emits state history automatically — you can query "Show me every step this saga took and when."
+
+> [!SUCCESS] The ability to replay a saga from its event history is the killer feature of orchestration. Support tickets go from hours of investigation to minutes.
+
+## Common Mistakes
+
+- Skipping compensations because "that step rarely fails" — it will
+- Compensations that require the original state (lost after crashes)
+- Non-idempotent steps — duplicate effects after retries
+- Human approval steps without timeouts (saga hangs forever)
+
+## When Saga Is Wrong
+
+If your "distributed" operation is actually within one service's bounded context, use a single ACID transaction. Saga complexity only makes sense when independent services coordinate.
+
+## Starter Template
+
+Cloud Canvas Designer includes a Durable Function saga template with three example workflows (order, refund, subscription). Exports to Bicep with the Function App, Storage account, and App Insights wired.
+
+## Closing
+
+The saga pattern trades immediate atomicity for eventual consistency and operational complexity. In exchange, you get scalability and service autonomy. For most modern distributed systems, it is the right trade.`;
+
+
+// ============================================================
+// ARTICLE: active-passive-dr-blueprint
+// ============================================================
+articleContent['active-passive-dr-blueprint'] = `# Active-Passive Multi-Region DR: A Blueprint With RTO < 15 Minutes
+
+The most common DR failure mode is not technology — it is process. Teams have replicas configured but nobody has actually failed over in two years. When the real incident happens, the runbook is stale, the credentials are expired, and everyone is learning the failover procedure under pressure.
+
+This blueprint covers both the **technology architecture** and the **operational discipline** to achieve an RTO under 15 minutes and an RPO under 5 minutes at reasonable cost.
+
+{{diagram:drActivePassive}}
+
+## The Active-Passive Model
+
+**Primary region** serves all production traffic. **Secondary region** exists as a warm standby: infrastructure is deployed, data replicates continuously, but the passive region takes no live traffic.
+
+Failover is triggered manually (or automatically via Front Door health probes) when the primary is unhealthy beyond threshold.
+
+## Front Door Priority Routing
+
+The front door always has both origins configured with **priorities**:
+- Primary origin: priority 1 (takes all traffic while healthy)
+- Secondary origin: priority 2 (kicks in when priority 1 fails health probes)
+
+Health probes run every 30 seconds. Failover happens within 3 consecutive failures — about 90 seconds of detection time.
+
+## Data Replication
+
+| Service | Replication Mode | RPO |
+|---------|------------------|-----|
+| Azure SQL | Active geo-replication (async) | < 5 sec |
+| Storage | GRS or GZRS | < 15 min |
+| Cosmos DB | Multi-region read (single master) | < 1 sec |
+| Key Vault | Replicated automatically | Instant |
+| App Config | Manual sync or pipeline | Varies |
+
+SQL geo-replica is read-only until promoted. Storage GRS gives you a readable secondary endpoint. Cosmos replicas stay in sync within a bounded staleness guarantee.
+
+## Failover Procedure
+
+Documented, practiced, timed:
+
+1. **Declare incident** (5 min SLA to declare after detection)
+2. **Promote SQL geo-replica** to primary (2-5 min)
+3. **Update Front Door origin priorities** — bump secondary to priority 1
+4. **Validate synthetic smoke tests** on the new primary
+5. **Communicate status** to stakeholders
+6. **Monitor** for 30 minutes, then release incident
+
+Total elapsed: 10-15 minutes if the runbook is sharp.
+
+## The Non-Negotiable Discipline
+
+> [!DANGER] DR that hasn't been tested isn't DR. It is a theory.
+
+- **Quarterly DR drills** — actually fail over, measure RTO/RPO, run for 24 hours on the secondary, then fail back
+- **Game days** — simulate random failures (region loss, DNS failure, SQL corruption)
+- **Runbook as code** — failover steps automated in Azure Automation runbooks or pipelines, not docs
+- **Break-glass credentials** — separate admin accounts for DR scenarios, tested quarterly
+
+## Cost Shape
+
+Secondary region costs ~30-50% of primary (smaller replicas, scaled-down compute, same data size). For a $20K/mo primary workload, budget ~$7-10K/mo for DR.
+
+**Cost reduction tactic:** scale the secondary App Service plan to 1 instance at minimum tier when idle. During failover, scale it up via Automation before promoting.
+
+## Common Mistakes
+
+- No runbook, or runbook is a Word doc that hasn't been updated in years
+- Secondary region uses different VM SKUs than primary (shortages during failover)
+- Never tested failback — stuck in secondary indefinitely
+- App config values hardcoded to primary region endpoints
+- DNS TTLs set to 24 hours — no one can reach the failed-over app
+
+## Active-Passive vs Active-Active
+
+Active-active is technically superior — no downtime, no failover event. It is also 2x the infrastructure cost, data-layer complexity explodes with multi-region writes, and split-brain scenarios need handlers.
+
+Active-passive wins for: cost sensitivity, simpler data models, acceptable 15-min RTO.
+
+## Closing
+
+Active-passive DR on Azure is well-supported and affordable. The hard part is the discipline — practicing until failover is a procedure, not an emergency. Budget the quarterly drill time; it pays off the first time you need it.`;
+
+// ============================================================
+// ARTICLE: azure-firewall-vs-nva
+// ============================================================
+articleContent['azure-firewall-vs-nva'] = `# Azure Firewall vs Third-Party NVAs: Honest Trade-Offs
+
+Every enterprise Azure rollout eventually hits this fork: do we use Azure Firewall (Microsoft-native, managed) or bring in a third-party NVA like Palo Alto, Fortinet, or Check Point? Vendors will tell you theirs is best. The honest answer depends on three things: your existing skills, your feature requirements, and your operational budget.
+
+{{diagram:firewallNva}}
+
+## Feature Comparison
+
+| Feature | Azure Firewall Premium | Palo Alto / Fortinet NVA |
+|---------|------------------------|--------------------------|
+| L3-L7 filtering | ✅ | ✅ |
+| TLS inspection | ✅ | ✅ (feature-rich) |
+| IDS/IPS | ✅ (signature-based) | ✅ (signature + behavior) |
+| URL filtering | ✅ (categories) | ✅ (granular) |
+| DNS proxy | ✅ | ✅ |
+| User-based policies | ❌ | ✅ |
+| App-ID / Layer 7 identification | Limited | ✅ |
+| Managed service | ✅ (no VMs) | ❌ (you run VMs) |
+| Auto-scale | ✅ | ❌ (you size VMSS) |
+| HA | Built-in | You build it |
+| Cross-cloud consistency | ❌ Azure only | ✅ Same vendor on AWS/GCP |
+
+## When Azure Firewall Wins
+
+- You are Azure-only or Azure-primary
+- You want managed service (no VMs, no patching, no HA headache)
+- Your policy needs are standard (URL categories, threat intel, basic L7)
+- You don't have existing firewall vendor skills
+- You want tight integration with Azure (Firewall Manager, Policy, Defender)
+
+Cost: ~$1,500/mo Premium + bandwidth. One SKU, one bill.
+
+## When NVA Wins
+
+- You are multi-cloud — same vendor across clouds means one policy language
+- You have existing firewall team with Palo Alto or Fortinet expertise
+- You need advanced L7 identification (specific SaaS apps)
+- You need granular user-based policies tied to AD groups
+- Your compliance requires a specific vendor (rare but happens)
+
+Cost: ~$2,500-4,000/mo for HA pair VMSS + licensing + management.
+
+## Hybrid: Use Both
+
+Some enterprises run **Azure Firewall for east-west (between spokes)** and **NVA for north-south (internet egress)**. The NVA provides advanced inspection for internet traffic; Azure Firewall handles internal segmentation cheaply.
+
+> [!TIP] In Virtual WAN, Secured Virtual Hubs natively support Azure Firewall. For third-party NVAs, deploy via Routing Intent (available with most major vendors now).
+
+## Operational Burden
+
+Azure Firewall: zero VM patches, Microsoft handles the fleet. You manage policies.
+
+NVA: you manage the VM scale set, OS updates, vendor software upgrades, HA config, auto-scale rules. Budget 10-20% of a platform engineer's time.
+
+## Decision Framework
+
+- **Azure-only + no vendor lock-in = Azure Firewall**
+- **Multi-cloud with existing vendor = NVA**
+- **Need advanced user/app identification = NVA**
+- **Limited ops capacity = Azure Firewall**
+- **Best-of-breed security posture, cost-no-object = NVA**
+
+## Closing
+
+Azure Firewall has closed most of the feature gap with NVAs over the last three years. For most net-new Azure workloads, it is the right default. NVAs still win when multi-cloud consistency or advanced inspection is a hard requirement.`;
+
+
+// ============================================================
+// ARTICLE: expressroute-vs-vpn
+// ============================================================
+articleContent['expressroute-vs-vpn'] = `# ExpressRoute vs Site-to-Site VPN: Which Hybrid Path?
+
+Most enterprises connecting on-prem to Azure ask the same question: VPN or ExpressRoute? The answer usually ends up being **both** — but for different reasons than you might expect.
+
+## The Core Differences
+
+| Aspect | Site-to-Site VPN | ExpressRoute |
+|--------|------------------|--------------|
+| Transport | Public internet + IPsec tunnel | Private fiber circuit |
+| Bandwidth | Up to ~10 Gbps (VPN Gateway VpnGw5) | 50 Mbps to 100 Gbps |
+| Latency | Variable (internet-dependent) | Deterministic |
+| SLA | 99.95% | 99.95% (dual circuits: 99.99%) |
+| Setup time | Hours | Weeks (carrier-dependent) |
+| Monthly cost | ~$300-1,400 | ~$300 (50 Mbps) to ~$15,000 (10 Gbps) + port fees |
+| Encryption | Built-in IPsec | None by default (add MACsec) |
+
+## When VPN Wins
+
+- **Low bandwidth needs** (< 500 Mbps average)
+- **Quick setup** — you need connectivity this week, not next quarter
+- **Dev/test or branch offices** where cost matters
+- **Backup path** for ExpressRoute (recommended design)
+
+## When ExpressRoute Wins
+
+- **High, predictable throughput** requirements (streaming data, database replication)
+- **Latency-sensitive workloads** (VoIP, real-time trading)
+- **Compliance** that forbids internet-traversing traffic
+- **Microsoft peering** — direct access to M365, Dynamics, without going through your proxy
+
+## The Reference Hybrid Topology
+
+The design most enterprises end up with:
+
+- **ExpressRoute** for primary production traffic (dedicated bandwidth, low latency)
+- **Site-to-Site VPN** as a backup path (same GatewaySubnet, different gateway)
+- **BGP** on both to auto-failover when ExpressRoute degrades
+
+> [!TIP] ExpressRoute includes no SLA from your ISP. Keep the VPN backup active. A failed BGP session on your ER circuit and an inactive VPN = hours of downtime.
+
+## Costs Over Time
+
+| Month | VPN only | ER 1 Gbps Metered | ER 1 Gbps Unlimited |
+|-------|----------|-------------------|---------------------|
+| Gateway | $140 | $300 | $300 |
+| Data out (5 TB) | included | ~$300 | included |
+| Port fees | n/a | $300 | $300 |
+| Total | **~$140** | **~$900** | **~$600** |
+
+For heavy egress, ExpressRoute Unlimited pays for itself quickly.
+
+## Closing
+
+Start with VPN. Add ExpressRoute when your bandwidth or latency requirements justify the cost. Keep VPN as the backup. This layered approach matches how most production Azure enterprises are built.`;
+
+
+// ============================================================
+// ARTICLE: azure-dns-private-resolver
+// ============================================================
+articleContent['azure-dns-private-resolver'] = `# Azure DNS Private Resolver: Goodbye to DNS VMs
+
+For years, hybrid DNS on Azure meant spinning up VMs running BIND, Unbound, or Windows DNS. You patched them, clustered them, and they became a scale problem every team ran into. Azure DNS Private Resolver replaces all of that with a managed service.
+
+## What It Does
+
+Provides DNS forwarding between Azure VNets and on-premises networks. Two endpoint types:
+- **Inbound endpoints** — on-prem resolves Azure Private DNS zones by querying this IP
+- **Outbound endpoints** — Azure resources resolve on-prem zones by forwarding queries here
+
+## Architecture Pattern
+
+\`\`\`
+On-prem DNS                     Azure VNet (hub)
+    ↓                                ↓
+  conditional forwarder      Inbound endpoint IP
+    → Azure resolver IP      → resolves privatelink.* zones
+                                     ↓
+                             Outbound endpoint
+                             → forwards corp.contoso.com to on-prem DNS
+\`\`\`
+
+## Pricing
+
+~$160/month for a Private Resolver + modest per-query charges. Compare to 2 DNS VMs at ~$180/month plus ops time.
+
+## When You Do Not Need It
+
+- Single-VNet scenarios with no hybrid requirement
+- Very small environments where VM-based DNS works fine
+- Scenarios using Entra Domain Services (which provides its own DNS)
+
+## Starter Template
+
+Cloud Canvas Designer's hub template includes Private Resolver with inbound/outbound endpoints already configured and linked to Private DNS zones for the common Azure services.`;
+
+
+// ============================================================
+// ARTICLE: virtual-wan-deep-dive
+// ============================================================
+articleContent['virtual-wan-deep-dive'] = `# Azure Virtual WAN: When It Beats Classic Hub-Spoke
+
+Virtual WAN is Microsoft's managed "hub-spoke at scale" service. Instead of building and connecting regional hubs yourself, VWAN manages the hubs, routing, and any-to-any connectivity for you.
+
+## When Virtual WAN Wins
+
+- **3+ Azure regions** with spokes in each
+- **Multiple ExpressRoute circuits** you want to manage centrally
+- **SD-WAN appliances** in branch offices (VWAN has native partner integrations)
+- **Any-to-any** branch-to-branch traffic without BGP gymnastics
+
+## When Classic Hub-Spoke Wins
+
+- 1-2 Azure regions
+- Tight routing control needed
+- Cost sensitivity (VWAN premium over classic = ~$700/mo per hub)
+
+## Secured Virtual Hubs
+
+VWAN supports Azure Firewall inside the hub natively. Enable it and you get:
+- Managed firewall
+- Routing intent for east-west and internet egress
+- Central policy via Firewall Manager
+
+## Cost Shape
+
+Per hub: ~$180/mo base + ~$40/mo per connection + data transfer. A two-region VWAN with 8 spokes lands around ~$700-900/mo before firewall.
+
+## Common Mistakes
+
+- Mixing VWAN and classic hubs randomly — pick one model
+- Not planning CIDR allocations across regions
+- Forgetting that Secured Hubs require Routing Intent for east-west FW inspection
+
+## Closing
+
+For multi-region enterprises, Virtual WAN is worth the premium. For simpler footprints, classic hub-spoke wins on cost and control.`;
+
+
+// ============================================================
+// ARTICLE: defender-for-cloud-deep-dive
+// ============================================================
+articleContent['defender-for-cloud-deep-dive'] = `# Microsoft Defender for Cloud: CSPM + CWP Without the Buzzwords
+
+Defender for Cloud has two jobs: **Cloud Security Posture Management (CSPM)** — audit your config against best practice, and **Cloud Workload Protection (CWP)** — runtime protection for VMs, containers, databases, and more.
+
+## Secure Score
+
+A single 0-100 number summarizing your posture. Each recommendation has a point value. Fix the high-point items first.
+
+> [!STAT] A Secure Score jump from 50 to 70 typically prevents the majority of common attacks — misconfigured storage, public SQL endpoints, missing MFA.
+
+## The Plans to Turn On
+
+| Plan | Protects | Monthly |
+|------|----------|---------|
+| Servers (P2) | VMs + hybrid machines | ~$15/server |
+| Containers | AKS + container registries | ~$7/vCore |
+| Databases | SQL + open-source DB | ~$15/DB |
+| Storage | Storage accounts | ~$0.02/10K transactions |
+| Key Vault | Vaults | ~$2/10K transactions |
+| DNS | DNS | ~$1/M queries |
+
+## High-Value Findings to Fix First
+
+1. MFA not enforced on admin accounts
+2. Public IP on SQL / Storage / Key Vault
+3. Diagnostic settings missing
+4. VMs without endpoint protection
+5. Containers running as root
+
+## Regulatory Compliance Dashboard
+
+Defender maps your findings to PCI-DSS, ISO 27001, SOC 2, HIPAA, and more. Great for audit prep — click a framework, see passing/failing controls.
+
+## Common Mistakes
+
+- Enabling Defender but not acting on findings
+- Not piping alerts to Sentinel or ticketing
+- Disabling Defender to save money (false economy — breaches are more expensive)
+
+## Closing
+
+Defender is the easiest security win on Azure. Turn it on, fix the top 10 findings monthly, and your posture improves fast.`;
+
+
+// ============================================================
+// ARTICLE: key-vault-secrets-rotation
+// ============================================================
+articleContent['key-vault-secrets-rotation'] = `# Azure Key Vault Secrets Rotation That Actually Works
+
+Everyone knows they should rotate secrets. Most teams don't because rotation causes outages. Here is the pattern that works: **Event Grid + Function + dual-secret interval**.
+
+## The Pattern
+
+1. Key Vault secrets have a \`RotationPolicy\` with an interval (e.g., 60 days)
+2. Before expiry, Key Vault fires an Event Grid event
+3. A Function handler:
+   - Generates a new secret in the target system (DB, storage, API)
+   - Writes it to Key Vault as the new version
+   - Old version stays active for grace period (7-14 days)
+4. Applications read the **latest version** on startup and periodically refresh
+
+## Applications Must Support Dual Secrets
+
+During the grace period, both old and new secrets work. Applications refresh their cached secret every hour (or on 401 errors) to pick up the new one.
+
+\`\`\`csharp
+var secret = await kvClient.GetSecretAsync("db-password");
+// cache for 1 hour, retry on auth failure
+\`\`\`
+
+## What You Can Rotate This Way
+
+- SQL / PostgreSQL / MySQL passwords
+- Storage account keys (swap primary ↔ secondary)
+- API keys for external services (if the service allows dual active keys)
+- Cosmos DB keys
+
+## What You Cannot Easily Rotate
+
+- Secrets embedded in baked VM images (rebuild the image)
+- Secrets in on-prem config files (deploy new config)
+
+For these, move to managed identities.
+
+## Monitoring
+
+Alert on:
+- Rotation event failures
+- Secrets not rotated in > 90 days
+- Secrets accessed outside business hours (potential compromise)
+
+## Closing
+
+Secrets rotation done with events + functions + dual-secret overlap is painless. Managed Identities eliminate the need for most of them anyway — that is the end state.`;
+
+
+// ============================================================
+// ARTICLE: managed-identity-patterns
+// ============================================================
+articleContent['managed-identity-patterns'] = `# Managed Identity Patterns: Kill Every Secret in Your Azure Estate
+
+Managed Identities are the single biggest security improvement most Azure shops can make. Every secret removed is a potential leak eliminated. This article covers the patterns that eliminate ~95% of connection strings, API keys, and passwords.
+
+## System-Assigned vs User-Assigned
+
+**System-assigned** — tied to a specific resource. Lifecycle matches the resource. Good for single-owner scenarios.
+
+**User-assigned** — standalone identity. Multiple resources can share it. Good for resource-agnostic permissions (e.g., "all web tier instances use \`id-web-prod\`").
+
+Default to user-assigned for production. It survives resource recreation and simplifies RBAC.
+
+## Common Patterns
+
+### App to Azure SQL
+\`\`\`sql
+CREATE USER [id-web-prod] FROM EXTERNAL PROVIDER;
+ALTER ROLE db_datareader ADD MEMBER [id-web-prod];
+\`\`\`
+
+App connects with \`Authentication=Active Directory Default\`. No password.
+
+### Function to Storage
+Assign RBAC \`Storage Blob Data Contributor\` to the managed identity. Use \`DefaultAzureCredential\` in code. No storage key.
+
+### Function to Key Vault
+Assign \`Key Vault Secrets User\` role. Function reads secrets via managed identity.
+
+### Container App to Cosmos DB
+Assign \`Cosmos DB Built-in Data Contributor\` role. SDK uses \`DefaultAzureCredential\`.
+
+## Workload Identity Federation
+
+For cross-boundary scenarios (GitHub Actions, AWS, external IdP), use **federated credentials**. No shared secret — just trust via OIDC.
+
+\`\`\`
+GitHub Actions OIDC token → Federated credential in Entra ID
+→ Access token for Azure resources
+\`\`\`
+
+This is how modern CI/CD deploys to Azure without stored service principal secrets.
+
+## Anti-Patterns
+
+- Falling back to "just use a service principal secret" because MI setup was hard
+- Granting \`Contributor\` at subscription scope to identities — always least privilege
+- Using system-assigned then deleting the resource (losing the RBAC assignments)
+
+## Closing
+
+Every time you reach for a connection string, ask: "could this be a managed identity?" Usually the answer is yes. Migrating is a quiet, high-impact security project.`;
+
+
+// ============================================================
+// ARTICLE: sentinel-detections-playbook
+// ============================================================
+articleContent['sentinel-detections-playbook'] = `# Microsoft Sentinel: 20 Detections Every Tenant Should Run
+
+Sentinel out of the box ingests logs but doesn't detect anything specific to you. This article gives you the baseline detection pack — 20 KQL rules that catch 80% of common threats.
+
+## Identity Detections
+
+1. **Brute force sign-in attempts**
+   \`\`\`
+   SigninLogs | where ResultType in ("50126","50053") | summarize count() by IPAddress | where count_ > 10
+   \`\`\`
+
+2. **Impossible travel** — sign-ins from different countries within 1 hour
+
+3. **Privilege escalation** — role assignments to privileged roles outside change windows
+
+4. **MFA fatigue** — repeated MFA prompts for one user
+
+5. **Admin sign-in without MFA** — should never happen; fire Sev-1
+
+## Data Detections
+
+6. **Mass data export** — Storage access with download > 1 GB in 10 min from a single principal
+
+7. **Database dump** — SQL export operations outside maintenance window
+
+8. **Key Vault mass secret access** — >20 secrets retrieved in 5 min
+
+## Network Detections
+
+9. **Firewall deny spike** — east-west deny count increases 5x baseline
+
+10. **Unexpected outbound to TOR exits**
+
+11. **DNS tunneling** — unusually long DNS queries
+
+## Resource Detections
+
+12. **Public IP assigned to VM** in a subscription where policy forbids it
+
+13. **NSG rule allowing 0.0.0.0/0 on 22/3389** — should be blocked but verify
+
+14. **Storage account public access enabled**
+
+## Operational Detections
+
+15. **Resource deletion spikes** — possible insider threat or compromised credential
+
+16. **PIM activation outside business hours** — admin role activated overnight
+
+17. **Orphaned subscription** — cost growing with no activity logs
+
+## Container / AKS
+
+18. **Privileged pod deployed** — security context allows privilege escalation
+
+19. **Image pulled from untrusted registry**
+
+## Generic
+
+20. **Defender for Cloud Sev-1 alert correlated** with user sign-in
+
+## Best Practice
+
+- **Automate response** via Logic Apps: disable user, revoke tokens, isolate VM
+- **Tune quarterly** — false positives kill adoption
+- **Document each rule** with MITRE ATT&CK technique
+
+## Closing
+
+Deploying these 20 rules takes a few days of KQL work. The uplift in detection coverage is dramatic.`;
+
+
+// ============================================================
+// ARTICLE: container-apps-deep-dive
+// ============================================================
+articleContent['container-apps-deep-dive'] = `# Azure Container Apps: The Compute Platform Most Teams Should Use
+
+Azure Container Apps sits between App Service and AKS. For many workloads, it is the right answer — you get containers, scale-to-zero, and Dapr sidecars without running a Kubernetes cluster.
+
+{{diagram:containerAppsScale}}
+
+## The Value Proposition
+
+- Container-native (bring any image)
+- Scale to zero (no idle cost)
+- KEDA triggers built in (HTTP, queues, cron, custom metrics)
+- Dapr sidecars for pub/sub, state, bindings
+- Managed ingress with custom domains and TLS
+- Revisions for blue/green
+
+## When It Beats App Service
+
+- You want containers without building your own image for App Service
+- You need microservices with Dapr-style communication
+- You want true scale-to-zero
+- You are running event-driven workers (queue processors, Service Bus consumers)
+
+## When AKS Still Wins
+
+- You need custom networking (node NSGs, specific CNI)
+- You run privileged workloads
+- You need GPU with pod-level scheduling
+- You want DaemonSets or advanced Kubernetes primitives
+
+## Cost Shape
+
+Consumption plan: $0 when idle, ~$0.000024/vCPU-second + memory. A service at 1 replica averaging 0.5 vCPU = ~$33/month continuous, $0 when off.
+
+Dedicated plan: ~$200-800/month minimum for more isolation and network control.
+
+## Migrating From App Service
+
+Most App Service apps move to Container Apps in a day:
+1. Build a container image (Dockerfile)
+2. Push to Azure Container Registry
+3. Deploy via \`az containerapp create\`
+4. Update DNS
+
+## Anti-Patterns
+
+- Using Container Apps for latency-critical APIs with scale-to-zero (cold start)
+- Migrating complex K8s Helm charts — usually better stay on AKS
+- Missing health probes (leads to bad traffic routing on revision swaps)
+
+## Closing
+
+Container Apps is the 80% answer for modern container workloads on Azure. AKS when you need more. App Service when you want zero container work. Three tiers, pick wisely.`;
+
+
+// ============================================================
+// ARTICLE: aks-production-checklist
+// ============================================================
+articleContent['aks-production-checklist'] = `# AKS Production Checklist: 40 Things to Get Right Before Go-Live
+
+AKS is powerful and also unforgiving. This checklist covers the 40 items our platform team verifies before any AKS cluster is declared production-ready.
+
+## Cluster Setup (8 items)
+
+1. Private cluster (API server not public)
+2. Multiple availability zones across node pools
+3. Azure CNI Overlay or Azure CNI (not Kubenet)
+4. Workload Identity enabled (not pod identity — deprecated)
+5. Azure AD integration for kubectl access
+6. Cluster autoscaler configured with sensible min/max
+7. System node pool separated from user workloads
+8. Kubernetes version within N-1 of latest stable
+
+## Networking (7 items)
+
+9. UDR through Azure Firewall if required
+10. Egress via NAT Gateway (not SLB default)
+11. Private endpoints on Azure Container Registry
+12. Network policies enabled (Azure or Calico)
+13. Ingress controller chosen (AGIC, nginx, Application Gateway)
+14. WAF policy on Application Gateway
+15. External DNS for automatic DNS records
+
+## Security (9 items)
+
+16. Pod Security Standards enforced
+17. Image scanning via Defender for Containers
+18. Secrets via Key Vault CSI driver (not K8s secrets)
+19. Network policies denying cross-namespace by default
+20. Audit logging to Log Analytics
+21. RBAC least-privilege
+22. Azure Policy for AKS assigned
+23. Private link on the ACR
+24. No cluster-admin RBAC for human users
+
+## Observability (5 items)
+
+25. Container Insights enabled
+26. App Insights for app-level traces
+27. Prometheus metrics via Managed Prometheus
+28. Alert rules for node pressure, pod restarts, cluster health
+29. Workbook for cluster overview
+
+## Scale and Performance (4 items)
+
+30. HPA on every deployment
+31. Resource requests and limits set
+32. PodDisruptionBudgets for HA workloads
+33. VPA recommendations reviewed monthly
+
+## Cost (4 items)
+
+34. Spot node pool for batch / dev workloads
+35. Reservations on baseline node count
+36. Karpenter or cluster autoscaler tuned
+37. Node size diversity across pools
+
+## Operations (3 items)
+
+38. Upgrade cadence documented
+39. Disaster recovery runbook
+40. Automated cluster provisioning via IaC
+
+## Closing
+
+This list is the bar, not the ceiling. Mature teams layer on chaos engineering, cost anomaly alerts, and FinOps reviews on top. But if you hit all 40, you are in a much better place than most AKS adopters.`;
+
+
+// ============================================================
+// ARTICLE: gpu-compute-on-azure
+// ============================================================
+articleContent['gpu-compute-on-azure'] = `# GPU Compute on Azure: A100, H100, and Cost Survival Guide
+
+Azure's GPU story got complicated — A100, H100, ND and NC series, with and without Infiniband, capacity reservations, and pricing that changes the math for any ML workload. Here is the current state.
+
+## The Main SKUs
+
+| Series | GPUs | Memory | Use case |
+|--------|------|--------|----------|
+| NCv3 | V100 (Volta) | 16 GB | Legacy inference |
+| NDv4 | 8x A100 40GB | 320 GB | Training large models |
+| ND H100 v5 | 8x H100 80GB | 640 GB | Modern LLM training |
+| NC A100 v4 | 1-4x A100 80GB | 80-320 GB | Training + fine-tune |
+| ND MI300X v5 | 8x AMD MI300X | 1.5 TB | Alternative to H100 |
+
+## Cost Reality
+
+| SKU | On-demand | 3-yr RI |
+|-----|-----------|---------|
+| Single A100 80GB (NC A100 v4) | ~$3.40/hr | ~$1.70/hr |
+| 8x A100 (NDv4) | ~$27/hr | ~$13/hr |
+| 8x H100 (ND H100 v5) | ~$99/hr | ~$50/hr |
+
+Running an 8x H100 continuously = **$71,000/month**. Plan accordingly.
+
+## Training vs Inference
+
+**Training:**
+- Prefer ND series with NVLink + InfiniBand for multi-node
+- Use Batch or Azure ML for orchestrated jobs
+- Spot when checkpointing is reliable (up to 90% discount)
+
+**Inference:**
+- Prefer NC single-GPU or A10 series
+- Scale horizontally with AKS + GPU node pools
+- Consider Azure OpenAI PTUs for LLM inference (better cost + SLA)
+
+## Capacity Reality
+
+H100 capacity is scarce. For guaranteed access:
+- **Capacity Reservations** — hold capacity even when VMs are stopped
+- **On-demand Capacity Reservations** — book a time window
+- **Dedicated Host** — rare SKUs sometimes only available this way
+
+## Cost Control
+
+> [!WARNING] The #1 GPU cost bug: forgetting to stop the cluster after a training run. Always use auto-shutdown, budget alerts, and scheduled deallocate jobs.
+
+- Auto-shutdown for dev/test VMs
+- Azure ML job definitions auto-release compute
+- Spot for checkpointed workloads
+- Reservations for predictable inference fleets
+
+## Closing
+
+GPUs on Azure are powerful and expensive. The operational discipline — auto-shutdown, Spot for interruptible workloads, reservations for steady-state — makes the difference between "useful tool" and "budget emergency."`;
+
+
+// ============================================================
+// ARTICLE: serverless-patterns
+// ============================================================
+articleContent['serverless-patterns'] = `# Azure Functions Patterns: Fan-Out, Aggregator, and Durable Orchestration
+
+Basic HTTP triggers are where most teams stop. But Functions' real power comes from the advanced patterns — Durable Functions orchestrations, fan-out/fan-in, and event chaining.
+
+## Pattern 1: Function Chaining
+
+Sequential steps in a workflow:
+
+\`\`\`csharp
+[FunctionName("ProcessOrder")]
+public static async Task<Order> Run(
+    [OrchestrationTrigger] IDurableOrchestrationContext ctx)
+{
+    var order = ctx.GetInput<Order>();
+    order = await ctx.CallActivityAsync<Order>("ValidateOrder", order);
+    order = await ctx.CallActivityAsync<Order>("CalculateTax", order);
+    order = await ctx.CallActivityAsync<Order>("ReserveInventory", order);
+    return order;
+}
+\`\`\`
+
+## Pattern 2: Fan-Out/Fan-In
+
+Parallel tasks that all complete before the next step:
+
+\`\`\`csharp
+var tasks = new List<Task<Result>>();
+foreach (var item in items)
+    tasks.Add(ctx.CallActivityAsync<Result>("ProcessItem", item));
+
+var results = await Task.WhenAll(tasks);
+var summary = await ctx.CallActivityAsync<Summary>("Aggregate", results);
+\`\`\`
+
+Great for: batch processing, parallel API calls, multi-region fan-out.
+
+## Pattern 3: Async HTTP APIs
+
+Long-running work exposed as async HTTP:
+
+\`\`\`
+POST /jobs      → 202 Accepted + statusQueryGetUri
+GET  /jobs/{id} → { status: "Running" | "Completed", output: ... }
+\`\`\`
+
+Durable Functions provides this out of the box.
+
+## Pattern 4: Human Interaction / Approval
+
+Orchestration waits for external input:
+
+\`\`\`csharp
+await ctx.WaitForExternalEvent<bool>("ApprovalGranted", TimeSpan.FromDays(3));
+\`\`\`
+
+Great for: approval workflows, 2FA, escalations with timeouts.
+
+## Pattern 5: Event Aggregator
+
+Durable Entities accumulate state across events:
+
+\`\`\`csharp
+[FunctionName("Counter")]
+public static void Run([EntityTrigger] IDurableEntityContext ctx)
+{
+    switch (ctx.OperationName)
+    {
+        case "add":    ctx.SetState((int)ctx.GetState<int>() + ctx.GetInput<int>()); break;
+        case "reset":  ctx.SetState(0); break;
+    }
+}
+\`\`\`
+
+## Pattern 6: Monitor Pattern
+
+Poll something until a condition is met, then act:
+
+\`\`\`csharp
+while (!cancelled)
+{
+    var status = await ctx.CallActivityAsync<Status>("CheckStatus", id);
+    if (status == Status.Done) break;
+    await ctx.CreateTimer(ctx.CurrentUtcDateTime.AddSeconds(30), CancellationToken.None);
+}
+\`\`\`
+
+## Anti-Patterns
+
+- Using Functions for always-on request-response at high QPS (App Service is cheaper)
+- Not setting max execution time — runaway orchestrations
+- Heavy external libraries on Consumption plan (cold starts are painful)
+- Storing state in Function memory (it is stateless — use Durable Entities)
+
+## Closing
+
+Durable Functions is one of Azure's underrated gems. Workflow orchestration, retries, state, and async HTTP — all without running a workflow engine.`;
+
+
+// ============================================================
+// ARTICLE: azure-fabric-overview
+// ============================================================
+articleContent['azure-fabric-overview'] = `# Microsoft Fabric: The Data Platform Unification Play
+
+Microsoft Fabric is Microsoft's bet on unifying data platforms. Instead of Synapse + Power BI + Data Factory + multiple lakes, you get one SaaS platform with one storage layer (OneLake) and one capacity SKU.
+
+{{diagram:fabric}}
+
+## The Workloads
+
+Fabric bundles:
+- **Data Factory** — pipelines and dataflows
+- **Data Engineering** — Spark notebooks
+- **Data Warehouse** — T-SQL analytics
+- **Real-Time Intelligence** — KQL + Event Streams
+- **Data Science** — ML experiments
+- **Power BI** — reports and semantic models
+
+All on OneLake (delta-parquet in ADLS Gen2 under the hood).
+
+## Why Unify?
+
+- One copy of data instead of per-tool copies
+- Unified security via Purview integration
+- Copilot across all workloads
+- Single billing (capacity SKU like F2, F16, F64)
+
+## Capacity Sizing
+
+| SKU | Monthly | Use case |
+|-----|---------|----------|
+| F2 | ~$263 | Small workloads, testing |
+| F16 | ~$2,100 | Team-level analytics |
+| F64 | ~$8,400 | Department-scale |
+| F256 | ~$33,500 | Enterprise |
+
+Capacity smooths across workloads — you can burst spark during the day and use the same CU for BI refreshes overnight.
+
+## When Fabric Makes Sense
+
+- You have Power BI already at scale
+- Data platform is fragmented across Synapse / Databricks / Power BI
+- Team wants SaaS experience without infra management
+- You want Copilot across data workloads
+
+## When Databricks Still Wins
+
+- Heavy Spark + MLflow + Unity Catalog investments
+- Strong preference for best-of-breed specialized tools
+- Multi-cloud strategy (Fabric is Azure-only)
+
+## Closing
+
+Fabric is early-stage but rapidly maturing. For Microsoft-stack enterprises, it reduces data platform complexity significantly. For best-of-breed teams, Databricks and Synapse are still valid.`;
+
+
+// ============================================================
+// ARTICLE: cosmos-db-partition-keys
+// ============================================================
+articleContent['cosmos-db-partition-keys'] = `# Cosmos DB Partition Keys: The Decision That Makes or Breaks Your App
+
+Partition key choice is the single most important design decision in Cosmos DB. Get it right: Cosmos scales linearly and costs are predictable. Get it wrong: hot partitions, throttles, bills 5x what they should be.
+
+## Core Principles
+
+1. **High cardinality** — tens of thousands of distinct values, not 5
+2. **Even access distribution** — no one partition takes 80% of traffic
+3. **Scoped queries** — most queries filter on the partition key
+
+## Good Examples
+
+- **Per-tenant SaaS:** \`tenantId\` — each tenant's workload is a partition
+- **IoT telemetry:** \`deviceId\` or \`deviceId_yyyyMMdd\` for time-bucketed
+- **User profile store:** \`userId\`
+
+## Bad Examples
+
+- \`status\` with 5 values — throttle city
+- \`date\` — all writes today go to one partition
+- \`region\` with 3 values — 3 partitions for the whole DB
+
+## Synthetic Partition Keys
+
+For hot entities, combine values:
+
+\`\`\`
+partitionKey = "{tenantId}_{bucket}"
+where bucket = orderId % 100
+\`\`\`
+
+Spreads traffic for a large tenant across 100 logical partitions.
+
+## Signs You Picked Wrong
+
+- "429 Too Many Requests" with plenty of provisioned RU/s
+- Metrics Explorer shows one partition taking >70% of RU
+- Write latency p95 much higher than p50
+- Provisioning 10x the RU/s just to avoid throttles
+
+## Fixing It
+
+Cosmos does not let you change the partition key on an existing container. Options:
+- Create a new container with the right key
+- Use Change Feed to migrate data
+- Switch application to the new container
+- Drop the old one
+
+Plan for this — it is the most common Cosmos DB migration.
+
+## Closing
+
+Spend 2x as long on partition key design as you think you should. The cost of getting it wrong compounds for years.`;
+
+
+// ============================================================
+// ARTICLE: vector-databases-azure
+// ============================================================
+articleContent['vector-databases-azure'] = `# Vector Databases on Azure: AI Search vs pgvector vs Cosmos
+
+Every RAG project needs a vector store. Azure gives you three main choices. Here is how to pick.
+
+{{diagram:vectorDb}}
+
+## AI Search — The Default for RAG
+
+- Hybrid search (vector + BM25) with semantic reranker
+- Built for search workloads, scales to billions of docs
+- Native security filters (RBAC, per-tenant)
+- Starts at ~$420/month for Standard S1
+
+**Pick when:** building RAG, enterprise search, or need the reranker quality boost.
+
+## pgvector — Same DB as Your App
+
+- Adds vector similarity to PostgreSQL
+- SQL joins between vectors and metadata
+- ~$175/month Flexible Server baseline
+- HNSW and IVFFlat indexes
+
+**Pick when:** AI feature in an existing Postgres app, moderate scale (<10M vectors).
+
+## Cosmos DB Vector
+
+- MongoDB vCore or NoSQL API with vector support
+- Global distribution, multi-region writes
+- Starts at ~$600/month
+
+**Pick when:** global-scale AI app, Cosmos is already in the stack.
+
+## Decision Matrix
+
+| Need | Winner |
+|------|--------|
+| Best RAG quality out of the box | AI Search |
+| Minimize stack complexity | pgvector |
+| Global distribution | Cosmos |
+| Lowest cost at moderate scale | pgvector |
+| Hybrid search + reranker | AI Search |
+| Complex filters + joins | pgvector |
+
+## Closing
+
+For most enterprise RAG, AI Search. For embedded AI in existing apps, pgvector. For global B2C AI apps, Cosmos. Pick based on workload, not hype.`;
+
+
+// ============================================================
+// ARTICLE: delta-lake-on-azure
+// ============================================================
+articleContent['delta-lake-on-azure'] = `# Delta Lake on Azure: ACID on Your Data Lake
+
+Data lakes were never designed for transactional integrity. Delta Lake fixes that — ACID transactions, schema enforcement, and time travel on top of Parquet files.
+
+## What Delta Gives You
+
+- **ACID transactions** across multiple files
+- **Schema enforcement** — rejects incompatible writes
+- **Schema evolution** — add columns safely
+- **Time travel** — query any historical version
+- **MERGE** — upserts (CDC patterns)
+- **Z-ordering** — co-locate related data for fast reads
+
+## Where It Runs
+
+- **Microsoft Fabric** — OneLake is delta-native
+- **Synapse Spark** — Delta is default for Spark 3+
+- **Databricks** — where it was born
+- **Azure Data Explorer** — can read delta externally
+
+## Classic Use Cases
+
+- **Medallion architecture** — Bronze (raw) → Silver (cleaned) → Gold (aggregated)
+- **Slowly changing dimensions** — MERGE handles SCD Type 2 elegantly
+- **CDC ingestion** — apply changes from source systems idempotently
+
+## Common Pitfalls
+
+- Small file problem — too many tiny parquet files slow queries. Use \`OPTIMIZE\`.
+- Not running \`VACUUM\` — old versions accumulate storage costs
+- Schema drift without evolution policy — writes fail silently
+
+## Closing
+
+Delta is the default table format for the modern lakehouse. Learn MERGE, OPTIMIZE, and VACUUM and you are 80% there.`;
+
+
+// ============================================================
+// ARTICLE: privileged-identity-management
+// ============================================================
+articleContent['privileged-identity-management'] = `# PIM Deep Dive: Eliminate Standing Admin Access
+
+Privileged Identity Management (PIM) turns "I am a Global Admin 24/7" into "I can activate Global Admin for 2 hours with MFA and approval." Standing access → just-in-time activation.
+
+## The Roles to PIM-Enable
+
+Everything privileged:
+- Global Administrator
+- Privileged Role Administrator
+- Security Administrator
+- Exchange / SharePoint / Teams admin
+- User Administrator
+- Billing Administrator
+- Azure subscription Owner / Contributor (yes, Azure roles too)
+
+## Role Settings That Matter
+
+| Setting | Recommended |
+|---------|-------------|
+| Activation max duration | 4-8 hours |
+| Require MFA on activation | Always |
+| Require justification | Always |
+| Require ticket number | For regulated environments |
+| Require approval | For highest-privilege roles (Global Admin) |
+| Approvers | Minimum 2 people |
+| Notification on activation | Email security team |
+
+## Break-Glass Strategy
+
+Keep 2 cloud-only accounts that are:
+- **Permanent Global Admins** (no PIM on them)
+- Excluded from Conditional Access policies
+- Password in a physical safe
+- Tested quarterly
+- Alert on any sign-in
+
+## Access Reviews
+
+Quarterly: review who has eligible roles. Remove anyone who has not activated in 90 days.
+
+## Common Mistakes
+
+- PIM for tier-0 admin but not tier-1 (Exchange admin can often reset passwords)
+- Approval workflows routed to one person who is on vacation — access blocked
+- Not monitoring PIM activation patterns — unusual activations are a red flag
+
+## Closing
+
+PIM reduces your attack surface by making privilege ephemeral. Audit trail, time-bound access, and approval gates — the foundation of Zero Trust identity.`;
+
+
+// ============================================================
+// ARTICLE: entra-id-b2c-vs-external-id
+// ============================================================
+articleContent['entra-id-b2c-vs-external-id'] = `# Entra External ID: What Replaces Azure AD B2C in 2026
+
+Microsoft merged B2B and B2C into one product: **Entra External ID**. Existing Azure AD B2C tenants keep working, but new projects should default to External ID.
+
+## What Changed
+
+- Unified tenant model (no separate B2C tenant)
+- Modern user flows (like B2C's custom policies but simpler)
+- External ID pricing — ~$0.03/MAU for basic, ~$0.15/MAU for premium
+- Richer developer experience with Microsoft Entra Identity Platform
+
+## Migration From Legacy B2C
+
+- Existing B2C tenants keep working indefinitely
+- New tenants cannot be created as B2C — External ID only
+- Migration tool from Microsoft available for small tenants
+- Large tenants: plan for 3-6 month migration project
+
+## When to Use
+
+- SaaS apps with customer-facing auth
+- Consumer apps (mobile, web)
+- B2B + B2C combined (federate with customers' IdPs)
+
+## Integration Points
+
+- OAuth 2.0 / OIDC for modern apps
+- SAML for legacy SaaS
+- API integration for custom auth flows
+- Conditional Access for customer sign-ins too
+
+## Closing
+
+If starting fresh in 2026, use External ID. If on legacy B2C, no rush — Microsoft committed to long support. Plan migration for your next major app refresh.`;
+
+
+// ============================================================
+// ARTICLE: workload-identity-federation
+// ============================================================
+articleContent['workload-identity-federation'] = `# Workload Identity Federation: Secrets-Free CI/CD to Azure
+
+Storing service principal secrets in GitHub or Azure DevOps is a security liability. Federated credentials eliminate the secret entirely.
+
+{{diagram:devopsPipeline}}
+
+## How It Works
+
+1. GitHub Actions issues a short-lived OIDC token on every workflow run
+2. Your Entra ID app registration has a **federated credential** configured with:
+   - Issuer: \`https://token.actions.githubusercontent.com\`
+   - Subject: \`repo:org/repo:environment:production\`
+3. GitHub exchanges the OIDC token for an Azure access token
+4. No secret stored anywhere
+
+## Setup
+
+\`\`\`bash
+az ad app federated-credential create --id $APP_ID --parameters '{
+  "name": "github-prod",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "subject": "repo:myorg/myrepo:environment:production",
+  "audiences": ["api://AzureADTokenExchange"]
+}'
+\`\`\`
+
+Then in GitHub Actions:
+
+\`\`\`yaml
+permissions:
+  id-token: write
+steps:
+  - uses: azure/login@v1
+    with:
+      client-id: \${{ secrets.AZURE_CLIENT_ID }}
+      tenant-id: \${{ secrets.AZURE_TENANT_ID }}
+      subscription-id: \${{ secrets.AZURE_SUBSCRIPTION_ID }}
+\`\`\`
+
+## Supported Platforms
+
+- GitHub Actions (OIDC)
+- Azure DevOps (service connections federated mode)
+- GitLab, Bitbucket, Terraform Cloud, and most modern CI
+- AWS IAM → Azure (for cross-cloud workload identity)
+
+## Benefits
+
+- Zero secrets to rotate or leak
+- Per-environment, per-branch scoping
+- Audit log shows workflow + commit hash that authenticated
+- Revocable by removing the federated credential
+
+## Common Mistakes
+
+- Subject too broad (\`repo:myorg/*\`) — any repo can use this identity
+- Not scoping by environment (prod credentials usable from any branch)
+- Leaving behind legacy secrets after migrating to federation
+
+## Closing
+
+Federated workload identity is the modern way to authenticate CI/CD. No reason to ever store a service principal secret again.`;
+
+
+// ============================================================
+// ARTICLE: entra-id-access-reviews
+// ============================================================
+articleContent['entra-id-access-reviews'] = `# Access Reviews and Entitlement Management: Governance That Scales
+
+Manually reviewing who has access to what is a nightmare at enterprise scale. Entra's Access Reviews and Entitlement Management automate joiner-mover-leaver.
+
+## Access Reviews
+
+Periodic reviews of group membership, role assignments, and app access.
+
+**Patterns that work:**
+- Self-review (user attests they still need access)
+- Manager review (manager approves continued access)
+- Stale access detection (inactive users flagged)
+
+Schedule quarterly for privileged roles, semi-annually for standard groups.
+
+## Access Packages (Entitlement Management)
+
+Bundles of resources users request access to:
+- Group memberships
+- App assignments
+- Azure resource roles
+- Teams, SharePoint sites
+
+**Benefits:**
+- Self-service request portal for employees
+- Approval workflows
+- Auto-expiry on access
+- Terms-of-use acceptance
+- Audit trail
+
+## Lifecycle Workflows
+
+Joiner: auto-provision based on HR event → attributes → Access Packages
+Mover: revoke old access, grant new based on new role
+Leaver: deprovision everything on termination
+
+## Closing
+
+Without automation, access review becomes security theater — boxes checked without thought. With Access Reviews + Entitlement Management, the system guides reviewers and enforces hygiene.`;
+
+
+// ============================================================
+// ARTICLE: kql-cheatsheet
+// ============================================================
+articleContent['kql-cheatsheet'] = `# KQL Cheatsheet: The 30 Queries That Solve 80% of Problems
+
+Kusto Query Language is the query language of Azure Log Analytics, App Insights, and Sentinel. Here are the 30 queries I find myself writing over and over.
+
+{{diagram:kqlFlow}}
+
+## Incident Investigation
+
+**1. Failed requests in the last hour**
+\`\`\`
+requests | where timestamp > ago(1h) and success == false
+| summarize count() by name, resultCode
+\`\`\`
+
+**2. Slowest requests**
+\`\`\`
+requests | where timestamp > ago(24h) | top 20 by duration desc
+\`\`\`
+
+**3. Correlate request → dependencies**
+\`\`\`
+union requests, dependencies, exceptions
+| where operation_Id == "abc123"
+| order by timestamp asc
+\`\`\`
+
+**4. Exception frequency by type**
+\`\`\`
+exceptions | summarize count() by type | order by count_ desc
+\`\`\`
+
+## Performance Analysis
+
+**5. P50/P95/P99 latency**
+\`\`\`
+requests | summarize percentiles(duration, 50, 95, 99) by name
+\`\`\`
+
+**6. RED metrics over time**
+\`\`\`
+requests
+| summarize rate=count(), errors=countif(success==false), p95=percentile(duration, 95) by bin(timestamp, 5m)
+| render timechart
+\`\`\`
+
+**7. Slow dependencies**
+\`\`\`
+dependencies | where timestamp > ago(24h)
+| summarize avg(duration) by target | top 10 by avg_duration desc
+\`\`\`
+
+## Security Hunting
+
+**8. Sign-in failures by IP**
+\`\`\`
+SigninLogs | where ResultType !in ("0","50058") 
+| summarize count() by IPAddress, UserPrincipalName
+| where count_ > 10
+\`\`\`
+
+**9. Role assignments in last 24h**
+\`\`\`
+AuditLogs | where OperationName contains "Add member to role"
+| where TimeGenerated > ago(24h)
+\`\`\`
+
+**10. Key Vault secret access spikes**
+\`\`\`
+AzureDiagnostics | where ResourceType == "VAULTS" and OperationName == "SecretGet"
+| summarize count() by identity_claim_oid_s, bin(TimeGenerated, 5m)
+\`\`\`
+
+## Cost Analysis
+
+**11. Top 10 most expensive log tables**
+\`\`\`
+Usage | where TimeGenerated > ago(30d)
+| summarize GB=sum(Quantity)/1024 by DataType
+| top 10 by GB desc
+\`\`\`
+
+**12. App Insights ingestion by app**
+\`\`\`
+AppTraces | summarize count() by AppRoleName, bin(TimeGenerated, 1d)
+\`\`\`
+
+## Infrastructure
+
+**13. VM CPU over 80%**
+\`\`\`
+Perf | where CounterName == "% Processor Time" and CounterValue > 80
+| summarize avg(CounterValue) by Computer, bin(TimeGenerated, 5m)
+\`\`\`
+
+**14. AKS pod restart count**
+\`\`\`
+KubePodInventory | where TimeGenerated > ago(1h)
+| summarize max(PodRestartCount) by PodName, Namespace
+| where max_PodRestartCount > 5
+\`\`\`
+
+**15. Storage account throttling**
+\`\`\`
+StorageBlobLogs | where StatusCode in (429, 503)
+| summarize count() by AccountName
+\`\`\`
+
+## Network
+
+**16. Firewall top denies**
+\`\`\`
+AZFWNetworkRule | where Action == "Deny"
+| summarize count() by SourceIp, DestinationIp, DestinationPort
+| top 20 by count_ desc
+\`\`\`
+
+**17. DNS query spike**
+\`\`\`
+AZFWDnsQuery | summarize count() by QueryName, bin(TimeGenerated, 5m)
+| where count_ > 1000
+\`\`\`
+
+## App Insights Specifics
+
+**18. Slow DB queries**
+\`\`\`
+dependencies | where type == "SQL" and duration > 1000
+| project timestamp, target, data, duration
+\`\`\`
+
+**19. User sessions in last hour**
+\`\`\`
+pageViews | where timestamp > ago(1h)
+| summarize dcount(user_Id) by bin(timestamp, 5m)
+| render timechart
+\`\`\`
+
+**20. Browser errors**
+\`\`\`
+exceptions | where client_Type == "Browser"
+| summarize count() by type, outerMessage | top 20 by count_ desc
+\`\`\`
+
+## Tips
+
+- \`ago(1h)\` > \`datetime(...)\` for readability
+- \`summarize\` before \`order by\` for performance
+- \`project\` early to reduce columns
+- \`parse\` for structured string fields
+- \`render timechart | piechart | barchart\` for visual output
+
+## Closing
+
+Save this as a snippets file. Half of Azure operator work is KQL — the sooner these become muscle memory, the faster you resolve incidents.`;
+
+
+// ============================================================
+// ARTICLE: managed-prometheus-grafana
+// ============================================================
+articleContent['managed-prometheus-grafana'] = `# Azure Managed Prometheus + Grafana: CNCF on Azure Done Right
+
+If your team came from Kubernetes, the Prometheus + Grafana stack is muscle memory. Microsoft has a managed version — **Azure Monitor Managed Service for Prometheus** and **Azure Managed Grafana** — that removes the ops burden while keeping the familiar tooling.
+
+## Azure Managed Prometheus
+
+- Ingests standard Prometheus metrics via remote-write
+- PromQL-compatible query endpoint
+- 18-month retention included
+- Deeply integrated with AKS (one-click enable)
+
+**Pricing:** ~$0.16 per million samples ingested.
+
+## Azure Managed Grafana
+
+- Managed Grafana OSS
+- Entra ID auth built-in
+- Managed updates, HA, backups
+- Private networking supported
+- ~$8/month per editor + ~$9/GB storage
+
+## When You Prefer This Over Azure Monitor
+
+- Existing Prometheus exporters and dashboards
+- Team already knows PromQL
+- Need granular custom metrics (Prometheus beats Azure Monitor here)
+- Want CNCF ecosystem (Alertmanager, Thanos, etc.)
+
+## When Azure Monitor Native Wins
+
+- Azure resources outside Kubernetes (VMs, App Service, Functions)
+- Heavy log integration + KQL
+- Cost-sensitive (platform metrics are free)
+
+## Hybrid: Use Both
+
+- Managed Prometheus for AKS custom metrics
+- Azure Monitor for Azure platform metrics
+- Grafana has native connectors to both — unified dashboards
+
+## Closing
+
+For K8s-first shops, Managed Prometheus + Grafana is the sweet spot. You keep your dashboards, your alerts, your skills, and ditch the ops burden of running the stack yourself.`;
+
+
+// ============================================================
+// ARTICLE: opentelemetry-on-azure
+// ============================================================
+articleContent['opentelemetry-on-azure'] = `# OpenTelemetry on Azure: One SDK, Many Backends
+
+OpenTelemetry is the vendor-neutral standard for telemetry. Instrument your app once, send to multiple backends, switch observability tools without rewriting code.
+
+## What OTel Covers
+
+- **Traces** (distributed tracing)
+- **Metrics** (time-series)
+- **Logs** (structured logs)
+
+## The Azure Story
+
+- **App Insights** accepts OTel directly via the Azure Monitor OpenTelemetry Exporter
+- **Managed Prometheus** accepts OTel metrics
+- **Container Insights** integrates OTel Collector
+
+## Why Switch From Vendor SDKs
+
+- Future-proof: move to any backend without code changes
+- Richer auto-instrumentation for many languages
+- Standardized semantic conventions (HTTP, DB, messaging)
+
+## Typical Setup
+
+\`\`\`python
+from azure.monitor.opentelemetry import configure_azure_monitor
+configure_azure_monitor(connection_string=os.environ["APPLICATIONINSIGHTS_CONNECTION_STRING"])
+
+# Standard OTel APIs work now
+from opentelemetry import trace
+tracer = trace.get_tracer(__name__)
+with tracer.start_as_current_span("my-operation") as span:
+    span.set_attribute("customer_id", "abc123")
+\`\`\`
+
+## OTel Collector Pattern
+
+For microservices at scale, deploy an OpenTelemetry Collector as a DaemonSet or Deployment. Apps send OTLP locally; the collector fans out to App Insights + Prometheus + Loki as needed.
+
+## Closing
+
+OpenTelemetry is the strategic direction. New apps should instrument with OTel from day one.`;
+
+
+// ============================================================
+// ARTICLE: slo-error-budgets
+// ============================================================
+articleContent['slo-error-budgets'] = `# SLOs and Error Budgets: Turning SRE Theory Into Azure Alerts
+
+SLO (Service Level Objective) is a target for system health — "99.9% of requests complete in < 500ms." The **error budget** is \`1 - SLO\` — how much failure you can tolerate in a given window.
+
+## The Power of Error Budgets
+
+- Under budget → ship features fast
+- Over budget → freeze deploys, focus on reliability
+
+Removes the engineering-vs-product fight with data.
+
+## Defining SLIs (Service Level Indicators)
+
+Good SLIs:
+- **Availability:** successful requests / total requests
+- **Latency:** p95 request duration
+- **Throughput:** requests served / requests attempted
+- **Freshness:** how stale can data be?
+
+Bad SLIs:
+- CPU utilization (not user-facing)
+- Queue depth (internal)
+
+## Computing SLOs in Azure
+
+\`\`\`kql
+requests | where timestamp > ago(30d)
+| summarize good = countif(success==true), total = count()
+| extend slo = todouble(good) / total
+\`\`\`
+
+Compare to target (e.g., 99.9%). Remaining error budget = \`(slo - target) * total\`.
+
+## Burn Rate Alerts
+
+Alert not when you hit 100% of budget, but when burn rate is too fast:
+- **Fast burn:** 2% of budget in 1 hour → page on-call
+- **Slow burn:** 10% of budget in 6 hours → create ticket
+
+Both are multi-window alerts in Azure Monitor.
+
+## Anti-Patterns
+
+- SLOs too tight (99.99% when your customers tolerate 99.5%)
+- SLOs too loose (100%? That is a promise you cannot keep)
+- Ignoring error budget (always freezing or never freezing)
+- Measuring wrong thing (CPU is not an SLI)
+
+## Closing
+
+SLOs make reliability a negotiation between teams, using data. That changes the culture more than any tool.`;
+
+
+// ============================================================
+// ARTICLE: finops-organizational
+// ============================================================
+articleContent['finops-organizational'] = `# FinOps on Azure: Org Model, Tags, and Chargeback That Stick
+
+Tactical cost optimization saves money once. **FinOps** is the cultural and organizational discipline that keeps saving money indefinitely.
+
+## The FinOps Framework
+
+Three phases, repeated cyclically:
+
+1. **Inform** — visibility via tags, dashboards, allocation
+2. **Optimize** — right-sizing, reservations, anomaly detection
+3. **Operate** — governance, automation, policies
+
+## The Org Model
+
+- **FinOps Practitioner** — single owner of the program (day 1 hire)
+- **FinOps Champions** — one per team, meet monthly
+- **Executive Sponsor** — CFO or CTO-level
+- **Cloud Governance Board** — reviews costs quarterly
+
+## Tagging as the Foundation
+
+Required tags enforced via Azure Policy:
+- \`CostCenter\`
+- \`Environment\` (prod, dev, test)
+- \`Application\`
+- \`Owner\`
+- \`DataClassification\`
+
+Without tags, no chargeback, no attribution, no accountability.
+
+## Chargeback vs Showback
+
+- **Showback:** teams see their costs, no financial transfer
+- **Chargeback:** teams' budgets are actually charged
+
+Start with showback (easier). Move to chargeback once tagging is 95%+ compliant.
+
+## Metrics That Matter
+
+- Cost per customer (SaaS)
+- Cost per transaction (e-commerce)
+- Cost per developer (platform teams)
+- Cost per month-over-month change
+- % of spend on reservations/savings plans
+
+## Common Failure Modes
+
+- FinOps as a one-off project, not ongoing
+- No tagging enforcement
+- Reservations underutilized
+- Teams not incented to save
+- Anomalies caught too late (monthly review > weekly)
+
+## Closing
+
+FinOps is cultural. Processes and tools without cultural adoption fail. Start with one team, show the savings, expand.`;
+
+
+// ============================================================
+// ARTICLE: reservations-savings-plans
+// ============================================================
+articleContent['reservations-savings-plans'] = `# Reservations vs Savings Plans: The Decision Framework
+
+Azure offers two ways to trade commitment for discount: Reservations (RIs) and Savings Plans. Use them wrong and you either overspend on pay-go or lock in the wrong SKU.
+
+{{diagram:reservations}}
+
+## The Quick Rule
+
+- **RIs** — when the SKU is stable and you will run it unchanged for 1-3 years
+- **Savings Plans** — when your compute shape changes (regions, VM families) but your dollar spend is predictable
+
+## What RIs Cover Best
+
+- Azure SQL (per-vCore, stable for years)
+- Cosmos DB (provisioned throughput)
+- Cache for Redis
+- Synapse dedicated pool
+- VM SKUs that will not change
+
+## What Savings Plans Cover Best
+
+- VMs across multiple families (D-series, E-series, F-series)
+- Container Apps + AKS where pods shift node families
+- Multi-region compute
+
+## Portfolio Approach
+
+Most mature orgs use **both**:
+- Reservations for steady Azure SQL + baseline VMs
+- Savings Plans for evolving compute workloads
+
+Target: 60-70% of compute spend covered, 30-40% on-demand for flex.
+
+## Buying Strategy
+
+- Analyze 90 days of usage, not just a week
+- Commit to 80-90% of observed baseline, not 100%
+- Start with 1-year; graduate to 3-year for very stable workloads
+- Exchange RIs quarterly as portfolio evolves
+
+## Shared Scope vs Single Subscription
+
+Shared scope = discount applies across subscriptions in the billing profile. Single = just one sub. Shared is better for most enterprises.
+
+## Closing
+
+Commit conservatively. Over-committing wastes 30% of the committed spend. Under-committing leaves savings on the table. Aim for the 80% confidence level.`;
+
+
+// ============================================================
+// ARTICLE: aks-cost-optimization
+// ============================================================
+articleContent['aks-cost-optimization'] = `# AKS Cost Optimization: Cut Your Kubernetes Bill 40%
+
+AKS can be expensive fast — a moderate cluster runs $3-5K/month. Most of it is waste. Here is the stacked optimization path that typically cuts 40-60%.
+
+{{diagram:aksCost}}
+
+## Right-Size Node Pools
+
+- Start with general-purpose D-series; upgrade specific pools to memory-optimized (E-series) or compute-optimized (F-series) based on workload
+- Monitor node CPU + memory utilization for 30 days before right-sizing
+
+## Multiple Node Pools
+
+- **System pool:** small D-series for system components
+- **User pool:** sized for your apps
+- **Spot pool:** for non-critical, batch, dev workloads (up to 90% discount)
+- **GPU pool:** only when needed, with scale-to-zero via autoscaler
+
+## Cluster Autoscaler Tuning
+
+- Set low \`minCount\` (e.g., 2-3 nodes) — scale up is fast
+- \`scale-down-delay-after-add\` = 10m
+- \`scale-down-unneeded-time\` = 10m
+
+## Pod-Level
+
+- HPA on every deployment
+- VPA recommendations enabled (for monitoring, not auto-apply)
+- Set resource requests accurately — too high wastes; too low evicts
+
+## Reservations + Savings Plans
+
+- 3-year RI on baseline nodes (your minCount nodes)
+- Savings Plan for the dynamic portion
+
+## Storage
+
+- Premium SSD only where needed
+- Use Azure Files Standard (not Premium) for low-IO use cases
+- Delete orphaned PVs after workload migrations
+
+## Monitoring Cost Itself
+
+- Log Analytics ingestion is often the second-largest AKS cost
+- Use Basic logs for verbose container stdout
+- Sampling on high-volume app logs
+
+## Closing
+
+The path from $10K/mo to $4K/mo on AKS is usually: right-size, spot pool, HPA, reservations. Stack them and savings compound.`;
+
+
+// ============================================================
+// ARTICLE: egress-cost-control
+// ============================================================
+articleContent['egress-cost-control'] = `# Azure Egress Costs: The Hidden Killer And How to Tame It
+
+Egress is the surprise on every cloud bill. Compute and storage you expect. Egress sneaks up when your architecture routes data in expensive patterns.
+
+## Egress Rates
+
+| Path | Price |
+|------|-------|
+| Inter-region (zone-to-zone within region) | Free |
+| Inter-region (within continent) | ~$0.02/GB |
+| Cross-continent | ~$0.05-0.08/GB |
+| Internet egress | ~$0.087/GB (with tiered discounts) |
+| CDN egress | ~$0.04/GB (tier 1) |
+
+First 100GB/month free per account.
+
+## Where Egress Hides
+
+- **VMs in region A chatting with storage in region B.** Keep compute and data co-located.
+- **AKS pods pulling images from a registry in another region.** Use ACR geo-replication.
+- **Data warehouses exporting to Power BI across regions.** Use same-region compute.
+- **Log Analytics cross-region ingestion.** Put workspace in the same region as sources.
+
+## CDN for Egress
+
+Front Door or Azure CDN egress rates are lower than region egress, and cache reduces origin requests too.
+
+## Private Link for PaaS
+
+Egress to PaaS over Private Endpoints stays on Microsoft backbone (cheaper + faster).
+
+## ExpressRoute Direct
+
+For very heavy egress to on-prem, ExpressRoute Unlimited plans can be cheaper than metered VPN egress.
+
+## Monitoring
+
+- Cost Analysis filtered on "Bandwidth" meter category
+- Per-service egress dashboard
+
+## Anti-Pattern Case Study
+
+A customer had 200 TB/month egress billing ~$17K. Root cause: backup tool in EastUS pushing to S3 in us-east-1. After switching to same-region Azure Blob + replicating: savings $14K/mo.
+
+## Closing
+
+Audit egress quarterly. The biggest wins are architectural — co-locate compute and data, use CDN, use Private Link.`;
+
+
+// ============================================================
+// ARTICLE: github-actions-to-azure
+// ============================================================
+articleContent['github-actions-to-azure'] = `# GitHub Actions → Azure: Deployment Patterns That Scale
+
+GitHub Actions deploying to Azure is the modern default. Here are the patterns that scale from "one repo" to "hundreds of services across dozens of teams."
+
+{{diagram:devopsPipeline}}
+
+## Foundation: OIDC + Federated Credentials
+
+No stored secrets. Every workflow gets a short-lived token to authenticate to Azure. See the Workload Identity Federation article for setup.
+
+## Reusable Workflows
+
+Define once, call from many:
+
+\`\`\`yaml
+# .github/workflows/deploy-bicep.yml
+on:
+  workflow_call:
+    inputs:
+      environment: { type: string, required: true }
+\`\`\`
+
+Individual apps call it:
+
+\`\`\`yaml
+jobs:
+  deploy:
+    uses: myorg/workflows/.github/workflows/deploy-bicep.yml@v1
+    with:
+      environment: production
+\`\`\`
+
+## Environment Protections
+
+Per-environment rules:
+- Required reviewers for production
+- Wait timers (e.g., 5 min before prod)
+- Branch restrictions (only main can deploy prod)
+- Environment secrets (separate from repo secrets)
+
+## Multi-Stage Pipelines
+
+- Build artifact once
+- Deploy to dev → smoke test → staging → canary → prod
+- Same artifact flows through; no rebuild per environment
+
+## Terraform/Bicep Patterns
+
+- **PR plan, main apply** — plan in PR comment, apply on merge
+- **Drift detection** — scheduled plan against production
+- **State locks** — RBAC on the state storage account
+
+## Cost Reporting in PR
+
+Add InfraCost or Azure Dev Cost APIs to show projected cost impact per PR. Massive FinOps win.
+
+## Closing
+
+Modern Azure CI/CD is federated auth + reusable workflows + environment protections + plan-on-PR. Nail those and you ship fast and safely.`;
+
+
+// ============================================================
+// ARTICLE: azure-devops-vs-github
+// ============================================================
+articleContent['azure-devops-vs-github'] = `# Azure DevOps vs GitHub Enterprise: Where Each Still Wins
+
+Microsoft owns both. New investment goes to GitHub. But Azure DevOps isn't dying yet. Here is the honest decision framework.
+
+## When GitHub Wins
+
+- You want the best code collaboration UX (PRs, code review)
+- You need Copilot deep integration
+- You want GitHub Actions (ecosystem much larger than Azure Pipelines)
+- You are starting fresh in 2026
+
+## When Azure DevOps Still Wins
+
+- You use Azure Boards for complex enterprise work management
+- You have significant investment in classic pipelines / TFVC
+- You need advanced branch policies or build triggers not in GitHub yet
+- Regulated environments where DevOps offers needed compliance (e.g., specific Azure Government features)
+
+## Migration Path
+
+Microsoft provides migration tools:
+- Repos: git push
+- Work items: Azure DevOps Migration Tools → GitHub Issues / Projects
+- Pipelines: rewrite in Actions (usually a project in itself)
+
+## Typical Outcome
+
+Most enterprises run both for a while:
+- **Code + CI/CD on GitHub**
+- **Work management on Azure Boards** (larger orgs with complex capacity planning)
+
+Over 2-3 years, Boards often migrates to GitHub Projects or Azure DevOps continues for that one team.
+
+## Closing
+
+New projects: GitHub. Existing: stay on DevOps until migration ROI exists. Both are safe Microsoft bets for 5+ years.`;
+
+
+// ============================================================
+// ARTICLE: policy-as-code-azure
+// ============================================================
+articleContent['policy-as-code-azure'] = `# Policy as Code on Azure: Guardrails That Actually Hold
+
+Azure Policy is the guardrail layer that prevents bad things at creation time. Done right, it becomes invisible to good-faith engineers and blocks mistakes.
+
+## Effects to Know
+
+- **Deny** — blocks the operation. Use sparingly; it stops people.
+- **Audit** — logs but doesn't block. Good for discovery.
+- **Append** — adds fields to resources (e.g., tags).
+- **Modify** — modifies existing fields (e.g., defaulting TLS version).
+- **DeployIfNotExists** — deploys a companion resource (e.g., diagnostic settings).
+
+## The Minimum Policy Set
+
+- **Deny public IPs on VMs** (except in explicitly tagged subnets)
+- **Require HTTPS on storage**
+- **Require diagnostic settings** to the central workspace
+- **Require TLS 1.2+ everywhere**
+- **Require tags** (CostCenter, Environment, Owner)
+- **Restrict allowed regions**
+- **Deny classic resources** (legacy ARM)
+
+## Testing Policies
+
+Before assigning to prod:
+1. Assign in **Audit** mode
+2. Review non-compliant resources for a week
+3. Fix the violations
+4. Switch to **Deny** mode
+
+## Exemptions That Don't Rot
+
+- Exemptions must have an expiry date
+- Categorize reason (waiver, mitigated, exempt-by-design)
+- Review quarterly — remove rotten exemptions
+
+## Custom Policies
+
+For scenarios Microsoft doesn't ship:
+- Denying specific SKUs
+- Enforcing naming conventions
+- Blocking specific resource providers
+
+Define in JSON, version in Git, deploy via pipeline.
+
+## Closing
+
+Azure Policy is the quiet hero of enterprise governance. Well-configured, it prevents the top 20 misconfigurations without anyone noticing. Poorly configured, it becomes the team's biggest blocker. Tune carefully.`;
+
+
+// ============================================================
+// ARTICLE: platform-engineering-azure
+// ============================================================
+articleContent['platform-engineering-azure'] = `# Platform Engineering on Azure: Build the Golden Path
+
+Platform engineering is the trend replacing old-school SRE and DevOps. The platform team builds an **internal developer platform (IDP)** — a "golden path" app teams use to get work done without learning every Azure service.
+
+## Components of a Golden Path
+
+- **Self-service onboarding** — request a new workload, get a subscription + VNet + pipeline in minutes
+- **Service templates** — "start a new microservice" → generated repo with CI/CD, logging, observability
+- **Runtime paved road** — Container Apps or AKS with opinionated defaults
+- **Developer portal** — Backstage or Azure DevOps wiki
+
+## Common Components
+
+- **Backstage** — open-source IDP (now in CNCF)
+- **Azure DevOps service catalogs** — tasks as reusable modules
+- **Terraform modules** — infrastructure primitives
+- **GitHub Template Repos** — project scaffolding
+
+## Why This Matters
+
+Instead of every team learning:
+- Azure Policy
+- Hub-spoke networking
+- RBAC patterns
+- Observability setup
+- CI/CD pipelines
+
+They get it all pre-built. Faster time to production, consistent ops posture, less drift.
+
+## Anti-Patterns
+
+- Platform team becomes a gate, not an enabler
+- Golden path is so opinionated teams can't diverge when needed
+- No metrics on platform adoption
+
+## Closing
+
+Modern enterprise Azure is platform-engineered. App teams build features. Platform team builds the paved road. Split roles deliberately.`;
+
+
+// ============================================================
+// ARTICLE: naming-tagging-standards
+// ============================================================
+articleContent['naming-tagging-standards'] = `# Azure Naming and Tagging: The Convention That Actually Scales
+
+Every enterprise has a naming and tagging doc. Most fail because they are too long, too strict, or enforced ad-hoc. Here is the pattern that sticks.
+
+## Naming Format
+
+\`\`\`
+<type>-<workload>-<env>-<region>-<seq>
+\`\`\`
+
+Examples:
+- \`vm-api-prod-eus-001\`
+- \`sql-catalog-dev-weu-001\`
+- \`st-shared-prod-eus-001\` (storage — global unique, so 'st' prefix + unique)
+
+## Type Abbreviations (CAF Standard)
+
+| Resource | Prefix |
+|----------|--------|
+| Resource Group | rg |
+| VM | vm |
+| Storage Account | st |
+| SQL Server | sql |
+| SQL DB | sqldb |
+| VNet | vnet |
+| Subnet | snet |
+| Key Vault | kv |
+| App Service Plan | asp |
+| Function App | func |
+| AKS | aks |
+| Container Registry | cr |
+| Log Analytics | log |
+
+Microsoft's [CAF naming guide](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations) is the standard.
+
+## Required Tags
+
+| Tag | Example |
+|-----|---------|
+| \`CostCenter\` | CC-1234 |
+| \`Environment\` | prod \\| dev \\| test |
+| \`Application\` | Catalog |
+| \`Owner\` | platform-team@contoso.com |
+| \`DataClassification\` | Public \\| Internal \\| Confidential \\| Restricted |
+
+## Enforcement
+
+Three-layer:
+1. **Azure Policy** — \`deny\` on missing tags at resource creation
+2. **CI/CD gates** — Terraform validation before apply
+3. **Periodic scan** — Resource Graph query flags drift
+
+## Common Mistakes
+
+- Too many required tags (>7 creates resistance)
+- Names too long (>64 chars breaks some resources)
+- No lowercase enforcement (consistency dies)
+- Changing the convention after adoption — fragmenting compliance
+
+## Closing
+
+Short, enforced, visible. That is the trifecta of a convention people follow. Pick 5 tags, 10 prefixes, and stop arguing.`;
+
+
+// ============================================================
+// ARTICLE: subscription-strategy
+// ============================================================
+articleContent['subscription-strategy'] = `# Azure Subscription Strategy: One Subscription Is Never the Answer
+
+The question every enterprise asks early: "how many subscriptions?" The bad answer is "one big one." The right answer depends on your org, but follows predictable patterns.
+
+## Forces Pushing You to MORE Subscriptions
+
+- **Quotas** (VM cores, public IPs, reserved IPs are per-sub)
+- **Blast radius isolation** (sub is a strong trust boundary)
+- **Cost attribution** (clean per-cost-center billing)
+- **Compliance** (PCI, HIPAA benefit from isolation)
+- **RBAC simplicity** (sub-level roles are clean)
+
+## Forces Pushing to FEWER
+
+- **Management overhead** (each sub has setup cost)
+- **Reservation pooling** (shared scope works across subs, but cleanest within)
+- **Cross-service communication** (peering + DNS + RBAC complexity)
+
+## Typical Patterns
+
+**Small (1-10 apps):** 2-4 subs
+- prod, non-prod, sandbox, management
+
+**Medium (10-50 apps):** 10-20 subs
+- One per workload family × environment
+- Platform subs separate (management, connectivity, identity)
+
+**Large (50+ apps):** 50-100+ subs
+- One per significant workload × environment
+- Multiple platform subs per region
+- Sandbox per business unit
+
+## Naming
+
+\`\`\`
+sub-<business-unit>-<workload-family>-<env>
+sub-retail-catalog-prod
+sub-platform-management-global
+\`\`\`
+
+## Management Groups
+
+- Group subs under MGs for policy inheritance
+- Structure follows Microsoft's CAF reference (see Landing Zones article)
+
+## Closing
+
+Start with ~5 subs even for a small org (prod, dev, test, mgmt, connectivity). Scale from there. A flat "one subscription for everything" is a long-term debt.`;
+
+
+// ============================================================
+// ARTICLE: disaster-recovery-patterns
+// ============================================================
+articleContent['disaster-recovery-patterns'] = `# Disaster Recovery Patterns: Backup, Active-Passive, Active-Active
+
+DR is not one-size-fits-all. Different workloads deserve different postures based on RTO, RPO, cost, and complexity.
+
+## The Four Patterns
+
+| Pattern | RTO | RPO | Cost |
+|---------|-----|-----|------|
+| Backup-only | hours-days | hours | lowest |
+| Pilot Light | hours | minutes | low |
+| Warm Standby (Active-Passive) | < 15 min | < 5 min | medium |
+| Active-Active | 0 | 0 (eventual consistency) | highest |
+
+## Pattern 1: Backup-Only
+
+Azure Backup stores VMs, SQL, files. On disaster:
+1. Provision fresh infrastructure (IaC)
+2. Restore data
+3. Cut over
+
+**RTO:** 2-24 hours depending on data size.
+
+**Cost:** storage only (~$5-30/VM/month).
+
+Good for: dev/test, non-critical prod.
+
+## Pattern 2: Pilot Light
+
+Infrastructure exists in secondary region but sized small. Data replicates. On failover, scale up.
+
+**RTO:** 1-3 hours.
+
+## Pattern 3: Warm Standby (Active-Passive)
+
+Full infrastructure in both regions. Primary active; secondary idle but ready. See the Active-Passive DR article for the detailed blueprint.
+
+**RTO:** < 15 min.
+
+## Pattern 4: Active-Active
+
+Both regions serve traffic. No failover — traffic shifts.
+
+**RTO:** ~0 (user sessions may blip).
+
+**Cost:** 2x baseline + data replication complexity.
+
+Good for: global-scale consumer apps, financial systems.
+
+## Picking per Workload
+
+- **Tier-0 (payments, core API):** Active-Active
+- **Tier-1 (customer-facing):** Warm Standby
+- **Tier-2 (internal apps):** Pilot Light
+- **Tier-3 (dev, test):** Backup-only
+
+## Testing
+
+Quarterly drills for Tier-0 and Tier-1. Annual for others. Untested DR is theory.
+
+## Closing
+
+Match the pattern to the business impact. Over-engineering DR costs as much as skipping it — balance deliberately.`;
+
+
+// ============================================================
+// ARTICLE: multi-region-architecture
+// ============================================================
+articleContent['multi-region-architecture'] = `# Multi-Region Architecture: Active-Active Is Harder Than It Looks
+
+Adding a second region sounds like a simple infrastructure change. It is really a data consistency problem in disguise.
+
+{{diagram:multiRegionActiveActive}}
+
+## The Core Problem: Writes
+
+Reading from multiple regions is easy — caches, CDN, read replicas. **Writing** from multiple regions requires you to solve:
+
+- **Consistency** — two writes to the same record from different regions. Who wins?
+- **Conflict resolution** — custom handlers needed for true multi-write stores
+- **Replication lag** — read-after-write behavior becomes non-intuitive
+- **Split-brain** — network partition means both regions think they are authoritative
+
+## Data Services Ranked by Difficulty
+
+1. **Cosmos DB with multi-region writes** — purpose-built. Last-write-wins or custom conflict handlers.
+2. **Azure SQL Business Critical Zone Redundant** — single write region with HA.
+3. **Azure SQL with Failover Group** — active-passive with seconds-RPO replica.
+4. **PostgreSQL with logical replication** — DIY, complex.
+5. **Redis geo-replication** — async, eventual consistency.
+
+## Application Patterns
+
+- **Region-affinity:** each user pinned to one region's writes
+- **Event sourcing:** events append-only, projected asynchronously
+- **CRDTs:** conflict-free replicated data types — complex but powerful
+
+## Routing
+
+Front Door with:
+- Geo-proximity routing (nearest region)
+- Weighted routing (canary new region at 10%)
+- Priority routing (active-passive)
+- Health-based failover
+
+## Testing
+
+- Chaos test by dropping regional links
+- Measure replication lag under load
+- Practice conflict resolution on Cosmos CRLL rules
+
+## Closing
+
+Multi-region is a capability, not a feature toggle. Plan the data consistency model first; infrastructure second.`;
+
+
+// ============================================================
+// ARTICLE: sql-server-to-azure-sql
+// ============================================================
+articleContent['sql-server-to-azure-sql'] = `# SQL Server → Azure SQL: DMS, Managed Instance, and the Gotchas
+
+Moving SQL Server to Azure is one of the most common migrations. Pick the right target, use the right tool, avoid the landmines.
+
+## Target Selection
+
+| Target | When |
+|--------|------|
+| Azure SQL DB | Modern app, single DB, new greenfield |
+| Azure SQL Managed Instance | Existing SQL Server workload with features like SQL Agent, linked servers, CLR |
+| SQL Server on VM | Need full control, OS-level features, cross-instance features unavailable in MI |
+
+Most legacy workloads land on Managed Instance.
+
+## The Tools
+
+**Azure Database Migration Service (DMS)** — managed service for online migrations. Continuously replicates. Short cutover window.
+
+**Data Migration Assistant (DMA)** — local tool for pre-assessment. Flags compatibility issues.
+
+**Backup/Restore** — simple for MI: restore .bak from blob storage.
+
+## Common Gotchas
+
+- **SQL Agent jobs** — migrate to MI (supports SQL Agent) or rewrite in Data Factory / Functions for Azure SQL DB
+- **Linked servers** — MI supports; DB does not
+- **Cross-DB queries** — MI does; DB requires Elastic Query (different syntax)
+- **CLR assemblies** — MI; not DB
+- **Full-text search** — supported on both
+- **SSIS packages** — migrate to Azure Data Factory or SQL MI with Integration Runtime
+- **Encrypted columns** — re-configure; key material changes
+
+## Migration Runbook
+
+1. Pre-assess with DMA
+2. Stand up target (MI typically)
+3. Configure DMS project
+4. Continuous sync for 1-2 weeks
+5. Plan cutover window
+6. Freeze app writes
+7. Final DMS sync
+8. Cutover connection strings
+9. Validate
+10. Keep source online for 1-2 weeks as fallback
+
+## Post-Migration
+
+- Right-size the tier (DMS sizing tends to overestimate)
+- Enable Advanced Threat Protection
+- Set up Active Geo-Replication for DR
+- Apply Reservations once stable
+
+## Closing
+
+SQL migrations are well-trodden. DMA + DMS remove most surprises. The cutover is the scariest hour; everything else is well-understood.`;
+
+
+// ============================================================
+// ARTICLE: vmware-to-azure
+// ============================================================
+articleContent['vmware-to-azure'] = `# VMware to Azure: AVS vs Native — the Real Decision
+
+You run VMware on-prem. You're going to Azure. Azure VMware Solution lets you run vSphere natively in Azure. Native Azure forces you to leave VMware behind. Which is right?
+
+## AVS — VMware in Azure
+
+- Full vSphere, NSX-T, vSAN running on dedicated bare-metal
+- Your existing VMware tooling (vCenter, PowerCLI) works unchanged
+- VMs move with VMware HCX replication
+- No rearchitecture — lift and shift
+
+**Pros:** fastest migration, minimal app change.
+**Cons:** expensive (~$12K/month minimum for 3 hosts), does not take advantage of Azure PaaS.
+
+## Native Azure Migration
+
+- VMs become Azure IaaS VMs (Hyper-V under the hood)
+- Use Azure Migrate for replication + cutover
+- Requires minor tooling changes, same apps
+- Opens door to modernization over time (VM → App Service → Container Apps)
+
+**Pros:** much cheaper, modernization path, native Azure integration.
+**Cons:** minor app changes, team re-skilling, networking adjustments.
+
+## Decision Framework
+
+**Pick AVS when:**
+- Hard deadline (datacenter eviction)
+- Complex VMware-specific dependencies (stretched clusters, NSX micro-seg)
+- Budget accommodates
+- Intermediate step before future modernization
+
+**Pick Native when:**
+- Long-term cost matters
+- Team has (or can build) Azure skills
+- Willing to invest in migration effort (re-networking, re-monitoring)
+- Want to modernize over time
+
+## Hybrid
+
+Many enterprises use AVS for hard-to-move workloads and Native for everything else. Both in the same tenant via hub-spoke.
+
+## Closing
+
+AVS is a great tactical option when timelines force it. Strategic long-term is usually Native with a modernization roadmap. Pick based on constraints, not hype.`;
+
+
+// ============================================================
+// ARTICLE: aws-to-azure-migration
+// ============================================================
+articleContent['aws-to-azure-migration'] = `# AWS to Azure: Service Mappings and Honest Gotchas
+
+Cross-cloud migrations happen for business reasons (Microsoft agreements, vendor rationalization) more than technical ones. If you have to do it, here is the honest map.
+
+## Service Mapping
+
+| AWS | Azure | Effort |
+|-----|-------|--------|
+| EC2 | Azure VM | Easy (VHD convert) |
+| S3 | Blob Storage | Easy (AzCopy from S3) |
+| Lambda | Functions | Medium (runtime + triggers differ) |
+| RDS (PostgreSQL) | Azure Database for PostgreSQL | Easy (pg_dump) |
+| RDS (Aurora) | Azure Cosmos DB for PostgreSQL or Azure SQL | Medium |
+| DynamoDB | Cosmos DB | Medium-hard (partition key rethink) |
+| SQS | Service Bus | Easy |
+| SNS | Event Grid + Service Bus Topics | Easy |
+| Kinesis | Event Hubs | Medium |
+| ElastiCache | Azure Cache for Redis | Easy |
+| EKS | AKS | Medium (networking differs) |
+| CloudFront | Azure Front Door | Easy (config map) |
+| Route 53 | Azure DNS + Traffic Manager | Easy |
+| IAM | Entra ID + RBAC | Hard (model differs) |
+| CloudFormation | Bicep / ARM | Hard (rewrite) |
+| Terraform AWS provider | Terraform AzureRM | Medium |
+
+## The Hardest Parts
+
+1. **Identity model mismatch.** AWS IAM is resource-centric. Entra ID is identity-centric. RBAC works differently.
+2. **Networking differences.** AWS VPCs and Azure VNets are similar but route tables, NACLs, security groups all behave subtly differently.
+3. **DNS migration.** Propagation delays during cutover.
+4. **CloudFormation → Bicep.** Rewrite, not translate. The templates have different models.
+5. **Custom Lambda layers / runtimes.** Azure Functions has different runtime constraints.
+
+## The Easiest Parts
+
+- Storage migration (AzCopy from S3 to Blob is well-oiled)
+- Databases (pg_dump + DMS covers most)
+- Container images (just push to ACR)
+
+## Recommended Sequence
+
+1. Foundation (landing zone, identity, network)
+2. Low-criticality VMs and databases
+3. Queue-based async workloads
+4. Web tier (with DNS cutover)
+5. Identity-heavy systems last
+
+## Cost Considerations
+
+- Azure is generally 10-20% cheaper for equivalent compute
+- Data egress from AWS during migration: budget $0.09/GB — can be significant
+- Reservations + Savings Plans once stabilized
+
+## Closing
+
+AWS→Azure migration is not a technology problem; it is an organizational and skill-building problem. Plan 12-18 months for moderate portfolios. Do not underestimate identity.`;
+
+
+// ============================================================
+// ARTICLE: mainframe-modernization
+// ============================================================
+articleContent['mainframe-modernization'] = `# Mainframe Modernization on Azure: Not All Roads Lead to Rewrite
+
+Mainframe migrations are the most expensive projects in enterprise IT. Get the disposition wrong and you will burn 5-10 years and tens of millions with little to show.
+
+## The Four Dispositions
+
+1. **Rehost** — run COBOL/CICS on Azure VMs with emulation (LzLabs, Micro Focus)
+2. **Re-architect** — gradual decomposition into microservices
+3. **Rebuild** — full rewrite as cloud-native
+4. **Replace** — buy SaaS (for common apps like payroll, GL)
+
+## Rehost with Emulation
+
+LzLabs Software Defined Mainframe or Micro Focus Enterprise Server run existing COBOL, JCL, CICS on Linux VMs.
+- Minimal app change
+- Significant license cost saved vs mainframe
+- Modernize gradually once on Azure
+
+## Re-architect
+
+Strangler Fig pattern: wrap the mainframe with APIs, slowly migrate functionality out. Multi-year but allows steady progress.
+
+## Rebuild
+
+Full rewrite. High risk. Reserve for apps where rewrite cost < 5x rehost cost, or strategic apps being replaced anyway.
+
+## Replace
+
+Payroll, accounting, HR — common enterprise systems often have SaaS alternatives. Dispose of in-house; buy Workday / SAP / Oracle cloud.
+
+## Decision Framework
+
+- **Strategic + complex + stable:** rehost, modernize over 5+ years
+- **Strategic + candidate for rewrite:** re-architect
+- **Commodity + SaaS exists:** replace
+- **Dying + not worth rewrite:** retain until sunset
+
+## Common Mistakes
+
+- "We will rewrite everything in 2 years" — almost never happens
+- Underestimating data migration (mainframe data formats are exotic)
+- Forgetting batch jobs, which are often 70% of mainframe workload
+- No testing strategy for re-platformed code
+
+## Closing
+
+Mainframe migration is a portfolio decision. Rehost the complex stuff, replace the commodity stuff, rewrite only what truly needs it. Patience and pragmatism win.`;

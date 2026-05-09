@@ -3,72 +3,16 @@ import React, { useEffect } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { blogArticles, articleContent, categoryColors } from '../utils/blogArticles';
 import { BlogHeader, BlogFooter } from '../components/BlogLayout';
+import { renderMarkdown } from '../utils/blogRenderer';
+import { diagramBySlug } from '../utils/blogDiagrams';
 import './Blog.css';
 
-// Lightweight markdown → HTML (headings, lists, bold, italic, inline code)
-const renderMarkdown = (md) => {
-  if (!md) return '';
-  const lines = md.split('\n');
-  const out = [];
-  let inList = false;
-  let listTag = '';
-
-  const inline = (s) =>
-    s
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*([^*]+)\*/g, '<em>$1</em>');
-
-  const closeList = () => {
-    if (inList) {
-      out.push(`</${listTag}>`);
-      inList = false;
-      listTag = '';
-    }
-  };
-
-  lines.forEach((raw) => {
-    const line = raw.trim();
-    if (!line) {
-      closeList();
-      return;
-    }
-    if (line.startsWith('### ')) {
-      closeList();
-      out.push(`<h3>${inline(line.slice(4))}</h3>`);
-    } else if (line.startsWith('## ')) {
-      closeList();
-      out.push(`<h2>${inline(line.slice(3))}</h2>`);
-    } else if (line.startsWith('# ')) {
-      closeList();
-      out.push(`<h1>${inline(line.slice(2))}</h1>`);
-    } else if (/^[-*] /.test(line)) {
-      if (!inList || listTag !== 'ul') {
-        closeList();
-        listTag = 'ul';
-        out.push('<ul>');
-        inList = true;
-      }
-      out.push(`<li>${inline(line.slice(2))}</li>`);
-    } else if (/^\d+\. /.test(line)) {
-      if (!inList || listTag !== 'ol') {
-        closeList();
-        listTag = 'ol';
-        out.push('<ol>');
-        inList = true;
-      }
-      out.push(`<li>${inline(line.replace(/^\d+\. /, ''))}</li>`);
-    } else {
-      closeList();
-      out.push(`<p>${inline(line)}</p>`);
-    }
+// Replace {{diagram:id}} tokens with fenced SVG blocks so the renderer emits <figure>
+const injectDiagrams = (md) =>
+  md.replace(/\{\{diagram:([a-zA-Z]+)\}\}/g, (_match, id) => {
+    const svg = diagramBySlug[id];
+    return svg ? `\n\n\`\`\`svg\n${svg}\n\`\`\`\n\n` : '';
   });
-  closeList();
-  return out.join('\n');
-};
 
 const BlogArticle = () => {
   const { slug } = useParams();
@@ -83,12 +27,14 @@ const BlogArticle = () => {
     return <Navigate to="/blog" replace />;
   }
 
-  // Strip first H1 if it matches the title to avoid duplication
+  // Strip first H1 if it matches the title (avoid duplication with hero)
   const body = content.replace(/^#\s+.+\n?/, '');
-  const html = renderMarkdown(body);
-  const pal = categoryColors[article.category] || { bg: 'linear-gradient(135deg,#0078D4,#50E6FF)', solid: '#0078D4', tint: '#eff6ff' };
+  const html = renderMarkdown(injectDiagrams(body));
+  const pal =
+    categoryColors[article.category] ||
+    { bg: 'linear-gradient(135deg,#0078D4,#50E6FF)', solid: '#0078D4', tint: '#eff6ff' };
 
-  const related = blogArticles.filter((a) => a.slug !== slug && a.category === article.category).slice(0, 2);
+  const related = blogArticles.filter((a) => a.slug !== slug && a.category === article.category).slice(0, 3);
   const fallbackRelated = blogArticles.filter((a) => a.slug !== slug).slice(0, 3 - related.length);
   const allRelated = [...related, ...fallbackRelated].slice(0, 3);
 
