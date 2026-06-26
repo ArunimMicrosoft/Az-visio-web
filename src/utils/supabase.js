@@ -4,12 +4,14 @@
 import { createClient } from '@supabase/supabase-js';
 import { isAdminEmail } from './adminConfig';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Public Supabase credentials — these are the ANON key (designed to be in the browser).
+// Hardcoded as fallback so the app works even when host env vars are not wired correctly.
+// The real security boundary is Supabase Row-Level Security policies, not these values.
+const FALLBACK_SUPABASE_URL = 'https://quknseohpwzlbbisgfpi.supabase.co';
+const FALLBACK_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1a25zZW9ocHd6bGJiaXNnZnBpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMDcxMjQsImV4cCI6MjA4ODc4MzEyNH0.1IlN3FpRVff30GftpWnqOl1Am3bwucu54x_lW_45SpQ';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('⚠️ Supabase credentials missing. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env');
-}
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || FALLBACK_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || FALLBACK_SUPABASE_ANON_KEY;
 
 // Create Supabase client
 // Using localStorage instead of indexedDB to avoid
