@@ -14,7 +14,7 @@
     "admin:setup": "node scripts/create-admin-user.mjs",
     "cf:dev": "wrangler pages dev build --compatibility-flag=nodejs_compat",
     "cf:build": "vite build",
-    "cf:deploy": "wrangler pages deploy build --project-name=cloudcanvas"
+    "cf:deploy": "wrangler pages deploy build --project-name=cloudcanvas --branch=main --commit-dirty=true"
   },
   "dependencies": {
     "@azure/functions": "^4.11.2",
