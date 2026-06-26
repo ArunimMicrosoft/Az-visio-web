@@ -1,47 +1,92 @@
-// Cloudflare Pages Function — POST /api/razorpay-create-order
-// Creates a Razorpay order using fetch (no SDK, no node deps)
+// POST /api/razorpay-create-order — hardened
 //
-// Env vars (set in Cloudflare Pages dashboard → Settings → Environment variables):
-//   RAZORPAY_KEY_ID      — public key id (rzp_live_... or rzp_test_...)
-//   RAZORPAY_KEY_SECRET  — server secret (NEVER expose in frontend)
+// Defense in depth:
+//   - Origin allowlist (CORS) — only our domains call this
+//   - Per-IP rate limit (30 req/min)
+//   - Strict Content-Type + body size cap (8 KB)
+//   - Input validation (length, type, allow-list of plans)
+//   - Stripped error messages to clients (full detail only in server log)
+//
+// Env vars (set as Secret in Cloudflare Pages):
+//   RAZORPAY_KEY_ID
+//   RAZORPAY_KEY_SECRET
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+import {
+  isAllowedOrigin,
+  rateLimit,
+  jsonResponse,
+  readJsonBody,
+  preflight,
+} from '../_shared/security.js';
 
-const json = (status, body) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-  });
+const ALLOWED_PLANS = new Set(['Starter', 'Professional', 'Enterprise']);
+const MIN_AMOUNT_PAISE = 100;        // 1 INR
+const MAX_AMOUNT_PAISE = 1_000_000;  // 10,000 INR sanity ceiling
 
-// CORS preflight
-export const onRequestOptions = () =>
-  new Response(null, { status: 204, headers: CORS_HEADERS });
+export const onRequestOptions = ({ request }) => preflight(request);
 
 export const onRequestPost = async ({ request, env }) => {
+  // 1) Origin check
+  if (!isAllowedOrigin(request)) {
+    return jsonResponse(403, { error: 'Origin not allowed' }, request);
+  }
+
+  // 2) Rate limit
+  const rl = rateLimit(request);
+  if (!rl.allowed) {
+    return new Response(
+      JSON.stringify({ error: 'Too many requests' }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(rl.retryAfter),
+          'Cache-Control': 'no-store',
+        },
+      },
+    );
+  }
+
+  // 3) Read + validate body
+  let body;
   try {
-    const keyId = env.RAZORPAY_KEY_ID || env.VITE_RAZORPAY_KEY_ID;
-    const keySecret = env.RAZORPAY_KEY_SECRET;
+    body = await readJsonBody(request);
+  } catch (e) {
+    return jsonResponse(400, { error: e.message }, request);
+  }
 
-    if (!keyId || !keySecret) {
-      return json(500, {
-        error: 'Razorpay credentials not configured on server',
-      });
-    }
+  const { amount, planName, customerEmail, customerName, customerId } = body || {};
 
-    const body = await request.json().catch(() => ({}));
-    const { amount, planName, customerEmail, customerName, customerId } = body;
+  if (typeof amount !== 'number' || !Number.isInteger(amount)) {
+    return jsonResponse(400, { error: 'amount must be an integer (paise)' }, request);
+  }
+  if (amount < MIN_AMOUNT_PAISE || amount > MAX_AMOUNT_PAISE) {
+    return jsonResponse(400, { error: 'amount out of range' }, request);
+  }
+  if (typeof planName !== 'string' || !ALLOWED_PLANS.has(planName)) {
+    return jsonResponse(400, { error: 'planName invalid' }, request);
+  }
+  if (typeof customerEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+    return jsonResponse(400, { error: 'customerEmail invalid' }, request);
+  }
+  if (customerName && (typeof customerName !== 'string' || customerName.length > 200)) {
+    return jsonResponse(400, { error: 'customerName invalid' }, request);
+  }
+  if (customerId && (typeof customerId !== 'string' || customerId.length > 100)) {
+    return jsonResponse(400, { error: 'customerId invalid' }, request);
+  }
 
-    if (!amount || !planName || !customerEmail) {
-      return json(400, { error: 'Missing required fields' });
-    }
+  // 4) Credentials
+  const keyId = env.RAZORPAY_KEY_ID || env.VITE_RAZORPAY_KEY_ID;
+  const keySecret = env.RAZORPAY_KEY_SECRET;
+  if (!keyId || !keySecret) {
+    console.error('[razorpay-create-order] missing credentials');
+    return jsonResponse(500, { error: 'Server misconfigured' }, request);
+  }
 
-    // Razorpay Orders API: Basic auth with keyId:keySecret
+  // 5) Call Razorpay
+  try {
     const auth = btoa(`${keyId}:${keySecret}`);
-
     const rzpResp = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
@@ -49,12 +94,12 @@ export const onRequestPost = async ({ request, env }) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount, // in paise; frontend converts
+        amount,
         currency: 'INR',
-        receipt: `rcpt_${customerId || 'guest'}_${Date.now()}`.slice(0, 40),
+        receipt: `rcpt_${(customerId || 'guest').slice(0, 20)}_${Date.now()}`.slice(0, 40),
         notes: {
           planName,
-          customerEmail,
+          customerEmail: customerEmail.toLowerCase(),
           customerName: customerName || '',
           customerId: customerId || '',
         },
@@ -62,20 +107,18 @@ export const onRequestPost = async ({ request, env }) => {
     });
 
     const data = await rzpResp.json();
-
     if (!rzpResp.ok) {
-      return json(rzpResp.status, {
-        error: 'Razorpay order creation failed',
-        detail: data,
-      });
+      console.error('[razorpay-create-order] razorpay error:', data);
+      return jsonResponse(502, { error: 'Payment provider error' }, request);
     }
 
-    return json(200, {
-      orderId: data.id,
-      amount: data.amount,
-      currency: data.currency,
-    });
+    return jsonResponse(
+      200,
+      { orderId: data.id, amount: data.amount, currency: data.currency },
+      request,
+    );
   } catch (err) {
-    return json(500, { error: 'Internal error', message: err.message });
+    console.error('[razorpay-create-order] exception:', err);
+    return jsonResponse(500, { error: 'Internal error' }, request);
   }
 };
