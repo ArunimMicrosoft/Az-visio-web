@@ -80,8 +80,22 @@ export const onRequestPost = async ({ request, env }) => {
   const keyId = env.RAZORPAY_KEY_ID || env.VITE_RAZORPAY_KEY_ID;
   const keySecret = env.RAZORPAY_KEY_SECRET;
   if (!keyId || !keySecret) {
-    console.error('[razorpay-create-order] missing credentials');
-    return jsonResponse(500, { error: 'Server misconfigured' }, request);
+    // Don't 500 — return a 200 with no orderId so frontend can fall back
+    // to client-side checkout. Logged loudly for ops.
+    console.error(
+      '[create-order] RAZORPAY credentials missing on server. ' +
+        'keyId:', !!keyId, 'keySecret:', !!keySecret,
+      '— frontend will fall back to client-side checkout (no server-side signature verification possible).',
+    );
+    return jsonResponse(
+      200,
+      {
+        orderId: null,
+        skipped: true,
+        reason: 'server-credentials-missing',
+      },
+      request,
+    );
   }
 
   // 5) Call Razorpay

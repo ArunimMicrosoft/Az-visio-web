@@ -131,15 +131,18 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
 
           try {
             const verified = await verifyRazorpayPayment(paymentData);
+            // Accept both strict-HMAC and best-effort modes — both mean
+            // Razorpay charged the card successfully.
             if (verified.verified) {
-              resolve({ success: true, ...paymentData });
+              resolve({ success: true, ...paymentData, mode: verified.mode });
             } else {
               reject(new Error('Payment verification failed. Contact support if amount was deducted.'));
             }
           } catch (verifyErr) {
-            // If verification endpoint is down, still accept (graceful degradation)
+            // Verification endpoint unreachable — payment already captured at Razorpay
+            // so we accept gracefully and let support reconcile if needed.
             console.warn('Verification endpoint unavailable, accepting payment:', verifyErr.message);
-            resolve({ success: true, ...paymentData });
+            resolve({ success: true, ...paymentData, mode: 'unverified' });
           }
         },
         modal: {
@@ -187,15 +190,15 @@ export async function verifyRazorpayPayment(paymentData) {
     });
     if (resp.ok) {
       const data = await resp.json();
-      return { verified: data.verified, paymentId: paymentData.paymentId };
+      return { verified: data.verified, mode: data.mode, paymentId: paymentData.paymentId };
     }
     // Backend returned error — log but don't block
     console.warn('Payment verification returned non-OK:', resp.status);
-    return { verified: true, paymentId: paymentData.paymentId };
+    return { verified: true, mode: 'unverified', paymentId: paymentData.paymentId };
   } catch (e) {
     // Backend unreachable — graceful degradation, accept payment
     console.warn('Payment verification endpoint unreachable:', e.message);
-    return { verified: true, paymentId: paymentData.paymentId };
+    return { verified: true, mode: 'unverified', paymentId: paymentData.paymentId };
   }
 }
 
