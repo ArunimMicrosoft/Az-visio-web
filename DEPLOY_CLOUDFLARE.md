@@ -25,17 +25,22 @@ The old `staticwebapp.config.json` and `/api/*` Azure Functions stay in the repo
 
 ## Step 1 — Create the Cloudflare Pages project
 
+> **Note about the new Cloudflare dashboard (late 2025):** Cloudflare unified everything under the **Workers** UI. The Pages flow still exists — it's just one click less obvious. Follow the steps below exactly.
+
 1. Sign in at `https://dash.cloudflare.com` (free account).
-2. **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
-3. Authorize Cloudflare on GitHub. Select repo `ArunimMicrosoft/Az-visio-web`.
-4. **Set up builds and deployments:**
+2. Sidebar → **Workers & Pages**.
+3. Click **Create**. You'll land on a screen titled **"Ship something new"** with options like "Continue with GitHub" and "Start with Hello World!" — this is the **Workers** flow. **Do not pick those.**
+4. At the **bottom of that screen**, find the small text: **"Looking to deploy Pages? Get started"** — click **Get started**. (Direct URL: `https://dash.cloudflare.com/?to=/:account/pages/new/provider`.)
+5. Now you're on the Pages flow. Select **GitHub** as the source.
+6. Authorize Cloudflare on GitHub if prompted. Select repo `ArunimMicrosoft/Az-visio-web`.
+7. **Set up builds and deployments:**
    - Project name: `cloudcanvas`
    - Production branch: `main`
-   - Framework preset: `Vite`
+   - Framework preset: `Vite` (auto-detected)
    - Build command: `npm run build`
    - Build output directory: `build`
    - Root directory: (leave blank)
-5. **Environment variables (Production)** — click "Add variable" for each:
+8. **Environment variables (Production)** — click "Add variable" for each:
 
 | Name | Value | Notes |
 |---|---|---|
@@ -48,6 +53,8 @@ The old `staticwebapp.config.json` and `/api/*` Azure Functions stay in the repo
 | `RAZORPAY_KEY_SECRET` | *(your secret)* | **mark as encrypted** |
 
 6. Click **Save and Deploy**. Wait ~2 minutes for the first build.
+
+> If you accidentally end up in the "Create a Worker" wizard (it asks for `npx wrangler deploy` as the Deploy command) — back out. That's the wrong flow for this app. Use the "Looking to deploy Pages?" link as described above.
 
 ## Step 2 — Verify the deploy works
 
