@@ -12,6 +12,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import SharedDiagram from './pages/SharedDiagram';
 import Blog from './pages/Blog';
 import BlogArticle from './pages/BlogArticle';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
 import App from './App';
 
 const AppWithAuth = () => {
@@ -31,6 +33,10 @@ const AppWithAuth = () => {
           {/* Blog / Learn center (public) */}
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogArticle />} />
+
+          {/* Legal pages (public) */}
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
             {/* Protected route - admin dashboard (admin role only) */}
           <Route 
             path="/admin" 

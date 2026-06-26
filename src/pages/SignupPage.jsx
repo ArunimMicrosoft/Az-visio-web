@@ -287,8 +287,8 @@ const SignupPage = () => {
             <div className="auth-terms">
               <p>
                 By creating an account, you agree to our{' '}
-                <a href="#" className="terms-link">Terms of Service</a> and{' '}
-                <a href="#" className="terms-link">Privacy Policy</a>
+                <a href="/terms" className="terms-link" target="_blank" rel="noopener noreferrer">Terms of Service</a> and{' '}
+                <a href="/privacy" className="terms-link" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
               </p>
             </div>
           </div>

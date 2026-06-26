@@ -508,6 +508,9 @@ const LandingPage = () => {
           <div className="footer-bottom-content">
             <p className="footer-copyright">
               © 2026 Cloud Canvas Designer. All rights reserved. | Built By: <a href="https://arunimitcaffe.gumroad.com/" target="_blank" rel="noopener noreferrer" style={{color: '#00BCF2', textDecoration: 'none'}}>Arunim's IT Café</a>
+              {' · '}<Link to="/terms" style={{color: '#00BCF2', textDecoration: 'none'}}>Terms</Link>
+              {' · '}<Link to="/privacy" style={{color: '#00BCF2', textDecoration: 'none'}}>Privacy</Link>
+              {' · '}<Link to="/blog" style={{color: '#00BCF2', textDecoration: 'none'}}>Learn</Link>
             </p>
           </div>
         </div>
