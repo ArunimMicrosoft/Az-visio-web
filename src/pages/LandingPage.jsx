@@ -490,7 +490,7 @@ const LandingPage = () => {
                 <li className="feature-item">✓ API access & webhooks</li>
                 <li className="feature-item">✓ SSO / SAML</li>
                 <li className="feature-item">✓ Audit logs</li>
-                <li className="feature-item">✓ SLA guarantee</li>
+                <li className="feature-item">✓ Dedicated support</li>
               </ul>
               <button 
                 className="btn-pricing btn-pricing-outline"

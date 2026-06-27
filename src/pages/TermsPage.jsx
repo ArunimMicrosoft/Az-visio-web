@@ -47,7 +47,7 @@ const TermsPage = () => {
           </div>
 
           <div className="legal-callout">
-            <strong>Plain-English summary:</strong> Cloud Canvas Designer is a SaaS tool for designing Azure architecture diagrams. By using it, you agree to use it lawfully, not abuse our service, pay for what you subscribe to, and accept that we provide it "as is" without unlimited liability. Refunds within 7 days for first-time subscribers. We can suspend abuse. India law applies.
+            <strong>Plain-English summary:</strong> Cloud Canvas Designer is a SaaS tool for designing Azure architecture diagrams. By using it, you agree to use it lawfully, not abuse our service, and accept that we provide it &quot;as is&quot;. All sales are final — no refunds. Our maximum liability to you is whatever you paid us in the last 12 months (free users = ₹0). We can suspend abuse. India law applies.
           </div>
 
           <h2 id="acceptance">1. Acceptance of these Terms</h2>
@@ -87,9 +87,16 @@ const TermsPage = () => {
           <p>New accounts receive a 7-day free trial with limited features (up to 3 diagrams, 5 PNG exports, watermark on exports). No payment information is required to start a trial. The trial ends automatically after 7 days; you can upgrade at any time during or after the trial.</p>
 
           <h2 id="refunds">6. Refunds & Cancellations</h2>
-          <p><strong>7-day refund window (first-time subscribers only):</strong> If you subscribe to a paid plan for the first time and are not satisfied, request a refund within 7 days of the initial charge by emailing <a href="mailto:arunimpandey2903@hotmail.com">arunimpandey2903@hotmail.com</a>. We will refund the full amount via the original payment method within 5–10 business days.</p>
-          <p><strong>Standard cancellations:</strong> You may cancel any time. Cancellation stops future renewals; we do not pro-rate the current billing cycle.</p>
-          <p><strong>Exclusions:</strong> Refunds are not available for accounts terminated under Section 14 (Acceptable Use violations), for fraudulent chargebacks, or after the 7-day window has elapsed.</p>
+          <p><strong>All sales are final. We do not offer refunds.</strong> By subscribing, you acknowledge that:</p>
+          <ul>
+            <li>Subscription fees, once charged, are non-refundable for any reason except where a refund is strictly required by mandatory consumer-protection law in your jurisdiction. Any such mandatory refund will be limited to the minimum amount the applicable law requires and processed only after we verify eligibility in writing.</li>
+            <li>You acknowledge you have had the opportunity to evaluate the Service through the 7-day free trial before paying, and you accept the Service in its current state at the time of purchase.</li>
+            <li>Partial-month, partial-feature, downtime-based, or dissatisfaction-based refunds are <strong>not</strong> available.</li>
+            <li>Fees paid for prior billing cycles are non-refundable regardless of subsequent cancellation.</li>
+            <li>If you initiate a chargeback that is later resolved in our favor, you remain liable for fees plus any chargeback-related costs we incur, and we may permanently suspend your account.</li>
+          </ul>
+          <p><strong>Cancellation:</strong> You may cancel future renewals at any time from your account settings or by email. Cancellation prevents future charges but does not refund any prior charge and does not pro-rate the current billing cycle.</p>
+          <p><strong>Account termination by us:</strong> If we terminate your account under Section 14 (Acceptable Use, fraud, or legal compliance), no refund of any kind is owed.</p>
 
           <h2 id="use">7. Acceptable Use</h2>
           <p>You agree NOT to:</p>
@@ -133,9 +140,12 @@ const TermsPage = () => {
           <h2 id="liability">12. Limitation of Liability</h2>
           <p>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW:</p>
           <ul>
-            <li>We will not be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, revenue, data, or goodwill.</li>
-            <li>Our total cumulative liability for any claim arising out of or relating to the Service is limited to the greater of (a) the amount you paid us in the 12 months preceding the claim, or (b) INR 5,000.</li>
-            <li>These limitations apply even if we have been advised of the possibility of such damages, and they apply to all causes of action, including breach of contract, tort, statute, and equity.</li>
+            <li>We will not be liable for any indirect, incidental, special, consequential, exemplary, or punitive damages whatsoever, including but not limited to loss of profits, revenue, business opportunity, data, goodwill, or use, arising out of or in connection with the Service or these Terms.</li>
+            <li><strong>Our total aggregate liability for any and all claims arising out of or relating to the Service or these Terms is strictly limited to the total amount actually paid by you (the User) to us in the twelve (12) months immediately preceding the event giving rise to the claim.</strong></li>
+            <li><strong>If you have not paid any amount to us during that period — including without limitation users on the free trial, users on any free tier, users whose paid subscription has lapsed, and users whose claim does not arise from a paid subscription — our maximum aggregate liability to you shall be zero (INR 0 / USD 0).</strong></li>
+            <li>The above limitation applies cumulatively across all claims, whether based in contract, tort (including negligence), statute, equity, strict liability, or any other legal theory, and applies even if we have been advised of the possibility of such damages and even if any limited remedy fails of its essential purpose.</li>
+            <li>You acknowledge that the Service is offered at low (and frequently zero) cost in exchange for these allocations of risk, and that without this limitation we would not offer the Service at these prices. This limitation is therefore an essential element of the bargain between you and us.</li>
+            <li>Where applicable law does not permit certain liability limitations or exclusions, our liability shall be limited to the minimum extent permitted by such law.</li>
           </ul>
 
           <h2 id="indemnity">13. Indemnification</h2>

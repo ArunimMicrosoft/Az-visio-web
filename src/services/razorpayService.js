@@ -280,7 +280,7 @@ export function getPricingPlans() {
         'Everything in Professional',
         'SSO / SAML',
         'API access',
-        'SLA guarantee',
+        'Priority response',
         'Dedicated support',
         'Audit logs',
         'Custom integrations',
