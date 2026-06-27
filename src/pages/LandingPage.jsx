@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  HeroIllustration,
   HowItWorksIllustration,
   ServiceMosaic,
   FeatureDragDrop,
@@ -13,6 +12,7 @@ import {
   FeatureSecurity,
 } from '../components/LandingIllustrations';
 import '../components/LandingIllustrations.css';
+import AppShowcase from '../components/AppShowcase';
 import './LandingPage.css';
 
 const LandingPage = () => {
@@ -104,8 +104,30 @@ const LandingPage = () => {
             </div>
           </div>
 
-          {/* Animated app preview illustration */}
-          <HeroIllustration />
+          {/* Real product screenshot — wrapped in browser frame */}
+          <div className="hero-screenshot-wrap">
+            <div className="hero-browser-frame">
+              <div className="hero-browser-bar">
+                <span className="hero-dot hero-dot-red" />
+                <span className="hero-dot hero-dot-yellow" />
+                <span className="hero-dot hero-dot-green" />
+                <span className="hero-url">cloudcanvas.co/app</span>
+              </div>
+              <img
+                src="/screenshots/canvas-boundaries.png"
+                alt="Cloud Canvas Designer — design Azure architectures visually with nested subscription, resource group, virtual network, and subnet boundaries"
+                className="hero-screenshot"
+                width="1024"
+                height="600"
+                loading="eager"
+                fetchpriority="high"
+              />
+            </div>
+            {/* Floating decorative orbs around the screenshot */}
+            <div className="hero-orb hero-orb-1" />
+            <div className="hero-orb hero-orb-2" />
+            <div className="hero-orb hero-orb-3" />
+          </div>
 
           <div className="scroll-indicator">
             <a href="#features" className="scroll-arrow">
@@ -127,6 +149,9 @@ const LandingPage = () => {
           <HowItWorksIllustration />
         </div>
       </section>
+
+      {/* Real product screenshots showcase */}
+      <AppShowcase />
 
       {/* Features Section */}
       <section id="features" className="features-section">
