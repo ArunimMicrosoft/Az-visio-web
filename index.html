@@ -8,6 +8,17 @@
     <meta name="keywords" content="Cloud, Canvas, Designer, Azure, Architecture, Diagram, Cost Estimation, Terraform, ARM Templates, Bicep" />
     <meta name="author" content="Arunim's IT Café" />
     <meta name="theme-color" content="#0078D4" />    <title>Cloud Canvas Designer | Built by Arunim's IT Café</title>
+    <!-- Canonical redirect: never serve pages.dev publicly -->
+    <script>
+      (function () {
+        var h = location.hostname;
+        if (h.indexOf('.pages.dev') !== -1) {
+          location.replace('https://cloudcanvas.co' + location.pathname + location.search + location.hash);
+        }
+      })();
+    </script>
+    <!-- Tell search engines pages.dev URLs are duplicates of the canonical domain -->
+    <link rel="canonical" href="https://cloudcanvas.co/" />
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-67VYW13NCK"></script>
     <script>
