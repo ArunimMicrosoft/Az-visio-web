@@ -1,0 +1,141 @@
+/* ============================================================
+   Landing page illustrations — visual richness for hero + sections
+   ============================================================ */
+
+/* ---------- Hero illustration ---------- */
+.hero-illustration-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  margin: 40px auto 20px;
+  filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.25));
+}
+
+.hero-illustration {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Float animations on the orbiting icons */
+.float-1 {
+  animation: float1 6s ease-in-out infinite;
+  transform-origin: center;
+}
+.float-2 {
+  animation: float2 7s ease-in-out infinite;
+  transform-origin: center;
+}
+.float-3 {
+  animation: float3 8s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translate(40px, 160px); }
+  50% { transform: translate(40px, 140px) rotate(3deg); }
+}
+@keyframes float2 {
+  0%, 100% { transform: translate(620px, 170px); }
+  50% { transform: translate(620px, 155px) rotate(-3deg); }
+}
+@keyframes float3 {
+  0%, 100% { transform: translate(60px, 400px); }
+  50% { transform: translate(60px, 415px) rotate(2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float-1, .float-2, .float-3 { animation: none; }
+}
+
+/* ---------- Feature card illustrations ---------- */
+.feature-illustration {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+/* ---------- How It Works strip ---------- */
+.how-it-works-strip {
+  margin: 24px auto 0;
+  max-width: 1000px;
+}
+.hiw-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ---------- Service Mosaic ---------- */
+.service-mosaic {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  margin: 32px auto 0;
+  max-width: 880px;
+  padding: 0 20px;
+}
+
+.mosaic-tile {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.15);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.mosaic-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.25), transparent 50%);
+  pointer-events: none;
+}
+
+.mosaic-tile:hover {
+  transform: translateY(-5px) scale(1.04);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.25);
+}
+
+.mosaic-icon {
+  font-size: 2.2rem;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.mosaic-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-top: 6px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.mosaic-more {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+}
+
+.mosaic-more .mosaic-icon {
+  font-size: 2.6rem;
+  font-weight: 200;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .hero-illustration-wrap { margin: 24px auto 10px; }
+  .service-mosaic {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .mosaic-icon { font-size: 1.8rem; }
+  .mosaic-label { font-size: 10px; }
+}

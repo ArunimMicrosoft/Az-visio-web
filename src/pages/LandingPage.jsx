@@ -1,6 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  HeroIllustration,
+  HowItWorksIllustration,
+  ServiceMosaic,
+  FeatureDragDrop,
+  FeatureWAF,
+  FeatureIaC,
+  FeatureCost,
+  FeatureExport,
+  FeatureSecurity,
+} from '../components/LandingIllustrations';
+import '../components/LandingIllustrations.css';
 import './LandingPage.css';
 
 const LandingPage = () => {
@@ -91,7 +103,10 @@ const LandingPage = () => {
               <div className="stat-label">Terraform + ARM</div>
             </div>
           </div>
-          
+
+          {/* Animated app preview illustration */}
+          <HeroIllustration />
+
           <div className="scroll-indicator">
             <a href="#features" className="scroll-arrow">
               <span>↓</span>
@@ -99,7 +114,21 @@ const LandingPage = () => {
             </a>
           </div>
         </div>
-      </header>      {/* Features Section */}
+      </header>
+
+      {/* How It Works — visual three-step flow */}
+      <section className="how-it-works-section" style={{ padding: '60px 20px 20px', background: '#f8fafc', textAlign: 'center' }}>
+        <div className="section-container">
+          <div className="section-header">
+            <span className="section-badge">How It Works</span>
+            <h2 className="section-title">From Idea to Production in 3 Steps</h2>
+            <p className="section-subtitle">No DevOps PhD required. Visual design, instant validation, exportable code.</p>
+          </div>
+          <HowItWorksIllustration />
+        </div>
+      </section>
+
+      {/* Features Section */}
       <section id="features" className="features-section">
         <div className="section-container">
           <div className="section-header">
@@ -110,6 +139,7 @@ const LandingPage = () => {
           
           <div className="features-grid">
             <div className="feature-card">
+              <FeatureDragDrop />
               <div className="feature-icon">🎨</div>
               <h3>Drag & Drop Canvas</h3>
               <p>Intuitive visual editor with 700+ official Microsoft Azure icons. Place services, draw connections, create security boundaries.</p>
@@ -121,6 +151,7 @@ const LandingPage = () => {
             </div>
 
             <div className="feature-card feature-card-highlight">
+              <FeatureWAF />
               <div className="feature-icon">🏛️</div>
               <h3>Azure Well-Architected Framework</h3>
               <p>Built-in WAF validator checks your architecture against all 5 pillars — Reliability, Security, Cost Optimization, Operational Excellence, and Performance.</p>
@@ -132,6 +163,7 @@ const LandingPage = () => {
             </div>
 
             <div className="feature-card feature-card-highlight">
+              <FeatureIaC />
               <div className="feature-icon">🔧</div>
               <h3>Terraform HCL Parser & Generator</h3>
               <p>Import existing Terraform code and visualize it as a diagram — or export your canvas directly to production-ready Terraform HCL with proper resource blocks and dependencies.</p>
@@ -143,6 +175,7 @@ const LandingPage = () => {
             </div>
 
             <div className="feature-card">
+              <FeatureCost />
               <div className="feature-icon">💰</div>
               <h3>Real-Time Cost Calculator</h3>
               <p>Estimate Azure costs as you design using the official Azure Retail Prices API. Compare SKUs, regions, and configurations instantly.</p>
@@ -154,6 +187,7 @@ const LandingPage = () => {
             </div>
 
             <div className="feature-card">
+              <FeatureExport />
               <div className="feature-icon">📦</div>
               <h3>Multi-Format Export</h3>
               <p>Export your architecture in any format your team needs — from visual PNG/PDF to deployable IaC templates.</p>
@@ -165,6 +199,7 @@ const LandingPage = () => {
             </div>
 
             <div className="feature-card">
+              <FeatureSecurity />
               <div className="feature-icon">🔒</div>
               <h3>Enterprise Security</h3>
               <p>Bank-grade authentication with rate limiting, account lockout, and full audit logging for compliance.</p>
@@ -283,7 +318,11 @@ const LandingPage = () => {
       <section className="services-section">
         <div className="section-container">
           <h2 className="section-title">Azure Services Supported</h2>
-          <div className="services-categories">
+          <p className="section-subtitle" style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 8px' }}>
+            700+ official Microsoft Azure service icons across 22 categories. Just a taste below.
+          </p>
+          <ServiceMosaic />
+          <div className="services-categories" style={{ marginTop: '40px' }}>
             <div className="service-category">
               <span className="category-icon">💻</span>
               <span className="category-name">Compute</span>
