@@ -114,8 +114,8 @@ const LandingPage = () => {
                 <span className="hero-url">cloudcanvas.co/app</span>
               </div>
               <img
-                src="/screenshots/canvas-boundaries.png"
-                alt="Cloud Canvas Designer — design Azure architectures visually with nested subscription, resource group, virtual network, and subnet boundaries"
+                src="/screenshots/app-overview.png"
+                alt="Cloud Canvas Designer — full app workspace with Azure service sidebar, drag-and-drop canvas, cost estimator panel, and toolbar for templates, save, load, validate, and export"
                 className="hero-screenshot"
                 width="1024"
                 height="600"
