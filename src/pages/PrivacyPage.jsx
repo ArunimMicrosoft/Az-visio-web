@@ -187,7 +187,7 @@ const PrivacyPage = () => {
           </ul>
 
           <h2 id="security">9. Security Measures</h2>
-          <p>We protect your data with the following controls. For full technical detail see our public <a href="https://github.com/ArunimMicrosoft/Az-visio-web/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">SECURITY.md</a>.</p>
+          <p>We protect your data with multiple layers of controls covering identity, network, data, and operations:</p>
           <ul>
             <li><strong>Encryption in transit</strong> — TLS 1.2+ everywhere, HSTS preloaded</li>
             <li><strong>Encryption at rest</strong> — Supabase Postgres encrypted via AWS KMS; backups encrypted</li>

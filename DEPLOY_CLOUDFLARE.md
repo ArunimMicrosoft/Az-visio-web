@@ -32,7 +32,7 @@ The old `staticwebapp.config.json` and `/api/*` Azure Functions stay in the repo
 3. Click **Create**. You'll land on a screen titled **"Ship something new"** with options like "Continue with GitHub" and "Start with Hello World!" — this is the **Workers** flow. **Do not pick those.**
 4. At the **bottom of that screen**, find the small text: **"Looking to deploy Pages? Get started"** — click **Get started**. (Direct URL: `https://dash.cloudflare.com/?to=/:account/pages/new/provider`.)
 5. Now you're on the Pages flow. Select **GitHub** as the source.
-6. Authorize Cloudflare on GitHub if prompted. Select repo `ArunimMicrosoft/Az-visio-web`.
+6. Authorize Cloudflare on GitHub if prompted. Select your repository.
 7. **Set up builds and deployments:**
    - Project name: `cloudcanvas`
    - Production branch: `main`
