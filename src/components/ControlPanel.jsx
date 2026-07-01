@@ -127,7 +127,7 @@ const ControlPanel = ({
           isTrial={isTrial}
           onUpgrade={onUpgrade}
         />
-        <button className="control-btn discovery-btn" onClick={onOpenDiscovery} title="AI Architecture Discovery — import ARM, Bicep, TF, Resource Graph, Az CLI, PowerShell, or .ccd">
+        <button className="control-btn discovery-btn" onClick={onOpenDiscovery} title="Architecture Discovery — visualize IaC files or your live Azure environment (ARM, Bicep, TF, Resource Graph, Az CLI, PowerShell, .ccd)">
           🧭 Discover
         </button>
         <button className="control-btn validate-btn" onClick={onValidate} title="Validate architecture for deployment">

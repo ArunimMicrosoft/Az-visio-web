@@ -99,9 +99,9 @@ export default function DiscoveryImport({ open, onClose, onImport, isTrial, onUp
         {/* Header */}
         <div className="discovery-header">
           <div>
-            <div className="discovery-title">🧭 AI Architecture Discovery</div>
+            <div className="discovery-title">🧭 Architecture Discovery</div>
             <div className="discovery-subtitle">
-              Upload an Azure export — we&apos;ll build the diagram, score it, and flag issues.
+              Upload an Azure export — IaC or a live-environment snapshot — and we&apos;ll build the diagram, score it, and flag issues.
             </div>
           </div>
           <button className="discovery-close" onClick={handleClose} aria-label="Close">✕</button>
@@ -329,7 +329,9 @@ function HowToExportHelp() {
 
       {tab === 'cli' && (
         <div className="discovery-howto-body">
-          <p className="discovery-howto-lead">Requires <a href="https://learn.microsoft.com/cli/azure/install-azure-cli" target="_blank" rel="noopener noreferrer">Azure CLI</a> installed and <code>az login</code>.</p>
+          <p className="discovery-howto-lead">
+            Snapshot your <b>live, currently deployed</b> Azure resources — no IaC needed. Requires <a href="https://learn.microsoft.com/cli/azure/install-azure-cli" target="_blank" rel="noopener noreferrer">Azure CLI</a> installed and <code>az login</code>.
+          </p>
           <p className="discovery-howto-label">Export a whole subscription:</p>
           <pre className="discovery-howto-code">{`az account set --subscription "<sub-id-or-name>"
 az resource list > resources.json`}</pre>

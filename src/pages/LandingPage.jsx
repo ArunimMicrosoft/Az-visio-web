@@ -238,15 +238,26 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* AI Architecture Discovery Section */}
+      {/* Architecture Discovery Section */}
       <section id="discovery" className="discovery-section">
         <div className="section-container">
           <div className="section-header">
             <span className="section-badge">🆕 New · Pro Feature</span>
-            <h2 className="section-title">AI Architecture Discovery</h2>
+            <h2 className="section-title">Architecture Discovery</h2>
             <p className="section-subtitle">
-              Turn any Azure export into a professional architecture diagram in seconds — with WAF scoring, security issues, and traffic flows.
+              Turn any Azure export — IaC code <em>or</em> a live-environment snapshot — into a professional architecture diagram. See exactly how your running resources connect, score against WAF pillars, and spot issues in seconds.
             </p>
+          </div>
+
+          {/* Live-environment highlight — sits between subtitle and the two info cards */}
+          <div className="discovery-live-banner">
+            <span className="discovery-live-icon">🛰️</span>
+            <div>
+              <div className="discovery-live-title">Visualize your live Azure environment, not just IaC</div>
+              <div className="discovery-live-text">
+                Run one Azure CLI or PowerShell command to snapshot your <b>currently running</b> subscription, resource group, or single resource — then upload the file here. Discovery reconstructs the actual traffic flows and dependencies from real deployed state, so you can finally see how everything is wired without hunting through the portal.
+              </div>
+            </div>
           </div>
 
           <div className="discovery-landing-grid">

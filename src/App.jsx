@@ -880,7 +880,7 @@ function App() {
         isTrial={!hasTier(user, 'professional')}
         onUpgrade={() => {
           setDiscoveryOpen(false);
-          setUpgradeReason('AI Architecture Discovery requires the Professional plan. Upgrade to import ARM, Bicep, Terraform, and Resource Graph exports.');
+          setUpgradeReason('Architecture Discovery requires the Professional plan. Upgrade to visualize IaC files or your live Azure environment (ARM, Bicep, Terraform, Resource Graph, Az CLI, PowerShell).');
           setUpgradeFeature('Discovery');
           setUpgradeModalOpen(true);
         }}

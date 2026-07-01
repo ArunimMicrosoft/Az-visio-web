@@ -1776,7 +1776,7 @@ html {
 
 
 /* ─────────────────────────────────────────────────────────────
-   AI Architecture Discovery — landing section
+   Architecture Discovery — landing section
 ───────────────────────────────────────────────────────────── */
 .discovery-section {
   padding: 6rem 2rem;
@@ -2006,4 +2006,45 @@ html {
   .discovery-landing-grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .discovery-section { padding: 4rem 1.25rem; }
   .discovery-landing-info, .discovery-landing-howto { padding: 1.5rem; }
+}
+
+
+/* Live-environment banner inside Discovery landing section */
+.discovery-live-banner {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 22px 26px;
+  margin: 2rem auto 0;
+  max-width: 900px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(56, 189, 248, 0.08) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+  position: relative;
+  z-index: 2;
+}
+.discovery-live-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+.discovery-live-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #86efac;
+  margin-bottom: 6px;
+  letter-spacing: -0.2px;
+}
+.discovery-live-text {
+  font-size: 0.92rem;
+  color: rgba(241, 245, 249, 0.85);
+  line-height: 1.65;
+}
+.discovery-live-text b { color: #fff; font-weight: 700; }
+
+@media (max-width: 900px) {
+  .discovery-live-banner { flex-direction: column; gap: 12px; padding: 18px; margin: 1.5rem auto 0; }
+  .discovery-live-icon { font-size: 26px; }
 }
