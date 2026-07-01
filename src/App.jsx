@@ -877,10 +877,9 @@ function App() {
         open={discoveryOpen}
         onClose={() => setDiscoveryOpen(false)}
         onImport={handleDiscoveryImport}
-        isTrial={!hasTier(user, 'professional')}
         onUpgrade={() => {
           setDiscoveryOpen(false);
-          setUpgradeReason('Architecture Discovery requires the Professional plan. Upgrade to visualize IaC files or your live Azure environment (ARM, Bicep, Terraform, Resource Graph, Az CLI, PowerShell).');
+          setUpgradeReason('Upgrade to unlock more Architecture Discovery runs — Starter gives you 10 runs every 30 days, Professional gives 100, Enterprise is unlimited.');
           setUpgradeFeature('Discovery');
           setUpgradeModalOpen(true);
         }}

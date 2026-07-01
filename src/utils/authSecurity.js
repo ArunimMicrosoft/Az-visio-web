@@ -207,6 +207,114 @@ export async function recordDiagramCreation(userId) {
   }
 }
 
+// ============================================================
+// Architecture Discovery quotas
+// ============================================================
+
+// Per-plan Discovery limits.
+//   trial        → 2 total (lifetime, no reset)
+//   starter      → 10 per calendar-30-day cycle
+//   professional → 100 per calendar-30-day cycle
+//   enterprise   → unlimited
+// null limit == unlimited.
+export const DISCOVERY_LIMITS = {
+  trial:        { limit: 2,    period: 'lifetime' },
+  starter:      { limit: 10,   period: 'monthly'  },
+  professional: { limit: 100,  period: 'monthly'  },
+  enterprise:   { limit: null, period: 'unlimited' },
+};
+
+/**
+ * Compute a user's current Discovery quota state (pure function).
+ * @returns { allowed, used, limit, remaining, isUnlimited, period, resetAt, tier }
+ */
+export function getDiscoveryStatus(user) {
+  if (!user) {
+    return { allowed: false, used: 0, limit: 0, remaining: 0, isUnlimited: false, period: 'none', tier: 'none' };
+  }
+  if (isAdminUser(user)) {
+    return { allowed: true, used: user.discoveriesUsed || 0, limit: null, remaining: Infinity, isUnlimited: true, period: 'unlimited', tier: 'admin' };
+  }
+
+  const tier = user.subscriptionTier || 'trial';
+  const cfg  = DISCOVERY_LIMITS[tier] || DISCOVERY_LIMITS.trial;
+
+  // Unlimited plans
+  if (cfg.limit == null) {
+    return { allowed: true, used: user.discoveriesUsed || 0, limit: null, remaining: Infinity, isUnlimited: true, period: cfg.period, tier };
+  }
+
+  // Determine effective "used" — for monthly plans, count resets when the cycle ends
+  const now = Date.now();
+  const resetTs = user.discoveriesResetAt ? new Date(user.discoveriesResetAt).getTime() : 0;
+  const cycleExpired = cfg.period === 'monthly' && resetTs > 0 && now > resetTs;
+  const used = cycleExpired ? 0 : (user.discoveriesUsed || 0);
+  const remaining = Math.max(0, cfg.limit - used);
+
+  return {
+    allowed:  remaining > 0,
+    used,
+    limit:    cfg.limit,
+    remaining,
+    isUnlimited: false,
+    period:   cfg.period,
+    resetAt:  cfg.period === 'monthly' ? user.discoveriesResetAt : null,
+    tier,
+  };
+}
+
+/**
+ * Increment a user's Discovery counter in Supabase.
+ * Handles monthly cycle reset when the current cycle has expired.
+ */
+export async function recordDiscoveryUse(user) {
+  if (!user || !user.id) return { success: false };
+  if (isAdminUser(user)) return { success: true };
+
+  const tier = user.subscriptionTier || 'trial';
+  const cfg  = DISCOVERY_LIMITS[tier] || DISCOVERY_LIMITS.trial;
+  if (cfg.limit == null) return { success: true };
+
+  const now = Date.now();
+  const resetTs = user.discoveriesResetAt ? new Date(user.discoveriesResetAt).getTime() : 0;
+  const cycleExpired = cfg.period === 'monthly' && resetTs > 0 && now > resetTs;
+
+  // Compute next values
+  let nextUsed;
+  let nextResetAt;
+  if (cfg.period === 'lifetime') {
+    nextUsed = (user.discoveriesUsed || 0) + 1;
+    nextResetAt = user.discoveriesResetAt || null; // never used
+  } else {
+    if (cycleExpired || !resetTs) {
+      nextUsed = 1;
+      nextResetAt = new Date(now + 30 * 24 * 60 * 60 * 1000).toISOString();
+    } else {
+      nextUsed = (user.discoveriesUsed || 0) + 1;
+      nextResetAt = user.discoveriesResetAt;
+    }
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      discoveries_used: nextUsed,
+      discoveries_reset_at: nextResetAt,
+    })
+    .eq('id', user.id);
+
+  if (error) {
+    // Column-missing → tell caller to run the SQL migration
+    if (error.code === '42703') {
+      console.warn('discoveries_used column missing. Run docs/ADD_DISCOVERY_TRACKING.sql');
+      return { success: false, needsMigration: true };
+    }
+    console.error('recordDiscoveryUse error:', error);
+    return { success: false };
+  }
+  return { success: true, used: nextUsed, resetAt: nextResetAt };
+}
+
 /**
  * Upgrade user subscription tier in Supabase.
  * Sets subscription_tier, upgraded_at, and subscription_expires_at (30 days from now).

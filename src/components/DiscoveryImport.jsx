@@ -2,8 +2,10 @@
 // Accepts ARM, Bicep, Terraform, TF state, Resource Graph, Az CLI, PowerShell,
 // .ccd, and generic inventory exports. Shows live 11-step progress.
 
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { runDiscovery } from '../utils/discovery/engine';
+import { getDiscoveryStatus, recordDiscoveryUse, DISCOVERY_LIMITS } from '../utils/authSecurity';
+import { useAuth } from '../contexts/AuthContext';
 import './DiscoveryImport.css';
 
 const STEP_TITLES = [
@@ -20,14 +22,19 @@ const STEP_TITLES = [
   '11. Output graph',
 ];
 
-export default function DiscoveryImport({ open, onClose, onImport, isTrial, onUpgrade }) {
+export default function DiscoveryImport({ open, onClose, onImport, onUpgrade }) {
+  const { user, refreshUser } = useAuth();
   const [steps, setSteps] = useState([]);
-  const [status, setStatus] = useState('idle'); // idle | processing | done | error
+  const [status, setStatus] = useState('idle'); // idle | processing | done | error | blocked
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
   const [fileName, setFileName] = useState('');
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Live quota state — recomputed every render from user object
+  const quota = useMemo(() => getDiscoveryStatus(user), [user]);
+  const blocked = !quota.allowed;
 
   const reset = () => {
     setSteps([]);
@@ -40,6 +47,14 @@ export default function DiscoveryImport({ open, onClose, onImport, isTrial, onUp
   const handleClose = () => { reset(); onClose?.(); };
 
   const process = useCallback(async (text, name) => {
+    // Re-check quota at the moment of running (in case user opened the modal
+    // days ago and their cycle expired or plan changed since).
+    const currentQuota = getDiscoveryStatus(user);
+    if (!currentQuota.allowed) {
+      setStatus('blocked');
+      return;
+    }
+
     setStatus('processing');
     setSteps([]);
     setError(null);
@@ -50,7 +65,6 @@ export default function DiscoveryImport({ open, onClose, onImport, isTrial, onUp
       const res = await runDiscovery(text, {
         filename: name,
         onStep: (step, all) => {
-          // Replace step by index (later 'done' overrides earlier 'running')
           setSteps(() => {
             const map = new Map();
             for (const s of all) map.set(s.index, s);
@@ -60,16 +74,23 @@ export default function DiscoveryImport({ open, onClose, onImport, isTrial, onUp
       });
       setResult(res);
       setStatus('done');
+
+      // Record the successful use — increments counter in DB, then refresh user
+      const record = await recordDiscoveryUse(user);
+      if (record.needsMigration) {
+        console.warn('Discovery counter not tracked — DB migration pending.');
+      }
+      try { await refreshUser?.(); } catch { /* ignore */ }
     } catch (err) {
       console.error('Discovery error:', err);
       setError(err.message || 'Discovery failed.');
       setStatus('error');
     }
-  }, []);
+  }, [user, refreshUser]);
 
   const handleFile = (file) => {
     if (!file) return;
-    if (isTrial) { onUpgrade?.(); return; }
+    if (blocked) { setStatus('blocked'); return; }
     const reader = new FileReader();
     reader.onload = (e) => process(e.target.result, file.name);
     reader.onerror = () => setError('Could not read file.');
@@ -104,22 +125,18 @@ export default function DiscoveryImport({ open, onClose, onImport, isTrial, onUp
               Upload an Azure export — IaC or a live-environment snapshot — and we&apos;ll build the diagram, score it, and flag issues.
             </div>
           </div>
-          <button className="discovery-close" onClick={handleClose} aria-label="Close">✕</button>
+          <div className="discovery-header-actions">
+            <QuotaPill quota={quota} />
+            <button className="discovery-close" onClick={handleClose} aria-label="Close">✕</button>
+          </div>
         </div>
 
         {/* Body */}
         <div className="discovery-body">
           {/* LEFT — Input panel */}
           <div className="discovery-input">
-            {isTrial ? (
-              <div className="discovery-trial-block">
-                <div className="discovery-lock">🔒</div>
-                <div className="discovery-trial-title">Discovery is a Pro feature</div>
-                <div className="discovery-trial-text">
-                  Upgrade to import ARM, Bicep, Terraform, Resource Graph, Az CLI, PowerShell, or Discovery (.ccd) exports and auto-generate architecture diagrams with WAF scoring.
-                </div>
-                <button className="discovery-btn-upgrade" onClick={onUpgrade}>Upgrade Plan →</button>
-              </div>
+            {blocked || status === 'blocked' ? (
+              <QuotaBlocked quota={quota} onUpgrade={onUpgrade} />
             ) : status === 'idle' ? (
               <>
                 <div
@@ -282,6 +299,109 @@ export default function DiscoveryImport({ open, onClose, onImport, isTrial, onUp
       </div>
     </div>
   );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Quota-related UI pieces
+───────────────────────────────────────────────────────────── */
+
+function QuotaPill({ quota }) {
+  if (!quota) return null;
+  if (quota.isUnlimited) {
+    return (
+      <div className="discovery-quota-pill discovery-quota-pill--unlimited" title="No usage limit">
+        <span className="discovery-quota-pill-icon">∞</span>
+        <span className="discovery-quota-pill-text">Unlimited</span>
+      </div>
+    );
+  }
+  const tone = quota.remaining === 0 ? 'red'
+             : quota.remaining <= Math.max(1, Math.round(quota.limit * 0.2)) ? 'amber'
+             : 'green';
+  const periodLabel = quota.period === 'lifetime' ? 'total' : 'this cycle';
+  return (
+    <div
+      className={`discovery-quota-pill discovery-quota-pill--${tone}`}
+      title={`Plan: ${quota.tier}. ${quota.used}/${quota.limit} discoveries used ${periodLabel}.`}
+    >
+      <span className="discovery-quota-pill-icon">
+        {quota.remaining === 0 ? '🔒' : '⚡'}
+      </span>
+      <span className="discovery-quota-pill-text">
+        {quota.remaining}/{quota.limit} left {quota.period === 'monthly' && '· 30-day'}
+      </span>
+    </div>
+  );
+}
+
+function QuotaBlocked({ quota, onUpgrade }) {
+  const isTrial = quota.tier === 'trial';
+  const isMonthlyReset = quota.period === 'monthly' && quota.resetAt;
+
+  // Build tier-specific copy
+  let title, body, ctaLabel;
+  if (isTrial) {
+    title = 'Free trial limit reached';
+    body  = `You've used all ${quota.limit} Discovery runs on the free trial. Upgrade to keep visualizing your Azure infrastructure — Starter gives you ${DISCOVERY_LIMITS.starter.limit} runs every 30 days, Professional gives you ${DISCOVERY_LIMITS.professional.limit}.`;
+    ctaLabel = 'Upgrade to unlock more →';
+  } else if (isMonthlyReset) {
+    const resetDate = new Date(quota.resetAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' });
+    title = `${humanTier(quota.tier)} plan limit reached`;
+    body  = `You've used all ${quota.limit} Discovery runs in this 30-day cycle. Your quota resets on ${resetDate}, or you can upgrade now for a higher limit.`;
+    ctaLabel = 'Upgrade plan →';
+  } else {
+    title = 'Discovery limit reached';
+    body  = `You've hit the maximum number of Discovery runs for your plan. Upgrade to continue.`;
+    ctaLabel = 'Upgrade plan →';
+  }
+
+  return (
+    <div className="discovery-blocked-block">
+      <div className="discovery-blocked-icon">🔒</div>
+      <div className="discovery-blocked-title">{title}</div>
+      <div className="discovery-blocked-stats">
+        <div className="discovery-blocked-stat">
+          <div className="discovery-blocked-stat-value">{quota.used}</div>
+          <div className="discovery-blocked-stat-label">Used</div>
+        </div>
+        <div className="discovery-blocked-stat">
+          <div className="discovery-blocked-stat-value">{quota.limit ?? '∞'}</div>
+          <div className="discovery-blocked-stat-label">Limit</div>
+        </div>
+        <div className="discovery-blocked-stat">
+          <div className="discovery-blocked-stat-value discovery-blocked-stat-value--zero">0</div>
+          <div className="discovery-blocked-stat-label">Remaining</div>
+        </div>
+      </div>
+      <div className="discovery-blocked-text">{body}</div>
+
+      {/* Show the plan ladder so users see what they get by upgrading */}
+      <div className="discovery-blocked-ladder">
+        <PlanRow name="Starter"      price="₹499"   runs={DISCOVERY_LIMITS.starter.limit}      period="per 30 days" active={quota.tier === 'starter'} />
+        <PlanRow name="Professional" price="₹1,200" runs={DISCOVERY_LIMITS.professional.limit} period="per 30 days" active={quota.tier === 'professional'} highlight />
+        <PlanRow name="Enterprise"   price="₹6,699" runs="Unlimited" period=""                  active={quota.tier === 'enterprise'} />
+      </div>
+
+      <button className="discovery-btn-upgrade" onClick={onUpgrade}>{ctaLabel}</button>
+    </div>
+  );
+}
+
+function PlanRow({ name, price, runs, period, active, highlight }) {
+  return (
+    <div className={`disc-plan-row ${highlight ? 'disc-plan-row--highlight' : ''} ${active ? 'disc-plan-row--active' : ''}`}>
+      <div className="disc-plan-row-name">
+        {name}
+        {active && <span className="disc-plan-row-badge">CURRENT</span>}
+      </div>
+      <div className="disc-plan-row-runs">{runs} {period}</div>
+      <div className="disc-plan-row-price">{price}<span>/mo</span></div>
+    </div>
+  );
+}
+
+function humanTier(tier) {
+  return String(tier || '').replace(/^./, c => c.toUpperCase());
 }
 
 function HowToExportHelp() {

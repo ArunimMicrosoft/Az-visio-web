@@ -321,6 +321,8 @@ export function profileToAppUser(supabaseUser, profile) {
     trialExpiresAt: profile.trial_expires_at,
     trialExportsUsed: profile.trial_exports_used || 0,
     diagramsCreated: profile.diagrams_created || 0,
+    discoveriesUsed: profile.discoveries_used || 0,
+    discoveriesResetAt: profile.discoveries_reset_at || null,
     createdAt: profile.created_at,
     lastLogin: profile.last_login,
     isActive: profile.is_active !== false,
