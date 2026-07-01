@@ -72,28 +72,30 @@ function normalizeResource(raw, defaults = {}) {
 function parseArm(json) {
   const evaluator = createEvaluator(json);
 
-  // Step 1 — flatten nested `resources` into single list with full type + name paths
-  const raw = flattenArmResources(json.resources || [], []);
-
-  // Step 2 — extract inline sub-resources (subnets inside VNets, etc.) that are
-  // declared as arrays inside `properties` rather than as nested `resources`.
-  const inline = [];
-  for (const r of raw) inline.push(...extractInlineChildren(r));
-  const combined = raw.concat(inline);
-
-  // Step 3 — evaluate ARM expressions on every resource
-  const evaluated = combined.map(r => ({
+  const evalOne = (r) => ({
     ...r,
-    name: evaluator.evalString(r.name),
-    location: evaluator.evalString(r.location || ''),
+    name:      evaluator.evalString(r.name),
+    location:  evaluator.evalString(r.location || ''),
     properties: evaluator.eval(r.properties || {}),
-    identity: evaluator.eval(r.identity || null),
-    sku: r.sku ? evaluator.eval(r.sku) : null,
-    tags: r.tags ? evaluator.eval(r.tags) : {},
-  }));
+    identity:  evaluator.eval(r.identity || null),
+    sku:       r.sku ? evaluator.eval(r.sku) : null,
+    tags:      r.tags ? evaluator.eval(r.tags) : {},
+  });
 
-  // Step 4 — normalize and synthesize proper ARM resource IDs
-  const normalized = evaluated.map(r => {
+  // Step 1 — flatten nested `resources` into single list, evaluate ARM expressions
+  const rawFlat = flattenArmResources(json.resources || [], []);
+  const evaluatedTopLevel = rawFlat.map(evalOne);
+
+  // Step 2 — extract inline sub-resources (subnets inside VNets, etc.). Parent
+  // names are now RESOLVED so child paths are clean strings.
+  const inline = [];
+  for (const r of evaluatedTopLevel) inline.push(...extractInlineChildren(r));
+  const evaluatedInline = inline.map(evalOne);
+
+  const combined = evaluatedTopLevel.concat(evaluatedInline);
+
+  // Step 3 — normalize + synthesize proper ARM resource IDs
+  const normalized = combined.map(r => {
     const id = synthesizeResourceId(r.type, r.name);
     return normalizeResource({
       id,
@@ -110,12 +112,11 @@ function parseArm(json) {
     });
   }).filter(r => !!r.azureType);
 
-  // Step 5 — dedupe by resourceId (inline subnet + top-level subnet declaration)
+  // Step 4 — dedupe by resourceId (inline subnet + top-level subnet declaration)
   const byId = new Map();
   for (const r of normalized) {
     const key = (r.resourceId || '').toLowerCase();
     if (!key) continue;
-    // Prefer the resource that carries richer properties
     const existing = byId.get(key);
     if (!existing) byId.set(key, r);
     else if (Object.keys(r.properties || {}).length > Object.keys(existing.properties || {}).length) {

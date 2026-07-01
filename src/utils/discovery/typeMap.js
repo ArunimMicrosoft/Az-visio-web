@@ -182,19 +182,24 @@ export const SKIP_CHILD_TYPES = new Set([
 ]);
 
 // Get metadata for a resource type — supports partial match for versioned names
+// Pre-compute lowercase lookups so ARM type-casing quirks don't cause misses.
+const _typeMapLower = new Map(Object.entries(AZURE_TYPE_MAP).map(([k, v]) => [k.toLowerCase(), v]));
+const _skipLower    = new Set([...SKIP_CHILD_TYPES].map(t => t.toLowerCase()));
+
 export function mapAzureType(azureType) {
   if (!azureType) return null;
-  if (SKIP_CHILD_TYPES.has(azureType)) return null;
+  const lower = azureType.toLowerCase();
+  if (_skipLower.has(lower)) return null;
 
-  // Exact match first
-  if (AZURE_TYPE_MAP[azureType]) return AZURE_TYPE_MAP[azureType];
+  // Exact match (case-insensitive)
+  if (_typeMapLower.has(lower)) return _typeMapLower.get(lower);
 
   // Try parent path (drop last segment iteratively)
-  const parts = azureType.split('/');
+  const parts = lower.split('/');
   while (parts.length > 2) {
     parts.pop();
     const parent = parts.join('/');
-    if (AZURE_TYPE_MAP[parent]) return AZURE_TYPE_MAP[parent];
+    if (_typeMapLower.has(parent)) return _typeMapLower.get(parent);
   }
 
   // Not a recognized architectural resource — signal caller to drop it.

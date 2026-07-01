@@ -142,7 +142,16 @@ export function buildLayout(resources, edges) {
 
 function shortName(name = '') {
   if (!name) return 'Resource';
+  let str = String(name);
+  // If eval failed, try to extract a readable name from an ARM expression.
+  const paramMatch = str.match(/parameters\('([^']+)'\)/);
+  if (paramMatch) {
+    // e.g. "virtualMachines_networktools_name" → "networktools"
+    str = paramMatch[1]
+      .replace(/^[a-z]+(?:_)?([A-Za-z0-9]+.*?)_name$/, '$1')
+      .replace(/_name$/, '');
+  }
   // For nested names like "server/database" keep the last segment for display
-  const last = name.split('/').pop();
-  return (last || name).replace(/[-_]+/g, ' ').slice(0, 32);
+  const last = str.split('/').pop();
+  return (last || str).replace(/[-_]+/g, ' ').slice(0, 32);
 }
