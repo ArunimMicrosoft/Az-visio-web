@@ -159,7 +159,23 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
 
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', function (response) {
-        reject(new Error(response.error.description || 'Payment failed'));
+        // Log the full Razorpay error object for diagnostics — surfaces
+        // real cause (KYC pending, method disabled, amount limits, etc.)
+        const err = response?.error || {};
+        console.error('[Razorpay] payment.failed →', {
+          code: err.code,
+          description: err.description,
+          source: err.source,
+          step: err.step,
+          reason: err.reason,
+          metadata: err.metadata,
+          full: response,
+        });
+        const userMsg =
+          err.description ||
+          err.reason ||
+          `Payment failed (code: ${err.code || 'unknown'})`;
+        reject(new Error(userMsg));
       });
       rzp.open();
     });
