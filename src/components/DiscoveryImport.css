@@ -326,3 +326,133 @@
   .discovery-metrics { grid-template-columns: repeat(3, 1fr); }
   .discovery-scores  { grid-template-columns: repeat(3, 1fr); }
 }
+
+
+/* ── How-to help panel ─────────────────────────────────────── */
+.discovery-howto {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+.discovery-howto summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #7dd3fc;
+  padding: 4px 0;
+  list-style: none;
+}
+.discovery-howto summary::-webkit-details-marker { display: none; }
+.discovery-howto summary::after {
+  content: '▾';
+  margin-left: auto;
+  color: rgba(125, 211, 252, 0.6);
+  font-size: 11px;
+  transition: transform 0.15s;
+}
+.discovery-howto[open] summary::after { transform: rotate(180deg); }
+
+.discovery-howto-icon {
+  font-size: 16px;
+}
+
+.discovery-howto-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 12px 0 10px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+.discovery-howto-tab {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(241, 245, 249, 0.7);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.discovery-howto-tab:hover { background: rgba(255, 255, 255, 0.1); color: #f1f5f9; }
+.discovery-howto-tab--active {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #7dd3fc;
+}
+
+.discovery-howto-body {
+  color: rgba(241, 245, 249, 0.85);
+  line-height: 1.55;
+  padding-top: 2px;
+}
+.discovery-howto-lead {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  color: rgba(241, 245, 249, 0.7);
+}
+.discovery-howto-lead a { color: #7dd3fc; }
+.discovery-howto-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: rgba(241, 245, 249, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 10px 0 4px;
+}
+.discovery-howto-steps {
+  padding-left: 20px;
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+.discovery-howto-steps li { padding: 1px 0; }
+.discovery-howto-steps b, .discovery-howto-body b { color: #f1f5f9; }
+
+.discovery-howto-list {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+.discovery-howto-list li { padding: 3px 0; }
+
+.discovery-howto-code {
+  background: rgba(0, 0, 0, 0.4);
+  color: #7dd3fc;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 11.5px;
+  line-height: 1.55;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow-x: auto;
+  white-space: pre;
+  margin: 4px 0 8px;
+}
+
+.discovery-howto code {
+  background: rgba(0, 0, 0, 0.35);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #7dd3fc;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.discovery-howto-tip {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  background: rgba(251, 191, 36, 0.08);
+  border-left: 3px solid rgba(251, 191, 36, 0.5);
+  border-radius: 4px;
+  font-size: 12px;
+  color: rgba(241, 245, 249, 0.85);
+  line-height: 1.55;
+}

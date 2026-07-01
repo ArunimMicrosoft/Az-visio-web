@@ -238,6 +238,100 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* AI Architecture Discovery Section */}
+      <section id="discovery" className="discovery-section">
+        <div className="section-container">
+          <div className="section-header">
+            <span className="section-badge">🆕 New · Pro Feature</span>
+            <h2 className="section-title">AI Architecture Discovery</h2>
+            <p className="section-subtitle">
+              Turn any Azure export into a professional architecture diagram in seconds — with WAF scoring, security issues, and traffic flows.
+            </p>
+          </div>
+
+          <div className="discovery-landing-grid">
+            {/* Left: what it does */}
+            <div className="discovery-landing-info">
+              <h3 className="discovery-landing-heading">Drop a file. Get a diagram.</h3>
+              <p className="discovery-landing-desc">
+                Upload an ARM template, Bicep file, Terraform HCL, Terraform state, Azure Resource Graph result, Az CLI JSON, PowerShell export, or a Cloud Canvas Discovery (.ccd) file. Our engine identifies every resource, infers relationships, traces traffic flows, and lays it all out in tiered Azure Architecture Center style.
+              </p>
+
+              <ul className="discovery-landing-features">
+                <li><span className="disc-check">✓</span> Detects 11 export types automatically</li>
+                <li><span className="disc-check">✓</span> Infers subnet, backend pool, private endpoint & identity links</li>
+                <li><span className="disc-check">✓</span> Scores against all 5 Well-Architected pillars</li>
+                <li><span className="disc-check">✓</span> Flags public storage, missing NSGs, no-backup VMs, and more</li>
+                <li><span className="disc-check">✓</span> Groups by Resource Group and Region visually</li>
+              </ul>
+
+              <div className="discovery-landing-cta">
+                <a href="/signup" className="discovery-landing-btn-primary">Try Discovery Free →</a>
+                <a href="#pricing" className="discovery-landing-btn-secondary">See pricing</a>
+              </div>
+            </div>
+
+            {/* Right: how to get the IaC */}
+            <div className="discovery-landing-howto">
+              <div className="discovery-landing-howto-header">
+                <span className="discovery-landing-howto-icon">📤</span>
+                <div>
+                  <div className="discovery-landing-howto-title">How to export your Azure infrastructure</div>
+                  <div className="discovery-landing-howto-sub">Pick the method you already use — no agent, no install.</div>
+                </div>
+              </div>
+
+              <div className="discovery-landing-method">
+                <div className="discovery-landing-method-name">
+                  <span className="disc-badge">Portal</span> ARM template (fastest)
+                </div>
+                <ol className="discovery-landing-method-steps">
+                  <li>Azure Portal → open your Resource Group</li>
+                  <li>Settings → <b>Export template</b></li>
+                  <li>Click <b>Download</b> — you get <code>template.json</code></li>
+                  <li>Upload that file to Discovery</li>
+                </ol>
+              </div>
+
+              <div className="discovery-landing-method">
+                <div className="discovery-landing-method-name">
+                  <span className="disc-badge">CLI</span> Azure CLI list
+                </div>
+                <pre className="discovery-landing-code">az resource list --subscription {`{sub-id}`} {'>'} resources.json</pre>
+                <p className="discovery-landing-method-note">Or per resource group: <code>az resource list -g my-rg {'>'} rg.json</code></p>
+              </div>
+
+              <div className="discovery-landing-method">
+                <div className="discovery-landing-method-name">
+                  <span className="disc-badge">Graph</span> Azure Resource Graph
+                </div>
+                <pre className="discovery-landing-code">{`az graph query -q "Resources | project id,name,type,location,resourceGroup,subscriptionId,properties" --first 1000 > graph.json`}</pre>
+              </div>
+
+              <div className="discovery-landing-method">
+                <div className="discovery-landing-method-name">
+                  <span className="disc-badge">PowerShell</span> Get-AzResource
+                </div>
+                <pre className="discovery-landing-code">{`Get-AzResource | ConvertTo-Json -Depth 20 > resources.json`}</pre>
+              </div>
+
+              <div className="discovery-landing-method">
+                <div className="discovery-landing-method-name">
+                  <span className="disc-badge">IaC</span> Terraform / Bicep
+                </div>
+                <p className="discovery-landing-method-note">
+                  Upload your <code>main.tf</code>, <code>terraform.tfstate</code>, or <code>main.bicep</code> directly. We parse it on the client — nothing is sent to any external LLM.
+                </p>
+              </div>
+
+              <div className="discovery-landing-privacy">
+                🔒 Your file is parsed in your browser. Nothing gets uploaded to third-party services.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* WAF Deep-Dive Section */}
       <section className="waf-section">
         <div className="section-container">

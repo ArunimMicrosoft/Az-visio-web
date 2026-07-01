@@ -143,6 +143,8 @@ export default function DiscoveryImport({ open, onClose, onImport, isTrial, onUp
                   />
                 </div>
 
+                <HowToExportHelp />
+
                 <div className="discovery-or">— or paste content below —</div>
 
                 <textarea
@@ -279,6 +281,114 @@ export default function DiscoveryImport({ open, onClose, onImport, isTrial, onUp
         </div>
       </div>
     </div>
+  );
+}
+
+function HowToExportHelp() {
+  const [tab, setTab] = React.useState('portal');
+  const tabs = [
+    { id: 'portal',     label: 'Portal (ARM)' },
+    { id: 'cli',        label: 'Azure CLI' },
+    { id: 'graph',      label: 'Resource Graph' },
+    { id: 'powershell', label: 'PowerShell' },
+    { id: 'iac',        label: 'Terraform / Bicep' },
+  ];
+  return (
+    <details className="discovery-howto">
+      <summary>
+        <span className="discovery-howto-icon">💡</span>
+        <span>How do I get my Azure IaC file?</span>
+      </summary>
+
+      <div className="discovery-howto-tabs">
+        {tabs.map(t => (
+          <button
+            key={t.id}
+            className={`discovery-howto-tab ${tab === t.id ? 'discovery-howto-tab--active' : ''}`}
+            onClick={() => setTab(t.id)}
+            type="button"
+          >{t.label}</button>
+        ))}
+      </div>
+
+      {tab === 'portal' && (
+        <div className="discovery-howto-body">
+          <p className="discovery-howto-lead">Fastest — no CLI required.</p>
+          <ol className="discovery-howto-steps">
+            <li>Sign in to <b>portal.azure.com</b></li>
+            <li>Open the <b>Resource Group</b> (or single resource) you want to diagram</li>
+            <li>Left menu → <b>Automation → Export template</b></li>
+            <li>Click <b>Download</b> — you get a <code>template.json</code></li>
+            <li>Drop it above ⤴</li>
+          </ol>
+          <p className="discovery-howto-tip">
+            💡 <b>Tip:</b> To export an entire subscription, use the CLI tab.
+          </p>
+        </div>
+      )}
+
+      {tab === 'cli' && (
+        <div className="discovery-howto-body">
+          <p className="discovery-howto-lead">Requires <a href="https://learn.microsoft.com/cli/azure/install-azure-cli" target="_blank" rel="noopener noreferrer">Azure CLI</a> installed and <code>az login</code>.</p>
+          <p className="discovery-howto-label">Export a whole subscription:</p>
+          <pre className="discovery-howto-code">{`az account set --subscription "<sub-id-or-name>"
+az resource list > resources.json`}</pre>
+
+          <p className="discovery-howto-label">Export a single resource group:</p>
+          <pre className="discovery-howto-code">{`az resource list -g <resource-group> > rg.json`}</pre>
+
+          <p className="discovery-howto-label">Export as ARM template:</p>
+          <pre className="discovery-howto-code">{`az group export -n <resource-group> > template.json`}</pre>
+        </div>
+      )}
+
+      {tab === 'graph' && (
+        <div className="discovery-howto-body">
+          <p className="discovery-howto-lead">Best for very large or multi-subscription tenants.</p>
+          <p className="discovery-howto-label">Install the graph extension (one time):</p>
+          <pre className="discovery-howto-code">az extension add --name resource-graph</pre>
+
+          <p className="discovery-howto-label">Query and save:</p>
+          <pre className="discovery-howto-code">{`az graph query -q "Resources | project id,name,type,location,resourceGroup,subscriptionId,properties,identity,sku,tags" --first 1000 > graph.json`}</pre>
+          <p className="discovery-howto-tip">
+            💡 Use <code>--first N</code> to increase page size; Discovery consumes the returned rows directly.
+          </p>
+        </div>
+      )}
+
+      {tab === 'powershell' && (
+        <div className="discovery-howto-body">
+          <p className="discovery-howto-lead">Requires the <code>Az</code> PowerShell module and <code>Connect-AzAccount</code>.</p>
+          <p className="discovery-howto-label">Export all resources:</p>
+          <pre className="discovery-howto-code">{`Get-AzResource | ConvertTo-Json -Depth 20 > resources.json`}</pre>
+
+          <p className="discovery-howto-label">Scope to a resource group:</p>
+          <pre className="discovery-howto-code">{`Get-AzResource -ResourceGroupName "<rg-name>" | ConvertTo-Json -Depth 20 > rg.json`}</pre>
+
+          <p className="discovery-howto-label">Export an ARM template:</p>
+          <pre className="discovery-howto-code">{`Export-AzResourceGroup -ResourceGroupName "<rg-name>" -Path .\\template.json`}</pre>
+        </div>
+      )}
+
+      {tab === 'iac' && (
+        <div className="discovery-howto-body">
+          <p className="discovery-howto-lead">
+            Already have Terraform or Bicep code? Just upload it — no export step needed.
+          </p>
+          <ul className="discovery-howto-list">
+            <li><b>Terraform HCL:</b> upload your <code>main.tf</code> (or paste the content above).</li>
+            <li><b>Terraform state:</b> upload <code>terraform.tfstate</code> — we&apos;ll read the current live resources.</li>
+            <li><b>Bicep:</b> upload your <code>*.bicep</code> file. For most accuracy, compile first:
+              <pre className="discovery-howto-code" style={{ marginTop: 6 }}>az bicep build --file main.bicep {'>'} template.json</pre>
+              then upload the JSON.</li>
+            <li><b>ARM Export from Portal:</b> works out of the box.</li>
+          </ul>
+          <p className="discovery-howto-tip">
+            🔒 Parsing happens in your browser. Files are never uploaded to any external service.
+          </p>
+        </div>
+      )}
+    </details>
   );
 }
 
