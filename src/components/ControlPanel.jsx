@@ -19,6 +19,7 @@ const ControlPanel = ({
   onExportCostReport,
   onImportTerraform,
   onPasteTerraform,
+  onOpenDiscovery,
   onOpenTemplates,
   onOpenVersions,
   onOpenPresentation,
@@ -126,6 +127,9 @@ const ControlPanel = ({
           isTrial={isTrial}
           onUpgrade={onUpgrade}
         />
+        <button className="control-btn discovery-btn" onClick={onOpenDiscovery} title="AI Architecture Discovery — import ARM, Bicep, TF, Resource Graph, Az CLI, PowerShell, or .ccd">
+          🧭 Discover
+        </button>
         <button className="control-btn validate-btn" onClick={onValidate} title="Validate architecture for deployment">
           ✅ Validate
         </button>

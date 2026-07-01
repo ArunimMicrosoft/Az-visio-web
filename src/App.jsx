@@ -15,6 +15,7 @@ import PresentationMode from './components/PresentationMode';
 import RegionCompare from './components/RegionCompare';
 import MyDiagrams from './components/MyDiagrams';
 import TrialWatermark from './components/TrialWatermark';
+import DiscoveryImport from './components/DiscoveryImport';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { useVersionHistory } from './hooks/useVersionHistory';
 import { exportBicepFile } from './utils/bicepGenerator';
@@ -58,6 +59,7 @@ function App() {
   const [presentationMode, setPresentationMode] = useState(false);
   const [regionCompareOpen, setRegionCompareOpen] = useState(false);
   const [myDiagramsOpen, setMyDiagramsOpen] = useState(false);
+  const [discoveryOpen, setDiscoveryOpen] = useState(false);
 
   // Hooks
   const undoRedo = useUndoRedo();
@@ -465,6 +467,24 @@ function App() {
     }
   };
 
+  // Called by DiscoveryImport — pre-processed items/connections/boundaries ready
+  const handleDiscoveryImport = (result) => {
+    if (!result || !result.items?.length) return;
+    const mode = askReplaceOrAdd('discovered resources');
+    if (!mode) return;
+    if (mode === 'replace') {
+      isLoadingDiagram.current = true;
+      handleSetItems(result.items);
+      setConnections(result.connections || []);
+      setBoundaries(result.boundaries || []);
+      isLoadingDiagram.current = false;
+    } else {
+      addToCanvas(result.items, result.connections || [], result.boundaries || []);
+    }
+    // Fire-and-forget analytics
+    try { trackTemplateUsed?.(user?.id, `discovery-${result.format}`); } catch { /* ignore */ }
+  };
+
   const handleImportTerraform = () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -756,6 +776,7 @@ function App() {
         onExportCostReport={handleExportCostReport}
         onImportTerraform={handleImportTerraform}
         onPasteTerraform={handlePasteTerraformImport}
+        onOpenDiscovery={() => setDiscoveryOpen(true)}
         onOpenTemplates={() => setTemplateGalleryOpen(true)}
         onOpenVersions={() => {
           if (!isStarterPlus) { setUpgradeReason('Version History requires Starter plan or above.'); setUpgradeFeature('Version History'); setUpgradeModalOpen(true); return; }
@@ -851,6 +872,18 @@ function App() {
         currentDiagram={{ items, connections, boundaries }}
         onLoadDiagram={handleLoadCloudDiagram}
         subscriptionTier={user?.subscriptionTier}
+      />
+      <DiscoveryImport
+        open={discoveryOpen}
+        onClose={() => setDiscoveryOpen(false)}
+        onImport={handleDiscoveryImport}
+        isTrial={!hasTier(user, 'professional')}
+        onUpgrade={() => {
+          setDiscoveryOpen(false);
+          setUpgradeReason('AI Architecture Discovery requires the Professional plan. Upgrade to import ARM, Bicep, Terraform, and Resource Graph exports.');
+          setUpgradeFeature('Discovery');
+          setUpgradeModalOpen(true);
+        }}
       />
     </div>
   );
