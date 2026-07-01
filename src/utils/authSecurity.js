@@ -49,6 +49,67 @@ export function getTrialStatus(user) {
 }
 
 /**
+ * Get combined subscription status for ANY tier (trial + starter + pro + enterprise).
+ * This is the single source of truth for "can this user access the app right now?"
+ *
+ * Returns { tier, isHardExpired, expiresAt, daysRemaining, kind }
+ *   kind: 'admin' | 'trial' | 'paid' | 'unknown'
+ *   isHardExpired: TRUE ⇒ user must renew before accessing /app
+ */
+export function getSubscriptionStatus(user) {
+  if (!user) return { tier: 'none', isHardExpired: true, kind: 'unknown' };
+
+  // Admins never expire
+  if (isAdminUser(user)) {
+    return { tier: 'enterprise', isHardExpired: false, kind: 'admin' };
+  }
+
+  const tier = user.subscriptionTier || 'trial';
+
+  // Trial tier — reuse existing logic
+  if (tier === 'trial') {
+    const trial = getTrialStatus(user);
+    return {
+      tier: 'trial',
+      isHardExpired: !!trial.isHardExpired,
+      expiresAt: trial.expiresAt,
+      daysRemaining: trial.daysRemaining ?? 0,
+      kind: 'trial',
+    };
+  }
+
+  // Paid tiers — check subscriptionExpiresAt
+  const exp = user.subscriptionExpiresAt;
+  if (!exp) {
+    // Legacy paid accounts with no expiry recorded — treat as active but flag
+    return {
+      tier,
+      isHardExpired: false,
+      expiresAt: null,
+      daysRemaining: null,
+      kind: 'paid',
+    };
+  }
+
+  const now = Date.now();
+  const expTs = new Date(exp).getTime();
+  if (Number.isNaN(expTs)) {
+    return { tier, isHardExpired: false, expiresAt: exp, kind: 'paid' };
+  }
+
+  const isExpired = now > expTs;
+  const daysRemaining = Math.ceil((expTs - now) / (24 * 60 * 60 * 1000));
+
+  return {
+    tier,
+    isHardExpired: isExpired,
+    expiresAt: exp,
+    daysRemaining: Math.max(0, daysRemaining),
+    kind: 'paid',
+  };
+}
+
+/**
  * Check if user can export PNG (pure function)
  */
 export function canExportPNG(user) {

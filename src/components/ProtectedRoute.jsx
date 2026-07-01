@@ -1,18 +1,31 @@
 import React from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getTrialStatus, isAdminUser } from '../utils/authSecurity';
+import { getSubscriptionStatus, isAdminUser } from '../utils/authSecurity';
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Full-screen trial-expired gate — user cannot dismiss or bypass this
+   Full-screen plan-expired gate — user cannot dismiss or bypass this.
+   Handles BOTH trial expiry and paid subscription expiry with one UI.
 ───────────────────────────────────────────────────────────────────────────── */
-const TrialExpiredGate = ({ user }) => {
+const PlanExpiredGate = ({ user, status }) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
-  const expiredDate = user?.trialExpiresAt
-    ? new Date(user.trialExpiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+  const isPaid = status.kind === 'paid';
+  const currentTier = (status.tier || 'trial').replace(/^./, (c) => c.toUpperCase());
+
+  const expiredDateRaw = isPaid ? user?.subscriptionExpiresAt : user?.trialExpiresAt;
+  const expiredDate = expiredDateRaw
+    ? new Date(expiredDateRaw).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
     : 'recently';
+
+  const title = isPaid
+    ? `Your ${currentTier} Plan Has Expired`
+    : 'Your Free Trial Has Ended';
+
+  const subtitle = isPaid
+    ? `Your ${currentTier} subscription expired on ${expiredDate}. Renew below to continue building.`
+    : `Your 7-day free trial expired on ${expiredDate}. Upgrade to keep all your diagrams and continue building.`;
 
   return (
     <div style={{
@@ -33,19 +46,19 @@ const TrialExpiredGate = ({ user }) => {
         boxShadow: '0 32px 80px rgba(0,0,0,0.5)',
       }}>
         {/* Icon */}
-        <div style={{ fontSize: '64px', marginBottom: '16px' }}>🔒</div>
+        <div style={{ fontSize: '64px', marginBottom: '16px' }}>{isPaid ? '⏰' : '🔒'}</div>
 
         {/* Title */}
         <h1 style={{ color: '#fff', fontSize: '28px', fontWeight: 700, margin: '0 0 12px' }}>
-          Your Free Trial Has Ended
+          {title}
         </h1>
 
         {/* Subtitle */}
         <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '15px', lineHeight: 1.6, margin: '0 0 8px' }}>
-          Your 7-day free trial expired on <strong style={{ color: '#fff' }}>{expiredDate}</strong>.
+          {subtitle}
         </p>
         <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', margin: '0 0 36px' }}>
-          Upgrade to keep all your diagrams and continue building.
+          Access to the app is paused until your plan is renewed. Your data is safe and will return the moment payment is confirmed.
         </p>
 
         {/* What they lose box */}
@@ -85,7 +98,7 @@ const TrialExpiredGate = ({ user }) => {
           onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
           onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
         >
-          ✨ Starter Plan — ₹499/mo
+          ✨ {isPaid ? 'Downgrade to Starter' : 'Starter Plan'} — ₹499/mo
         </button>
 
         <button
@@ -102,7 +115,7 @@ const TrialExpiredGate = ({ user }) => {
           onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
           onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
         >
-          🚀 Upgrade to Professional — ₹1,200/mo
+          🚀 {isPaid ? 'Renew Professional' : 'Upgrade to Professional'} — ₹1,200/mo
           <span style={{
             position: 'absolute', top: '-8px', right: '12px',
             background: '#fbbf24', color: '#0f172a',
@@ -123,7 +136,7 @@ const TrialExpiredGate = ({ user }) => {
           onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
           onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
         >
-          🏢 Enterprise Plan — ₹6,699/mo
+          🏢 {isPaid ? 'Upgrade to Enterprise' : 'Enterprise Plan'} — ₹6,699/mo
         </button>
 
         <button
@@ -216,11 +229,11 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
     return <Navigate to="/app" replace />;
   }
 
-  // Trial expired — hard block (skip for admin users)
+  // Plan expired — hard block for BOTH trial and paid tiers (admins bypassed)
   if (!isAdminUser(user) && user?.role !== 'admin') {
-    const trialStatus = getTrialStatus(user);
-    if (trialStatus.isHardExpired) {
-      return <TrialExpiredGate user={user} />;
+    const status = getSubscriptionStatus(user);
+    if (status.isHardExpired) {
+      return <PlanExpiredGate user={user} status={status} />;
     }
   }
 
