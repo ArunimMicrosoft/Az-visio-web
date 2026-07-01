@@ -5,6 +5,7 @@ import { blogArticles, articleContent, categoryColors } from '../utils/blogArtic
 import { BlogHeader, BlogFooter } from '../components/BlogLayout';
 import { renderMarkdown } from '../utils/blogRenderer';
 import { diagramBySlug } from '../utils/blogDiagrams';
+import BlogComments from '../components/BlogComments';
 import './Blog.css';
 
 // Replace {{diagram:id}} tokens with fenced SVG blocks so the renderer emits <figure>
@@ -79,6 +80,9 @@ const BlogArticle = () => {
           </div>
           <Link to="/signup" className="cc-article-cta-btn">Start Free Trial →</Link>
         </div>
+
+        {/* Community notes / comments */}
+        <BlogComments slug={slug} />
 
         {/* Related */}
         {allRelated.length > 0 && (

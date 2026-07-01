@@ -1,0 +1,302 @@
+/* =============================================================
+   Blog Comments — clean, on-brand thread under each article
+   ============================================================= */
+
+.blog-comments {
+  max-width: 780px;
+  margin: 48px auto 0;
+  padding: 32px 0 60px;
+  border-top: 1px solid #e2e8f0;
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+.bc-header {
+  margin-bottom: 22px;
+}
+
+.bc-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.bc-count {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.bc-sub {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ---------- Composer ---------- */
+.bc-composer {
+  background: linear-gradient(180deg, #f8fafc, #eff6ff);
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 28px;
+}
+
+.bc-composer-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.bc-composer-user {
+  color: #475569;
+  font-size: 13px;
+}
+.bc-composer-user strong {
+  color: #0f172a;
+}
+
+.bc-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 15px;
+  color: #0f172a;
+  background: #fff;
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+
+.bc-textarea:focus {
+  outline: none;
+  border-color: #0078D4;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.15);
+}
+
+.bc-textarea:disabled {
+  background: #f1f5f9;
+  cursor: not-allowed;
+}
+
+.bc-composer-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.bc-counter {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bc-counter.low {
+  color: #dc2626;
+}
+
+.bc-submit {
+  background: linear-gradient(135deg, #0078D4, #06b6d4);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(0, 120, 212, 0.3);
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+}
+
+.bc-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 120, 212, 0.4);
+}
+
+.bc-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.bc-err {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #fef2f2;
+  color: #991b1b;
+  border-left: 3px solid #dc2626;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.bc-ok {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #ecfdf5;
+  color: #065f46;
+  border-left: 3px solid #10b981;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* ---------- Sign-in prompt ---------- */
+.bc-signin-cta {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 18px 22px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: #475569;
+  font-size: 14px;
+}
+
+.bc-signin-btn {
+  background: #0078D4;
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.bc-signin-btn:hover { background: #005a9e; }
+
+.bc-signup-link {
+  color: #0078D4;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.bc-signup-link:hover { text-decoration: underline; }
+
+/* ---------- Comment list ---------- */
+.bc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bc-empty {
+  text-align: center;
+  padding: 30px;
+  color: #94a3b8;
+  font-size: 14px;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+
+.bc-item {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.bc-item:last-child {
+  border-bottom: none;
+}
+
+.bc-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.15);
+  flex-shrink: 0;
+}
+
+.bc-body {
+  min-width: 0;
+}
+
+.bc-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #64748b;
+  flex-wrap: wrap;
+}
+
+.bc-user {
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.bc-dot {
+  color: #cbd5e1;
+}
+
+.bc-time {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.bc-delete {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.bc-delete:hover {
+  background: #fef2f2;
+  text-decoration: underline;
+}
+
+.bc-content {
+  color: #1e293b;
+  font-size: 15px;
+  line-height: 1.55;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.bc-content a {
+  color: #0078D4;
+  text-decoration: underline;
+}
+
+.bc-content a:hover {
+  color: #005a9e;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .blog-comments { padding: 24px 0 40px; }
+  .bc-composer { padding: 16px; }
+  .bc-textarea { font-size: 14px; }
+  .bc-item { grid-template-columns: 36px 1fr; gap: 10px; }
+  .bc-avatar { width: 36px; height: 36px; font-size: 12px; }
+  .bc-composer-footer { flex-direction: column; align-items: stretch; gap: 8px; }
+  .bc-submit { width: 100%; }
+}
