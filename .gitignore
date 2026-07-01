@@ -46,3 +46,6 @@ deploy.ps1
 # Cloudflare Pages / Wrangler
 .dev.vars
 .wrangler/
+
+# Local-only submission documents (not for public repo)
+airtel-submission/

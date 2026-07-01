@@ -72,21 +72,43 @@ const TrialExpiredGate = ({ user }) => {
           ))}
         </div>
 
-        {/* CTA buttons */}
+        {/* CTA buttons — Starter (entry), Professional (highlighted), Enterprise */}
+        <button
+          onClick={() => navigate('/payment?plan=starter')}
+          style={{
+            width: '100%', padding: '14px', marginBottom: '10px',
+            background: 'rgba(255,255,255,0.08)',
+            color: '#fff', border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: '12px', fontSize: '15px', fontWeight: 600, cursor: 'pointer',
+            transition: 'background 0.15s',
+          }}
+          onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+          onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+        >
+          ✨ Starter Plan — ₹499/mo
+        </button>
+
         <button
           onClick={() => navigate('/payment?plan=professional')}
           style={{
-            width: '100%', padding: '16px', marginBottom: '12px',
+            width: '100%', padding: '16px', marginBottom: '10px',
             background: 'linear-gradient(135deg, #0078D4 0%, #005a9e 100%)',
             color: '#fff', border: 'none', borderRadius: '12px',
             fontSize: '16px', fontWeight: 700, cursor: 'pointer',
             boxShadow: '0 8px 24px rgba(0,120,212,0.4)',
             transition: 'transform 0.15s',
+            position: 'relative',
           }}
           onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
           onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
         >
-          🚀 Upgrade to Professional — ₹2,000/mo
+          🚀 Upgrade to Professional — ₹1,200/mo
+          <span style={{
+            position: 'absolute', top: '-8px', right: '12px',
+            background: '#fbbf24', color: '#0f172a',
+            fontSize: '10px', fontWeight: 800, padding: '3px 8px',
+            borderRadius: '10px', letterSpacing: '0.5px',
+          }}>MOST POPULAR</span>
         </button>
 
         <button
@@ -101,7 +123,7 @@ const TrialExpiredGate = ({ user }) => {
           onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
           onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
         >
-          🏢 Enterprise Plan — ₹12,499/mo
+          🏢 Enterprise Plan — ₹6,699/mo
         </button>
 
         <button

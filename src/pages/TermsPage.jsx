@@ -76,7 +76,7 @@ const TermsPage = () => {
             </thead>
             <tbody>
               <tr><td>Starter</td><td>₹499</td><td>Monthly, prepaid</td></tr>
-              <tr><td>Professional</td><td>₹2,000</td><td>Monthly, prepaid</td></tr>
+              <tr><td>Professional</td><td>₹1,200</td><td>Monthly, prepaid</td></tr>
               <tr><td>Enterprise</td><td>₹6,699</td><td>Monthly, prepaid</td></tr>
             </tbody>
           </table>

@@ -255,8 +255,8 @@ export function getPricingPlans() {
     {
       id: 'professional',
       name: 'Professional',
-      priceUSD: 24,
-      priceINR: 2000,
+      priceUSD: 15,
+      priceINR: 1200,
       interval: 'month',
       popular: true,
       features: [

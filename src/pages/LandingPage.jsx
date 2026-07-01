@@ -447,11 +447,11 @@ const LandingPage = () => {
               <div className="popular-badge">Most Popular</div>              <div className="pricing-header">
                 <h3 className="pricing-title">Professional</h3>
                 <div className="pricing-price">
-                  <span className="price-amount">$24</span>
+                  <span className="price-amount">$15</span>
                   <span className="price-period">/mo</span>
                 </div>
                 <div className="pricing-price-inr">
-                  <span className="price-amount-small">₹2,000</span>
+                  <span className="price-amount-small">₹1,200</span>
                   <span className="price-period-small">/mo</span>
                 </div>
                 <p className="pricing-description">For growing businesses</p>
