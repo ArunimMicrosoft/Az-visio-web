@@ -1,8 +1,10 @@
 // Blog listing page — shows all articles with filter by category
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { blogArticles, categoryColors } from '../utils/blogArticles';
 import { BlogHeader, BlogFooter } from '../components/BlogLayout';
+import { fetchLikeCounts } from '../utils/blogLikes';
+import { fetchCommentCounts } from '../utils/blogComments';
 import './Blog.css';
 
 const Blog = () => {
@@ -11,8 +13,18 @@ const Blog = () => {
   const filtered = category === 'All' ? blogArticles : blogArticles.filter((a) => a.category === category);
   const [featured, ...rest] = filtered;
 
+  // Fetch engagement counts once for all articles
+  const [likes, setLikes] = useState({});
+  const [comments, setComments] = useState({});
+  useEffect(() => {
+    const slugs = blogArticles.map((a) => a.slug);
+    fetchLikeCounts(slugs).then(setLikes);
+    fetchCommentCounts(slugs).then(setComments);
+  }, []);
+
   const fmtDate = (d) =>
     new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  const fmtCount = (n) => (n || 0).toLocaleString('en-IN');
 
   return (
     <div className="cc-blog-page">
@@ -75,6 +87,10 @@ const Blog = () => {
                 <span>·</span>
                 <span>{featured.readTime} read</span>
               </div>
+              <div className="cc-featured-engagement">
+                <span>❤️ {fmtCount(likes[featured.slug])} likes</span>
+                <span>💬 {fmtCount(comments[featured.slug])} comments</span>
+              </div>
               <span className="cc-blog-featured-cta">Read article →</span>
             </div>
             <div className="cc-blog-featured-right">
@@ -101,6 +117,10 @@ const Blog = () => {
                   <div className="cc-blog-card-meta">
                     <span>📅 {fmtDate(article.date)}</span>
                     <span>⏱ {article.readTime}</span>
+                  </div>
+                  <div className="cc-blog-card-engagement">
+                    <span>❤️ {fmtCount(likes[article.slug])}</span>
+                    <span>💬 {fmtCount(comments[article.slug])}</span>
                   </div>
                 </div>
               </Link>

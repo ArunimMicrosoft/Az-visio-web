@@ -6,6 +6,7 @@ import { BlogHeader, BlogFooter } from '../components/BlogLayout';
 import { renderMarkdown } from '../utils/blogRenderer';
 import { diagramBySlug } from '../utils/blogDiagrams';
 import BlogComments from '../components/BlogComments';
+import LikeButton from '../components/LikeButton';
 import './Blog.css';
 
 // Replace {{diagram:id}} tokens with fenced SVG blocks so the renderer emits <figure>
@@ -60,6 +61,9 @@ const BlogArticle = () => {
             <span>📅 {fmtDate(article.date)}</span>
             <span>·</span>
             <span>⏱ {article.readTime} read</span>
+          </div>
+          <div className="cc-article-hero-actions">
+            <LikeButton slug={slug} />
           </div>
         </div>
       </section>

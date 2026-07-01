@@ -1,0 +1,63 @@
+/* LikeButton — heart + count pill, prominent on article pages */
+
+.like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+
+.like-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.like-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.like-btn.liked {
+  background: rgba(236, 72, 153, 0.35);
+  border-color: rgba(236, 72, 153, 0.7);
+  box-shadow: 0 4px 14px rgba(236, 72, 153, 0.35);
+}
+
+.like-heart {
+  font-size: 18px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.like-btn.pulse .like-heart {
+  animation: like-pulse 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes like-pulse {
+  0%   { transform: scale(1);   }
+  40%  { transform: scale(1.5); }
+  100% { transform: scale(1);   }
+}
+
+.like-count {
+  min-width: 24px;
+  text-align: left;
+  letter-spacing: 0.3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .like-btn.pulse .like-heart { animation: none; }
+  .like-btn { transition: none; }
+}

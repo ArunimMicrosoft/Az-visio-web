@@ -961,3 +961,35 @@
   .cc-article-body { font-size: 16px; }
   .cc-article-body > p:first-of-type { font-size: 17px; }
 }
+
+
+/* Article hero — likes button row */
+.cc-article-hero-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* Blog card — engagement badges */
+.cc-blog-card-engagement {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+.cc-blog-card-engagement span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cc-featured-engagement {
+  display: flex;
+  gap: 14px;
+  margin: 10px 0 6px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+  font-weight: 600;
+}
