@@ -138,20 +138,47 @@ export const AZURE_TYPE_MAP = {
   'Microsoft.Authorization/roleAssignments':      { icon: 'resourcegroups',   serviceType: 'policy',           category: 'identity',    tier: 5, label: 'Role Assignment' },
 };
 
-// Child resource types to skip on the canvas (represented by parent)
+// Child resource types to skip on the canvas (represented by parent or by edges)
 export const SKIP_CHILD_TYPES = new Set([
+  // Network sub-resources — represented by their parent
   'Microsoft.Network/networkSecurityGroups/securityRules',
   'Microsoft.Network/loadBalancers/backendAddressPools',
   'Microsoft.Network/loadBalancers/frontendIPConfigurations',
   'Microsoft.Network/loadBalancers/loadBalancingRules',
   'Microsoft.Network/loadBalancers/probes',
+  'Microsoft.Network/loadBalancers/inboundNatRules',
   'Microsoft.Network/applicationGateways/backendAddressPools',
+  'Microsoft.Network/applicationGateways/frontendIPConfigurations',
+  'Microsoft.Network/applicationGateways/httpListeners',
+  'Microsoft.Network/applicationGateways/routingRules',
   'Microsoft.Network/routeTables/routes',
   'Microsoft.Network/virtualNetworks/virtualNetworkPeerings',
   'Microsoft.Network/networkInterfaces/ipConfigurations',
+  'Microsoft.Network/dnszones/A',
+  'Microsoft.Network/dnszones/CNAME',
+  'Microsoft.Network/privateDnsZones/virtualNetworkLinks',
+  'Microsoft.Network/privateDnsZones/A',
+  // Compute sub-resources — noise on the diagram
+  'Microsoft.Compute/virtualMachines/extensions',
+  'Microsoft.Compute/virtualMachines/runCommands',
+  // DevTestLab / auto-shutdown schedules — operational, not architectural
+  'Microsoft.DevTestLab/schedules',
+  'microsoft.devtestlab/schedules',
+  // Data plane / config sub-resources
+  'Microsoft.Storage/storageAccounts/blobServices',
   'Microsoft.Storage/storageAccounts/blobServices/containers',
+  'Microsoft.Storage/storageAccounts/fileServices',
+  'Microsoft.Storage/storageAccounts/queueServices',
   'Microsoft.Sql/servers/firewallRules',
   'Microsoft.Sql/servers/administrators',
+  'Microsoft.Sql/servers/auditingSettings',
+  // Alerts and diagnostic settings — attach via edges rather than clutter
+  'microsoft.insights/metricAlerts',
+  'Microsoft.Insights/diagnosticSettings',
+  'microsoft.insights/webtests',
+  // Maintenance configs — ops metadata, not architectural
+  'Microsoft.Maintenance/maintenanceConfigurations',
+  'microsoft.maintenance/maintenanceconfigurations',
 ]);
 
 // Get metadata for a resource type — supports partial match for versioned names
@@ -170,12 +197,6 @@ export function mapAzureType(azureType) {
     if (AZURE_TYPE_MAP[parent]) return AZURE_TYPE_MAP[parent];
   }
 
-  // Fallback: unknown resource → show as generic node
-  return {
-    icon: null,
-    serviceType: 'unknown',
-    category: 'unknown',
-    tier: 2,
-    label: azureType.split('/').pop() || 'Resource',
-  };
+  // Not a recognized architectural resource — signal caller to drop it.
+  return null;
 }

@@ -4,6 +4,14 @@
 
 import { FORMAT } from './detectors.js';
 import { parseTerraformFile } from '../terraformParser.js';
+import { createEvaluator, synthesizeResourceId, ARM_PLACEHOLDERS } from './armExpressions.js';
+import { mapAzureType } from './typeMap.js';
+
+// Drop resources that aren't recognized architectural nodes (child rules,
+// diagnostic settings, extensions, etc. → represented by parent or edges).
+function keepArchitectural(resources) {
+  return resources.filter(r => !!mapAzureType(r.azureType));
+}
 
 // ── ID utilities ─────────────────────────────────────────────────────────
 
@@ -62,36 +70,120 @@ function normalizeResource(raw, defaults = {}) {
 // ── ARM Template / ARM Export ────────────────────────────────────────────
 
 function parseArm(json) {
-  const resources = flattenArmResources(json.resources || [], []);
-  return resources
-    .map((r) => normalizeResource({
-      id: r.id || `/arm/${r.type}/${r.name}`,
+  const evaluator = createEvaluator(json);
+
+  // Step 1 — flatten nested `resources` into single list with full type + name paths
+  const raw = flattenArmResources(json.resources || [], []);
+
+  // Step 2 — extract inline sub-resources (subnets inside VNets, etc.) that are
+  // declared as arrays inside `properties` rather than as nested `resources`.
+  const inline = [];
+  for (const r of raw) inline.push(...extractInlineChildren(r));
+  const combined = raw.concat(inline);
+
+  // Step 3 — evaluate ARM expressions on every resource
+  const evaluated = combined.map(r => ({
+    ...r,
+    name: evaluator.evalString(r.name),
+    location: evaluator.evalString(r.location || ''),
+    properties: evaluator.eval(r.properties || {}),
+    identity: evaluator.eval(r.identity || null),
+    sku: r.sku ? evaluator.eval(r.sku) : null,
+    tags: r.tags ? evaluator.eval(r.tags) : {},
+  }));
+
+  // Step 4 — normalize and synthesize proper ARM resource IDs
+  const normalized = evaluated.map(r => {
+    const id = synthesizeResourceId(r.type, r.name);
+    return normalizeResource({
+      id,
       type: r.type,
-      name: (r.name || '').replace(/\[.*?\]/g, '').replace(/\'/g, '').trim() || 'unnamed',
-      location: r.location,
-      properties: r.properties || {},
-      identity: r.identity || null,
-      sku: r.sku || null,
-      tags: r.tags || {},
-      kind: r.kind || null,
-    }))
-    .filter(r => !!r.azureType);
+      name: r.name || 'unnamed',
+      location: r.location || 'unknown',
+      resourceGroupName: ARM_PLACEHOLDERS.resourceGroup,
+      subscriptionId: ARM_PLACEHOLDERS.subscription,
+      properties: r.properties,
+      identity: r.identity,
+      sku: r.sku,
+      tags: r.tags,
+      kind: r.kind,
+    });
+  }).filter(r => !!r.azureType);
+
+  // Step 5 — dedupe by resourceId (inline subnet + top-level subnet declaration)
+  const byId = new Map();
+  for (const r of normalized) {
+    const key = (r.resourceId || '').toLowerCase();
+    if (!key) continue;
+    // Prefer the resource that carries richer properties
+    const existing = byId.get(key);
+    if (!existing) byId.set(key, r);
+    else if (Object.keys(r.properties || {}).length > Object.keys(existing.properties || {}).length) {
+      byId.set(key, r);
+    }
+  }
+
+  return [...byId.values()];
 }
 
-// Recursively flatten ARM template resources — nested resources are children of parent
+// Recursively flatten ARM `resources` — nested resources are children of parent.
+// Composes full type (parent/type/child) and full name (parentName/childName).
 function flattenArmResources(list, parentPath) {
   const out = [];
   for (const r of list) {
-    const type = r.type;
-    if (!type) continue;
-    // Compose full type for nested resources
-    const fullType = parentPath.length > 0
-      ? parentPath.map(p => p.type).join('/') + '/' + type
-      : type;
-    out.push({ ...r, type: fullType });
-    if (Array.isArray(r.resources) && r.resources.length > 0) {
-      out.push(...flattenArmResources(r.resources, [...parentPath, r]));
+    if (!r || !r.type) continue;
+
+    let fullType = r.type;
+    let fullName = r.name || '';
+    if (parentPath.length > 0) {
+      // Child of nested resource — prepend parent type & name segments
+      const parentTypes = parentPath.map(p => p.type);
+      const parentNames = parentPath.map(p => p.name);
+      // Parent type may already be a compound (e.g., "Microsoft.Network/virtualNetworks")
+      // Concat with child's simple type
+      fullType = parentTypes[0] + '/' + parentTypes.slice(1).map(t => tailSegment(t)).concat(r.type).join('/');
+      fullName = parentNames.join('/') + '/' + r.name;
     }
+
+    out.push({ ...r, type: fullType, name: fullName });
+
+    if (Array.isArray(r.resources) && r.resources.length > 0) {
+      out.push(...flattenArmResources(r.resources, [...parentPath, { type: fullType, name: fullName }]));
+    }
+  }
+  return out;
+}
+
+function tailSegment(compoundType) {
+  const parts = compoundType.split('/');
+  return parts[parts.length - 1];
+}
+
+// Extract inline sub-resources declared inside a parent's `properties` array,
+// e.g. VNet.properties.subnets[] → separate `Microsoft.Network/virtualNetworks/subnets`
+// resources. Ensures every architectural component becomes its own node.
+function extractInlineChildren(parent) {
+  const out = [];
+  const type = (parent.type || '').toLowerCase();
+  const props = parent.properties || {};
+
+  const emit = (childType, childArray, propKey = 'properties') => {
+    if (!Array.isArray(childArray)) return;
+    for (const child of childArray) {
+      if (!child || !child.name) continue;
+      out.push({
+        type: `${parent.type}/${childType}`,
+        name: `${parent.name}/${child.name}`,
+        location: parent.location,
+        properties: child[propKey] || child.properties || {},
+      });
+    }
+  };
+
+  // Only subnets become architectural nodes. Peerings, rules, routes stay as
+  // properties on the parent and are surfaced through discovered edges.
+  if (type === 'microsoft.network/virtualnetworks') {
+    emit('subnets', props.subnets);
   }
   return out;
 }
@@ -282,7 +374,11 @@ function parseSingle(json) {
 
 export async function parseByFormat(format, rawText) {
   const parsed = tryJson(rawText);
+  const results = await parseByFormatInternal(format, rawText, parsed);
+  return keepArchitectural(results);
+}
 
+async function parseByFormatInternal(format, rawText, parsed) {
   switch (format) {
     case FORMAT.ARM_TEMPLATE:
     case FORMAT.ARM_EXPORT:

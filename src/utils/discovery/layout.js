@@ -25,7 +25,8 @@ export function buildLayout(resources, edges) {
   const resourceToItem = new Map();
 
   resources.forEach((r, idx) => {
-    const meta = mapAzureType(r.azureType) || { icon: null, serviceType: 'unknown', category: 'unknown', tier: 2, label: 'Resource' };
+    const meta = mapAzureType(r.azureType);
+    if (!meta) return; // silently drop — engine already filtered, but stay safe
     const item = {
       id: `disc-${idx}`,
       serviceType: meta.serviceType,
