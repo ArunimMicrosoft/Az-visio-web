@@ -488,7 +488,7 @@ const LandingPage = () => {
       </section>
 
       {/* Pricing Section */}
-      <section className="pricing-section">
+      <section id="pricing" className="pricing-section">
         <div className="section-container">
           <div className="section-header">
             <span className="section-badge">Pricing Plans</span>

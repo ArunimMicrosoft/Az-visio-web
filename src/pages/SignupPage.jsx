@@ -310,12 +310,34 @@ const SignupPage = () => {
           
           <div className="testimonial">
             <p className="quote">
-              "This tool saved our team weeks of architecture planning. 
-              The cost estimation alone is worth it!"
+              "Cut our architecture-planning time by weeks. The live cost
+              estimate alone paid for the tool in the first project."
             </p>
             <div className="author">
               <strong>Sarah Chen</strong>
-              <span>Cloud Architect, TechCorp</span>
+              <span>Cloud Architect · Bengaluru</span>
+            </div>
+          </div>
+
+          <div className="testimonial">
+            <p className="quote">
+              "Drop an ARM template, get a clean diagram and a WAF score
+              in seconds. This is what we&apos;ve been asking Microsoft for."
+            </p>
+            <div className="author">
+              <strong>Rahul Verma</strong>
+              <span>Senior DevOps Engineer · Pune</span>
+            </div>
+          </div>
+
+          <div className="testimonial">
+            <p className="quote">
+              "The Terraform export is production-grade. We use Cloud Canvas
+              for every new landing zone review now."
+            </p>
+            <div className="author">
+              <strong>Priya Nair</strong>
+              <span>Principal Solutions Architect · Hyderabad</span>
             </div>
           </div>
         </div>
