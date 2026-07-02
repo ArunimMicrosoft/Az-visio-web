@@ -12,6 +12,20 @@ import React, { useEffect, useRef } from 'react';
 // passes verification — used only when the real key isn't set (local dev).
 const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
 
+// Warn once at load so misconfigurations are obvious in DevTools
+if (typeof window !== 'undefined' && !window.__ccdTurnstileWarned) {
+  window.__ccdTurnstileWarned = true;
+  if (SITE_KEY.startsWith('1x') || SITE_KEY.startsWith('2x') || SITE_KEY.startsWith('3x')) {
+    console.warn(
+      '%c[Turnstile] Using Cloudflare TEST site key — "For testing only" banner will show.\n' +
+      'Set VITE_TURNSTILE_SITE_KEY in Cloudflare Pages env vars AND trigger a fresh build (Retry deployment).',
+      'color: #f59e0b; font-weight: bold;'
+    );
+  } else {
+    console.log('%c[Turnstile] Using site key: ' + SITE_KEY.slice(0, 10) + '…', 'color: #22c55e;');
+  }
+}
+
 export default function Turnstile({ onVerify, onExpire, onError, theme = 'light', size = 'normal' }) {
   const containerRef = useRef(null);
   const widgetIdRef = useRef(null);
