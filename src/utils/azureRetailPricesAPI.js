@@ -4,6 +4,8 @@
  * https://learn.microsoft.com/en-us/rest/api/cost-management/retail-prices/azure-retail-prices
  */
 
+import { getRate } from './currencyRates.js';
+
 // Use CORS proxy to bypass browser CORS restrictions
 const CORS_PROXY = 'https://corsproxy.io/?';
 const AZURE_RETAIL_PRICES_API = 'https://prices.azure.com/api/retail/prices';
@@ -1087,15 +1089,20 @@ export async function getArchitecturePricingSummary(items, region = 'eastus', cu
     console.log(`⚠️ Not Mapped: ${notMappedCount}`);
   }
   console.log(`===================================\n`);
+  // Convert USD prices → target currency using live FX rate.
+  // Azure Retail Prices API always returns USD, so we multiply here.
+  const fx = getRate(currency);
+
   const serviceBreakdown = pricedItems.map(item => ({
     id: item.id,
     name: item.name,
     serviceType: item.serviceType || item.type,
-    monthlyEstimate: item.realTimePrice?.monthlyEstimate || 0,
-    unitPrice: item.realTimePrice?.retailPrice || 0,
+    monthlyEstimate: (item.realTimePrice?.monthlyEstimate || 0) * fx,
+    unitPrice: (item.realTimePrice?.retailPrice || 0) * fx,
     unitOfMeasure: item.realTimePrice?.unitOfMeasure || 'N/A',
     skuName: item.realTimePrice?.skuName || 'Standard',
     currencyCode: currency,
+    fxRate: fx,
     region: region,    lastUpdated: new Date().toISOString(),
     isRetired: item.realTimePrice?.isRetired || false,
     retiredInfo: item.realTimePrice?.retiredInfo || null,
@@ -1104,10 +1111,15 @@ export async function getArchitecturePricingSummary(items, region = 'eastus', cu
     isFree: item.realTimePrice?.isFree || false,
     freeInfo: item.realTimePrice?.freeInfo || null,
     message: item.realTimePrice?.message || null
-  }));  return {
-    totalMonthly,
-    totalYearly: totalMonthly * 12,
+  }));
+
+  const totalMonthlyConverted = totalMonthly * fx;
+
+  return {
+    totalMonthly: totalMonthlyConverted,
+    totalYearly: totalMonthlyConverted * 12,
     currency,
+    fxRate: fx,
     region,
     itemCount: items.length,
     pricedItemCount: pricedCount,

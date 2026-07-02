@@ -1,6 +1,8 @@
 // Azure Cost Calculator
 // Estimates monthly costs for Azure services based on current pricing (2026)
 
+import { getRate as getLiveFxRate } from './currencyRates.js';
+
 /**
  * Azure Regions with pricing multipliers
  */
@@ -848,7 +850,10 @@ const normalizeServiceType = (serviceType) => {
 
 export const calculateCost = (items, regionKey = 'eastus', currencyKey = 'USD') => {
   const region = azureRegions[regionKey] || azureRegions['eastus'];
-  const currency = currencies[currencyKey] || currencies['USD'];
+  // Prefer live FX rate (refreshed every 12h from open.er-api.com);
+  // falls back to bundled static rate if the network fetch failed.
+  const staticCurrency = currencies[currencyKey] || currencies['USD'];
+  const currency = { ...staticCurrency, rate: getLiveFxRate(currencyKey) || staticCurrency.rate };
 
   let totalCost = 0;
   const breakdown = [];
