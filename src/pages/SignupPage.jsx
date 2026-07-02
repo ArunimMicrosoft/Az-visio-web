@@ -65,7 +65,8 @@ const SignupPage = () => {
     if (!captchaResult.success) {
       setIsLoading(false);
       setCaptchaToken(null);
-      setError('Security check failed. Please refresh the page and try again.');
+      const detail = captchaResult.hint || 'Please refresh the page and try again.';
+      setError('Security check failed. ' + detail);
       return;
     }
 

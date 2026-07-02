@@ -53,10 +53,27 @@ export async function onRequestPost({ request, env }) {
   }
 
   if (!verify?.success) {
+    const codes = verify?.['error-codes'] || [];
+    // Cloudflare's siteverify error codes:
+    //   'missing-input-secret'   → TURNSTILE_SECRET_KEY env var not set
+    //   'invalid-input-secret'   → secret key doesn't match the site key (wrong pair or typo)
+    //   'missing-input-response' → we forgot to send the token (bug in our code)
+    //   'invalid-input-response' → token expired or already used
+    //   'timeout-or-duplicate'   → same token used twice or older than 300s
+    let hint = 'Please refresh the page and try again.';
+    if (codes.includes('missing-input-secret')) {
+      hint = 'Server config: TURNSTILE_SECRET_KEY is not set on Cloudflare Pages env vars.';
+    } else if (codes.includes('invalid-input-secret')) {
+      hint = 'Server config: TURNSTILE_SECRET_KEY does not match the site key (wrong pair or typo).';
+    } else if (codes.includes('timeout-or-duplicate')) {
+      hint = 'Security check expired. Please refresh the page and try again.';
+    }
+    console.error('[verify-captcha] token rejected:', codes.join(', '));
     return json({
       success: false,
       error: 'invalid-token',
-      details: verify?.['error-codes'] || [],
+      hint,
+      details: codes,
     }, 403, cors);
   }
 
