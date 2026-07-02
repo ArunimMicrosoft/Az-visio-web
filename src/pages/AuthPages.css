@@ -547,3 +547,15 @@
   text-align: center;
   margin: 12px 0 20px;
 }
+
+
+/* Turnstile CAPTCHA — blocks credential-stuffing bots on /login and /signup */
+.turnstile-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 4px;
+  min-height: 65px;   /* prevents form jump while widget loads */
+}
+.turnstile-widget iframe {
+  border-radius: 8px;
+}

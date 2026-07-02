@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Turnstile from '../components/Turnstile';
+import { verifyCaptcha } from '../utils/captcha';
 import './AuthPages.css';
 
 const SignupPage = () => {
@@ -15,6 +17,7 @@ const SignupPage = () => {
   const [showWelcome, setShowWelcome] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState(null);
   const navigate = useNavigate();
   const { signup } = useAuth();
 
@@ -49,11 +52,25 @@ const SignupPage = () => {
       setError('Passwords do not match');
       return;
     }
-    
+
+    if (!captchaToken) {
+      setError('Please complete the security check below.');
+      return;
+    }
+
     setIsLoading(true);
-    
+
+    // Server-side CAPTCHA verify — blocks bots before Supabase signup
+    const captchaResult = await verifyCaptcha(captchaToken);
+    if (!captchaResult.success) {
+      setIsLoading(false);
+      setCaptchaToken(null);
+      setError('Security check failed. Please refresh the page and try again.');
+      return;
+    }
+
     const result = await signup(formData.email, formData.password, formData.name);
-    
+
     setIsLoading(false);    if (result.success) {
       if (result.requiresConfirmation) {
         setError('Account created! Please check your email to confirm, then log in.');
@@ -268,10 +285,18 @@ const SignupPage = () => {
                 </div>
               </div>
               
-              <button 
-                type="submit" 
+              <div className="turnstile-wrap">
+                <Turnstile
+                  onVerify={setCaptchaToken}
+                  onExpire={() => setCaptchaToken(null)}
+                  onError={() => setCaptchaToken(null)}
+                />
+              </div>
+
+              <button
+                type="submit"
                 className="auth-button primary"
-                disabled={isLoading}
+                disabled={isLoading || !captchaToken}
               >
                 {isLoading ? 'Creating Account...' : 'Create Account'}
               </button>

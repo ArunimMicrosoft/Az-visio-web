@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Turnstile from '../components/Turnstile';
+import { verifyCaptcha } from '../utils/captcha';
 import './AuthPages.css';
 
 const LoginPage = () => {
@@ -9,6 +11,7 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState(null);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -31,10 +34,25 @@ const LoginPage = () => {
       setError('Password must be at least 6 characters');
       return;
     }
-      setIsLoading(true);
-    
+
+    if (!captchaToken) {
+      setError('Please complete the security check below.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Server-side CAPTCHA verification — blocks bots before Supabase is called
+    const captchaResult = await verifyCaptcha(captchaToken);
+    if (!captchaResult.success) {
+      setIsLoading(false);
+      setCaptchaToken(null);
+      setError('Security check failed. Please refresh the page and try again.');
+      return;
+    }
+
     const result = await login(email, password);
-    
+
     setIsLoading(false);
     
     if (result.success) {
@@ -132,10 +150,18 @@ const LoginPage = () => {
                 </div>
               </div>
               
-              <button 
-                type="submit" 
+              <div className="turnstile-wrap">
+                <Turnstile
+                  onVerify={setCaptchaToken}
+                  onExpire={() => setCaptchaToken(null)}
+                  onError={() => setCaptchaToken(null)}
+                />
+              </div>
+
+              <button
+                type="submit"
                 className="auth-button primary"
-                disabled={isLoading}
+                disabled={isLoading || !captchaToken}
               >
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </button>
