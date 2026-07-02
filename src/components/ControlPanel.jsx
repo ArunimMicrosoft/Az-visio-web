@@ -181,7 +181,13 @@ const ControlPanel = ({
         <Menu label="File" icon="📁">
           <MenuLabel text="NEW" />
           <MenuItem icon="📐" label="Templates" hint="Start from a pre-built architecture" onClick={onOpenTemplates} />
-          <MenuItem icon="🗑️" label="Clear canvas" hint="Delete everything and start over" onClick={confirmClear} danger />
+          <MenuItem
+            icon="🧭"
+            label="Architecture Discovery"
+            hint="Import ARM, Bicep, Terraform, or Resource Graph"
+            onClick={onOpenDiscovery}
+            badge={isTrial ? 'PRO' : null}
+          />
           <MenuDivider />
           <MenuLabel text="SAVE & LOAD" />
           <MenuItem icon="💾" label="Save to file" hint="Download as .json" onClick={onSave} />
@@ -253,14 +259,13 @@ const ControlPanel = ({
           title="Redo (Ctrl+Y)"
         >↷</button>
 
-        {/* Discover — hero action, always visible */}
+        {/* Clear canvas — inline destructive action */}
         <button
-          className="cp-accent-btn"
-          onClick={onOpenDiscovery}
-          title="Architecture Discovery — visualize IaC files or your live Azure environment"
+          className="cp-danger-btn"
+          onClick={confirmClear}
+          title="Clear the entire canvas — this cannot be undone"
         >
-          <span>🧭</span> Discover
-          {isTrial && <span className="cp-accent-btn-badge">PRO</span>}
+          <span>🗑️</span> Clear
         </button>
 
         {/* Validate — primary CTA */}

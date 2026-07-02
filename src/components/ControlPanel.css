@@ -894,3 +894,34 @@
   .cp-accent-btn { padding: 8px 12px; }
   .cp-accent-btn span:not(:first-child):not(.cp-accent-btn-badge) { display: none; }
 }
+
+
+/* Inline destructive action (Clear canvas) — subtle red so it doesn't
+   compete visually with Validate but is clearly a "danger" action. */
+.cp-danger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  margin-left: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: #fff;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.cp-danger-btn:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #991b1b;
+}
+.cp-danger-btn span { font-size: 14px; }
+
+@media (max-width: 900px) {
+  .cp-danger-btn { padding: 8px 12px; }
+  .cp-danger-btn span:not(:first-child) { display: none; }
+}
