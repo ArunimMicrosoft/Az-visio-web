@@ -67,10 +67,26 @@ function normalizeResource(raw, defaults = {}) {
   };
 }
 
+// Detect the Resource Group name from ARM template parameters — many exports
+// embed cross-resource references as full ARM IDs (e.g. externalid parameters)
+// which contain `/resourceGroups/<name>/`. Falls back to placeholder.
+function detectArmResourceGroup(json) {
+  const params = json?.parameters || {};
+  for (const p of Object.values(params)) {
+    const v = p?.defaultValue;
+    if (typeof v === 'string') {
+      const m = v.match(/\/resourceGroups\/([^/]+)\//i);
+      if (m) return m[1];
+    }
+  }
+  return ARM_PLACEHOLDERS.resourceGroup;
+}
+
 // ── ARM Template / ARM Export ────────────────────────────────────────────
 
 function parseArm(json) {
-  const evaluator = createEvaluator(json);
+  const detectedRg = detectArmResourceGroup(json);
+  const evaluator = createEvaluator(json, { resourceGroup: detectedRg });
 
   const evalOne = (r) => ({
     ...r,
@@ -96,13 +112,13 @@ function parseArm(json) {
 
   // Step 3 — normalize + synthesize proper ARM resource IDs
   const normalized = combined.map(r => {
-    const id = synthesizeResourceId(r.type, r.name);
+    const id = synthesizeResourceId(r.type, r.name, detectedRg);
     return normalizeResource({
       id,
       type: r.type,
       name: r.name || 'unnamed',
       location: r.location || 'unknown',
-      resourceGroupName: ARM_PLACEHOLDERS.resourceGroup,
+      resourceGroupName: detectedRg,
       subscriptionId: ARM_PLACEHOLDERS.subscription,
       properties: r.properties,
       identity: r.identity,

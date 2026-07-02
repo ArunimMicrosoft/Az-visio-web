@@ -104,6 +104,9 @@ export function buildLayout(resources, edges) {
     const boxHeight = rowY - startY + RG_PAD_Y * 0.4;
     boundaries.push({
       id: `boundary-rg-${boundaries.length}`,
+      // Canvas reads `label` for the displayed text and `name` for internal use.
+      // Provide both so it works everywhere.
+      label: `📦 ${rgName}`,
       name: rgName,
       type: 'resource-group',
       x: cursorX,

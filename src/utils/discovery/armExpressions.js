@@ -11,9 +11,10 @@
 const PLACEHOLDER_SUB = '00000000-0000-0000-0000-000000000000';
 const PLACEHOLDER_RG  = 'arm-import';
 
-export function createEvaluator(template) {
+export function createEvaluator(template, options = {}) {
   const params = template?.parameters || {};
   const vars   = template?.variables  || {};
+  const RG_NAME = options.resourceGroup || PLACEHOLDER_RG;
 
   // Cache evaluated variables (in case they reference each other)
   const varCache = new Map();
@@ -132,7 +133,7 @@ export function createEvaluator(template) {
         value = { id: `/subscriptions/${PLACEHOLDER_SUB}`, subscriptionId: PLACEHOLDER_SUB };
         break;
       case 'resourcegroup':
-        value = { id: `/subscriptions/${PLACEHOLDER_SUB}/resourceGroups/${PLACEHOLDER_RG}`, name: PLACEHOLDER_RG, location: 'eastus' };
+        value = { id: `/subscriptions/${PLACEHOLDER_SUB}/resourceGroups/${RG_NAME}`, name: RG_NAME, location: 'eastus' };
         break;
       case 'reference':
       case 'listkeys':
@@ -217,7 +218,7 @@ export function createEvaluator(template) {
     if (!args || args.length === 0) return null;
     // resourceId([subscriptionId, resourceGroup,] resourceType, resourceName [, subResourceName ...])
     let sub = PLACEHOLDER_SUB;
-    let rg  = PLACEHOLDER_RG;
+    let rg  = RG_NAME;
     let idx = 0;
     // Detect optional subscription/rg leading args (36-char guid pattern for sub)
     if (typeof args[0] === 'string' && /^[a-f0-9-]{20,}$/i.test(args[0])) {
