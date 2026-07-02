@@ -9,6 +9,7 @@ import { discoverFlows } from './flows.js';
 import { buildLayout } from './layout.js';
 import { analyzeArchitecture } from './analysis.js';
 import { generateDocumentation } from './documentation.js';
+import { buildNarratives } from './narratives.js';
 import { mapAzureType } from './typeMap.js';
 
 const yieldToBrowser = () => new Promise((r) => setTimeout(r, 30));
@@ -104,8 +105,9 @@ export async function runDiscovery(rawText, options = {}) {
   await yieldToBrowser();
 
   // ── Step 10: Generate documentation ───────────────────────────────────
-  emit(10, 'Generate documentation', 'Producing per-domain and executive summaries…', 'running');
+  emit(10, 'Generate documentation', 'Producing per-domain summaries and plain-English data flow…', 'running');
   const documentation = generateDocumentation(resources, edges, flows, scores, scope);
+  const narratives    = buildNarratives(resources, edges);
   emit(10, 'Generate documentation', 'Documentation ready.', 'done');
   await yieldToBrowser();
 
@@ -124,6 +126,7 @@ export async function runDiscovery(rawText, options = {}) {
     scores,
     recommendations,
     documentation,
+    narratives,
     steps,
     metadata: {
       source: 'discovery',

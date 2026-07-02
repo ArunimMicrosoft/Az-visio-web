@@ -262,6 +262,41 @@ export default function DiscoveryImport({ open, onClose, onImport, onUpgrade }) 
                       <p dangerouslySetInnerHTML={{ __html: bold(result.documentation.executive) }} />
                     </details>
 
+                    {/* Plain-English "how data flows" — the most user-friendly view */}
+                    {result.narratives?.workloads?.length > 0 && (
+                      <details className="discovery-details" open>
+                        <summary>🛣️ How your data flows (plain English)</summary>
+                        {result.narratives.workloads.map((wl, i) => (
+                          <div key={i} className="discovery-workload-flow">
+                            <div className="discovery-workload-flow-title">
+                              Traffic to your {wl.anchorType} <b>{wl.anchor}</b>
+                            </div>
+                            <ol className="discovery-flow-steps">
+                              {wl.steps.map((s, j) => (
+                                <li key={j}
+                                    className={`discovery-flow-step discovery-flow-step--${s.role}`}
+                                    dangerouslySetInnerHTML={{ __html: s.text }} />
+                              ))}
+                            </ol>
+                          </div>
+                        ))}
+                      </details>
+                    )}
+
+                    {/* Per-edge sentence list — every connection explained */}
+                    {result.narratives?.connections?.length > 0 && (
+                      <details className="discovery-details">
+                        <summary>🔗 Every connection, explained ({result.narratives.connections.length})</summary>
+                        <ul className="discovery-connection-list">
+                          {result.narratives.connections.map((c, i) => (
+                            <li key={i}
+                                className={c.inferred ? 'discovery-connection--inferred' : ''}
+                                dangerouslySetInnerHTML={{ __html: c.sentence + (c.inferred ? ' <span class="discovery-connection-badge">inferred</span>' : '') }} />
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+
                     {result.warnings.length > 0 && (
                       <details className="discovery-details" open>
                         <summary>Top issues ({result.warnings.length})</summary>

@@ -607,3 +607,99 @@
 @media (max-width: 700px) {
   .disc-plan-row { grid-template-columns: 1fr; gap: 4px; text-align: left; }
 }
+
+
+/* ── Data-flow narrative ─────────────────────────────────────────── */
+.discovery-workload-flow {
+  margin: 10px 0 14px;
+  padding: 12px 14px;
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 10px;
+}
+.discovery-workload-flow-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #7dd3fc;
+  margin-bottom: 8px;
+}
+.discovery-workload-flow-title b { color: #fff; }
+
+.discovery-flow-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+.discovery-flow-steps::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 6px; bottom: 6px;
+  width: 2px;
+  background: linear-gradient(to bottom, rgba(56,189,248,0.6), rgba(139,92,246,0.6));
+  border-radius: 1px;
+}
+.discovery-flow-step {
+  position: relative;
+  padding: 8px 8px 8px 28px;
+  color: rgba(241, 245, 249, 0.85);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.discovery-flow-step::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 14px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #38bdf8;
+  border: 2px solid #0f172a;
+  z-index: 1;
+}
+.discovery-flow-step--inbound::before  { background: #22c55e; }
+.discovery-flow-step--filter::before   { background: #f59e0b; }
+.discovery-flow-step--nic::before      { background: #38bdf8; }
+.discovery-flow-step--subnet::before   { background: #8b5cf6; }
+.discovery-flow-step--route::before    { background: #a78bfa; }
+.discovery-flow-step--target::before   { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.3); }
+.discovery-flow-step--note::before     { background: #94a3b8; }
+.discovery-flow-step b { color: #fff; font-weight: 700; }
+.discovery-flow-step code {
+  background: rgba(0,0,0,0.35);
+  color: #7dd3fc;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-family: 'Consolas','Monaco',monospace;
+}
+
+/* ── Per-connection sentence list ─────────────────────────────────── */
+.discovery-connection-list {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0;
+}
+.discovery-connection-list li {
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(255,255,255,0.06);
+  color: rgba(241,245,249,0.85);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.discovery-connection-list li:last-child { border-bottom: none; }
+.discovery-connection-list li b { color: #fff; font-weight: 700; }
+.discovery-connection--inferred { color: rgba(241,245,249,0.55); font-style: italic; }
+.discovery-connection-badge {
+  display: inline-block;
+  background: rgba(148,163,184,0.15);
+  color: #cbd5e1;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
