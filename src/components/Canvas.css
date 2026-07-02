@@ -1,22 +1,20 @@
-/* ===== PROFESSIONAL CANVAS TOOLBAR (MATCHES CONTROL PANEL) ===== */
+/* ===== CANVAS TOOLBAR — docked as a strip above the canvas ===== */
+/* Previously floated over the canvas at top:220px which blocked the diagram.
+   Now it sits inline at the top of .canvas-wrapper, right below the main
+   ControlPanel, so it never obstructs the drawing area. */
 .canvas-toolbar {
-  position: fixed !important;
-  top: 220px !important;  /* Below trial banner and main buttons */
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  z-index: 999 !important;  /* Very high to ensure visibility */
-  background-color: #f8f9fa !important;
-  padding: 12px 20px !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
-  border: 2px solid #0078D4 !important;
+  position: relative !important;
+  z-index: 20 !important;
+  background: #ffffff !important;
+  padding: 8px 20px !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-bottom: 1px solid #e5e7eb !important;
   display: flex !important;
   align-items: center !important;
-  gap: 12px !important;
-  min-height: 48px !important;
-  pointer-events: auto !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  gap: 16px !important;
+  min-height: 44px !important;
 }
 
 .canvas-toolbar.drawing-mode {
