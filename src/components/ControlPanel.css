@@ -644,7 +644,9 @@
   font-size: 10px;
 }
 
-/* Menu bar row — force horizontal, no wrap, single scrollable line */
+/* Menu bar row — horizontal, no wrap. Overflow MUST stay visible so absolutely-
+   positioned dropdown menus can render outside the bar (previously overflow-x:
+   auto was silently clipping them, making clicks look like nothing happened). */
 .cp-menubar {
   display: flex !important;
   flex-direction: row !important;
@@ -655,11 +657,17 @@
   background: #ffffff !important;
   width: 100% !important;
   box-sizing: border-box !important;
-  overflow-x: auto !important;
-  overflow-y: visible !important;
+  overflow: visible !important;
+  position: relative !important;
+  z-index: 50 !important;
 }
-.cp-menubar::-webkit-scrollbar { height: 6px; }
-.cp-menubar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+
+/* The whole ControlPanel also needs overflow:visible so nested dropdowns can
+   escape both the menu bar AND the panel container. */
+.control-panel--v2 { overflow: visible !important; }
+
+/* And the dropdown itself should sit above absolutely everything on the page */
+.cp-menu-dropdown { z-index: 5000 !important; }
 
 .cp-menubar-spacer { flex: 1; }
 
