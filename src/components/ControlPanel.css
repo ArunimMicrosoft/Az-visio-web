@@ -568,36 +568,53 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.02) !important;
 }
 
-/* Top bar — brand + user + help */
+/* Top bar — three-column grid: [tips left] · [brand center] · [user right] */
 .cp-topbar {
-  display: flex !important;
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
   align-items: center !important;
-  justify-content: space-between !important;
-  padding: 10px 20px !important;
+  padding: 12px 20px !important;
   border-bottom: 1px solid #f1f3f5 !important;
   background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%) !important;
   width: 100% !important;
   box-sizing: border-box !important;
 }
 
+.cp-topbar-left {
+  display: flex;
+  align-items: center;
+  justify-self: start;
+  gap: 8px;
+}
+
 .cp-brand {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-family: 'Segoe UI', -apple-system, Arial, sans-serif;
+  gap: 10px;
+  justify-self: center;   /* stays perfectly centered in the middle column */
 }
-.cp-brand-icon { font-size: 20px; }
+.cp-brand-icon { font-size: 22px; line-height: 1; }
 .cp-brand-name {
-  font-size: 16px;
+  font-family: var(--font-sans);
+  font-size: 17px;
   font-weight: 700;
   color: #0f172a;
-  letter-spacing: -0.2px;
+  letter-spacing: -0.3px;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
 .cp-topbar-actions {
   display: flex;
   align-items: center;
+  justify-self: end;
   gap: 8px;
+}
+
+/* Collapse to single row on narrow screens */
+@media (max-width: 700px) {
+  .cp-topbar { grid-template-columns: auto 1fr auto !important; }
+  .cp-brand-name { font-size: 14px; }
+  .cp-topbar-left .cp-help-btn span:last-child { display: none; }
 }
 
 .cp-help-btn {
@@ -658,10 +675,11 @@
   color: #334155;
   font-size: 13px;
   font-weight: 600;
+  letter-spacing: -0.1px;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.12s, color 0.12s;
-  font-family: 'Segoe UI', -apple-system, Arial, sans-serif;
+  font-family: var(--font-sans);
 }
 .cp-menu-trigger:hover { background: #f1f5f9; color: #0f172a; }
 .cp-menu--open .cp-menu-trigger { background: #eff6ff; color: #0369a1; }

@@ -118,14 +118,9 @@ const ControlPanel = ({
 
   return (
     <div className="control-panel control-panel--v2">
-      {/* Top row: brand + user */}
+      {/* Top row: [tips left] · [brand center] · [user right] */}
       <div className="cp-topbar">
-        <div className="cp-brand">
-          <span className="cp-brand-icon">☁️</span>
-          <span className="cp-brand-name">Cloud Canvas Designer</span>
-        </div>
-
-        <div className="cp-topbar-actions">
+        <div className="cp-topbar-left">
           <button
             className="cp-help-btn"
             onClick={() => setShowHelp(v => !v)}
@@ -133,6 +128,14 @@ const ControlPanel = ({
           >
             <span>?</span> Tips
           </button>
+        </div>
+
+        <div className="cp-brand">
+          <span className="cp-brand-icon">☁️</span>
+          <span className="cp-brand-name">Cloud Canvas Designer</span>
+        </div>
+
+        <div className="cp-topbar-actions">
 
           <div className="user-menu-container">
             <button
