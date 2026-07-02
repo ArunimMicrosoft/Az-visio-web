@@ -31,7 +31,7 @@ export function buildLayout(resources, edges) {
       id: `disc-${idx}`,
       serviceType: meta.serviceType,
       type: meta.serviceType,
-      name: shortName(r.name),
+      name: shortName(r.name, r.azureType),
       label: r.name,
       x: 0, y: 0,
       path: getIconPath(meta.icon),
@@ -140,18 +140,27 @@ export function buildLayout(resources, edges) {
   return { items, connections, boundaries };
 }
 
-function shortName(name = '') {
+function shortName(name = '', azureType = '') {
   if (!name) return 'Resource';
   let str = String(name);
   // If eval failed, try to extract a readable name from an ARM expression.
   const paramMatch = str.match(/parameters\('([^']+)'\)/);
   if (paramMatch) {
-    // e.g. "virtualMachines_networktools_name" → "networktools"
     str = paramMatch[1]
       .replace(/^[a-z]+(?:_)?([A-Za-z0-9]+.*?)_name$/, '$1')
       .replace(/_name$/, '');
   }
-  // For nested names like "server/database" keep the last segment for display
+
+  // For subnets, keep the parent/child pair so users can tell them apart
+  const isSubnet = /virtualNetworks\/subnets$/i.test(azureType);
+  if (isSubnet && str.includes('/')) {
+    const parts = str.split('/');
+    const vnet = parts[0].replace(/[-_]+/g, ' ');
+    const sub  = parts[parts.length - 1].replace(/[-_]+/g, ' ');
+    return `${vnet} · ${sub}`.slice(0, 40);
+  }
+
+  // For other nested names, keep the last segment for display
   const last = str.split('/').pop();
   return (last || str).replace(/[-_]+/g, ' ').slice(0, 32);
 }
