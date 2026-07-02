@@ -236,7 +236,7 @@ const ControlPanel = ({
 
         <span className="cp-menubar-spacer" />
 
-        {/* Inline: Undo / Redo / Validate (frequent actions) */}
+        {/* Inline: Undo / Redo (frequent actions) */}
         <button
           className="cp-icon-btn"
           onClick={onUndo}
@@ -250,6 +250,17 @@ const ControlPanel = ({
           title="Redo (Ctrl+Y)"
         >↷</button>
 
+        {/* Discover — hero action, always visible */}
+        <button
+          className="cp-accent-btn"
+          onClick={onOpenDiscovery}
+          title="Architecture Discovery — visualize IaC files or your live Azure environment"
+        >
+          <span>🧭</span> Discover
+          {isTrial && <span className="cp-accent-btn-badge">PRO</span>}
+        </button>
+
+        {/* Validate — primary CTA */}
         <button
           className="cp-primary-btn"
           onClick={onValidate}
