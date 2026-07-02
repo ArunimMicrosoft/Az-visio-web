@@ -333,6 +333,39 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleUnlockAccount = async (u) => {
+    if (!window.confirm(`Unlock ${u.email}? They will be able to sign in again immediately.`)) return;
+    try {
+      // Prefer the RPC (SECURITY DEFINER checks caller is admin) — falls back
+      // to direct update on the profiles row if RPC is unavailable.
+      let unlockedViaRpc = false;
+      try {
+        const { error: rpcErr } = await supabase.rpc('admin_unlock_account', { p_user_id: u.id });
+        if (!rpcErr) unlockedViaRpc = true;
+      } catch { /* fall through */ }
+
+      if (!unlockedViaRpc) {
+        await updateProfile(u.id, {
+          failed_login_attempts: 0,
+          locked_at: null,
+          locked_reason: null,
+          last_failed_login_at: null,
+        });
+      }
+
+      await writeAuditLog({
+        userId: user.id,
+        email: user.email,
+        event: 'ACCOUNT_UNLOCKED',
+        details: { targetEmail: u.email, via: unlockedViaRpc ? 'rpc' : 'direct' },
+      });
+      showFlash('success', `🔓 Unlocked ${u.email} — counter reset to 0/3`);
+      await loadUsers();
+    } catch (e) {
+      showFlash('error', 'Unlock failed: ' + e.message);
+    }
+  };
+
   const handleResetCounters = async (u) => {
     if (!window.confirm(`Reset PNG + diagram counters for ${u.email}?`)) return;
     try {
@@ -659,6 +692,14 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                       >
                         <td className="ad-cell-email">
                           {isAdminRow && <span className="ad-badge-admin">ADMIN</span>}
+                          {u.locked_at && (
+                            <span
+                              className="ad-badge-locked"
+                              title={`Locked ${new Date(u.locked_at).toLocaleString()} — ${u.failed_login_attempts || 0} failed attempts`}
+                            >
+                              🔒 LOCKED
+                            </span>
+                          )}
                           {u.email}
                         </td>
                         <td>{u.name || '—'}</td>
@@ -753,6 +794,15 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                               >
                                 🔄 Reset
                               </button>
+                              {u.locked_at && (
+                                <button
+                                  className="ad-act ad-act-unlock"
+                                  title={`Locked at ${new Date(u.locked_at).toLocaleString()} — ${u.locked_reason || '3 failed sign-in attempts'}`}
+                                  onClick={() => handleUnlockAccount(u)}
+                                >
+                                  🔓 Unlock
+                                </button>
+                              )}
                               <button
                                 className={`ad-act ${
                                   u.is_active !== false ? 'ad-act-ban' : 'ad-act-unban'

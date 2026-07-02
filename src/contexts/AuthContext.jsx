@@ -86,14 +86,61 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: 'Email and password are required' };
       }
 
-      const data = await supabaseSignIn(email, password);
+      // ── Step 1: check lockout BEFORE hitting Supabase auth ──────────────
+      // This RPC is SECURITY DEFINER so it works with the anon key.
+      try {
+        const { data: lockCheck } = await supabase.rpc('is_account_locked', { p_email: email });
+        if (lockCheck?.locked) {
+          return {
+            success: false,
+            error: lockCheck.reason || 'Your account is locked after too many failed sign-in attempts. Please contact support to unlock it.',
+            locked: true,
+          };
+        }
+      } catch (rpcErr) {
+        // If the RPC is missing (migration not run yet), fall through — auth still works
+        console.warn('[login] is_account_locked RPC unavailable — lockout check skipped:', rpcErr?.message);
+      }
+
+      // ── Step 2: attempt Supabase sign-in ────────────────────────────────
+      let data;
+      try {
+        data = await supabaseSignIn(email, password);
+      } catch (authErr) {
+        // Wrong password → increment the counter (and maybe trip the lock)
+        try {
+          const { data: rec } = await supabase.rpc('record_failed_login', { p_email: email });
+          if (rec?.locked) {
+            return {
+              success: false,
+              error: 'Account locked after 3 failed sign-in attempts. Please contact support to unlock it.',
+              locked: true,
+            };
+          }
+          const attemptsLeft = rec?.attempts_left;
+          const suffix = (attemptsLeft === 1)
+            ? ' (1 attempt remaining before your account is locked).'
+            : (typeof attemptsLeft === 'number' && attemptsLeft > 0)
+              ? ` (${attemptsLeft} attempts remaining).`
+              : '.';
+          const base = authErr.message?.includes('Invalid login credentials')
+            ? 'Invalid email or password'
+            : (authErr.message || 'Sign-in failed');
+          return { success: false, error: base + suffix };
+        } catch { /* ignore RPC failure — still return the auth error */ }
+        throw authErr;
+      }
+
       const profile = await getUserProfile(data.user.id);
 
-      // Block banned users
+      // Blocked-by-admin check (separate from lockout)
       if (profile && profile.is_active === false) {
         await supabaseSignOut();
         return { success: false, error: 'Your account has been suspended. Contact support for assistance.' };
       }
+
+      // ── Step 3: reset the failed-attempt counter on success ─────────────
+      try { await supabase.rpc('reset_login_attempts', { p_email: email }); } catch { /* ignore */ }
 
       const appUser = profileToAppUser(data.user, profile);
       setUser(appUser);

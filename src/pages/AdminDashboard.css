@@ -492,3 +492,32 @@
 .ad-device-summary:hover { background: #e5e7eb; }
 .ad-device-info { margin-top: 4px; padding: 6px 8px; background: #f9fafb; border-radius: 4px; border: 1px solid #e5e7eb; }
 .ad-device-row { font-size: 11px; color: #4b5563; padding: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
+
+
+/* Locked account — badge in email column + unlock action button */
+.ad-badge-locked {
+  display: inline-block;
+  background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+  letter-spacing: 0.6px;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.25);
+  animation: locked-pulse 2s ease-in-out infinite;
+}
+@keyframes locked-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.75; }
+}
+.ad-act-unlock {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #78350f;
+  font-weight: 700;
+}
+.ad-act-unlock:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+}
