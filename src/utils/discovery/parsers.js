@@ -3,9 +3,9 @@
 //     properties, identity, tags, raw }
 
 import { FORMAT } from './detectors.js';
-import { parseTerraformFile } from '../terraformParser.js';
 import { createEvaluator, synthesizeResourceId, ARM_PLACEHOLDERS } from './armExpressions.js';
 import { mapAzureType } from './typeMap.js';
+import { terraformHclToArmResources } from './tfEnricher.js';
 
 // Drop resources that aren't recognized architectural nodes (child rules,
 // diagnostic settings, extensions, etc. → represented by parent or edges).
@@ -260,18 +260,84 @@ function parseTerraformState(json) {
       const attrs = inst.attributes || {};
       const azureType = tfToArmType(res.type);
       if (!azureType) continue;
+
+      // TF state IDs are real Azure resource IDs. Convert TF attributes into
+      // ARM-style properties so relationship inference picks them up.
+      const properties = tfAttrsToArmProperties(res.type, attrs);
+
       results.push(normalizeResource({
         id: attrs.id,
         type: azureType,
         name: attrs.name || res.name,
         location: attrs.location,
         resourceGroupName: attrs.resource_group_name,
-        properties: attrs,
+        properties,
         tags: attrs.tags || {},
       }));
     }
   }
   return results.filter(r => !!r.azureType);
+}
+
+// Terraform state attributes → ARM-style properties. Only maps the fields
+// the relationship engine needs (subnet, NSG, route table, PIP, NIC IDs).
+function tfAttrsToArmProperties(tfType, attrs) {
+  const props = {};
+
+  if (tfType === 'azurerm_network_interface') {
+    if (attrs.network_security_group_id) props.networkSecurityGroup = { id: attrs.network_security_group_id };
+    if (Array.isArray(attrs.ip_configuration)) {
+      props.ipConfigurations = attrs.ip_configuration.map((c, i) => ({
+        name: c.name || `ipconfig${i + 1}`,
+        properties: {
+          ...(c.subnet_id && { subnet: { id: c.subnet_id } }),
+          ...(c.public_ip_address_id && { publicIPAddress: { id: c.public_ip_address_id } }),
+          ...(c.private_ip_address && { privateIPAddress: c.private_ip_address }),
+        },
+      }));
+    }
+  }
+
+  if (tfType === 'azurerm_subnet') {
+    if (attrs.network_security_group_id) props.networkSecurityGroup = { id: attrs.network_security_group_id };
+    if (attrs.route_table_id) props.routeTable = { id: attrs.route_table_id };
+    if (attrs.address_prefixes) props.addressPrefixes = attrs.address_prefixes;
+  }
+
+  if (['azurerm_linux_virtual_machine', 'azurerm_windows_virtual_machine', 'azurerm_virtual_machine'].includes(tfType)) {
+    if (Array.isArray(attrs.network_interface_ids)) {
+      props.networkProfile = {
+        networkInterfaces: attrs.network_interface_ids.map(id => ({ id })),
+      };
+    }
+    if (attrs.size || attrs.vm_size) props.hardwareProfile = { vmSize: attrs.size || attrs.vm_size };
+  }
+
+  if (tfType === 'azurerm_kubernetes_cluster' && Array.isArray(attrs.default_node_pool)) {
+    const dnp = attrs.default_node_pool[0] || {};
+    if (dnp.vnet_subnet_id) props.networkProfile = { vnetSubnetId: dnp.vnet_subnet_id };
+  }
+
+  if (['azurerm_linux_web_app', 'azurerm_windows_web_app', 'azurerm_app_service', 'azurerm_function_app'].includes(tfType)) {
+    const planId = attrs.service_plan_id || attrs.app_service_plan_id;
+    if (planId) props.serverFarmId = planId;
+  }
+
+  if (tfType === 'azurerm_virtual_network_peering' && attrs.remote_virtual_network_id) {
+    props.remoteVirtualNetwork = { id: attrs.remote_virtual_network_id };
+  }
+
+  if (tfType === 'azurerm_private_endpoint') {
+    if (attrs.subnet_id) props.subnet = { id: attrs.subnet_id };
+    if (Array.isArray(attrs.private_service_connection)) {
+      const psc = attrs.private_service_connection[0];
+      if (psc?.private_connection_resource_id) {
+        props.privateLinkServiceConnections = [{ properties: { privateLinkServiceId: psc.private_connection_resource_id } }];
+      }
+    }
+  }
+
+  return props;
 }
 
 // Minimal Terraform provider type → ARM type mapping (for state files)
@@ -327,29 +393,121 @@ const TF_TO_ARM = {
 const tfToArmType = (t) => TF_TO_ARM[t] || null;
 
 // ── Bicep (best-effort) ──────────────────────────────────────────────────
-// Simple regex parser for the common patterns. Full Bicep parsing is out of
-// scope — this handles the shape most exports produce.
+// Bicep syntax is close to ARM JSON — object literals with property refs like
+// `subnet: { id: parentVnet::subnetDefault.id }` or `nic.id`. We extract the
+// same relationship-critical property paths as ARM so the layout works.
 function parseBicep(text) {
   const results = [];
-  const resRegex = /resource\s+(\w+)\s+'([^@]+)@[^']+'\s+=\s+/g;
+  const varToName = new Map();     // Bicep symbol → resolved name
+  const varToType = new Map();     // Bicep symbol → ARM type
+  const bodies    = new Map();     // Bicep symbol → body text
+
+  // Pass 1: split resource declarations and remember each one's name + type
+  const resRegex = /resource\s+(\w+)\s+'([^@]+)@[^']+'\s+=\s*(?:if\s*\([^)]*\)\s*)?/g;
   let match;
   while ((match = resRegex.exec(text)) !== null) {
-    const varName = match[1];
+    const symbol = match[1];
     const azureType = match[2];
-    // Extract following {...} block
     const bodyStart = text.indexOf('{', resRegex.lastIndex);
     if (bodyStart === -1) continue;
     const bodyEnd = matchBrace(text, bodyStart);
     const body = text.slice(bodyStart + 1, bodyEnd);
 
     const nameMatch = body.match(/\bname:\s*'([^']+)'/) || body.match(/\bname:\s*"([^"]+)"/);
-    const locMatch = body.match(/\blocation:\s*'([^']+)'/) || body.match(/\blocation:\s*"([^"]+)"/);
+    // Bicep names sometimes reference parameters — fall back to symbol
+    const resolvedName = nameMatch ? nameMatch[1].replace(/\$\{[^}]+\}/g, '') : symbol;
+
+    varToName.set(symbol, resolvedName);
+    varToType.set(symbol, azureType);
+    bodies.set(symbol, body);
+  }
+
+  // Helper: convert a Bicep reference like `nic.id` or `subnet.id` to an ARM ID
+  const RG = 'bicep';
+  const SUB_ID = '00000000-0000-0000-0000-000000000000';
+  const symbolToArmId = (sym) => {
+    const t = varToType.get(sym);
+    if (!t) return null;
+    return synthesizeResourceId(t, varToName.get(sym) || sym, RG, SUB_ID);
+  };
+
+  // Pass 2: extract properties per resource
+  for (const [symbol, body] of bodies.entries()) {
+    const azureType = varToType.get(symbol);
+    const resolvedName = varToName.get(symbol);
+
+    const properties = {};
+
+    // subnet: { id: subnetVar.id }  — used by NICs, private endpoints, etc.
+    const subM = body.match(/\bsubnet\s*:\s*\{[^}]*\bid\s*:\s*(\w+)\.id/);
+    if (subM) {
+      const id = symbolToArmId(subM[1]);
+      if (id) properties.subnet = { id };
+    }
+
+    // networkSecurityGroup: { id: nsgVar.id }
+    const nsgM = body.match(/\bnetworkSecurityGroup\s*:\s*\{[^}]*\bid\s*:\s*(\w+)\.id/);
+    if (nsgM) {
+      const id = symbolToArmId(nsgM[1]);
+      if (id) properties.networkSecurityGroup = { id };
+    }
+
+    // routeTable: { id: routeTableVar.id }
+    const rtM = body.match(/\brouteTable\s*:\s*\{[^}]*\bid\s*:\s*(\w+)\.id/);
+    if (rtM) {
+      const id = symbolToArmId(rtM[1]);
+      if (id) properties.routeTable = { id };
+    }
+
+    // publicIPAddress: { id: pipVar.id }
+    const pipM = body.match(/\bpublicIPAddress\s*:\s*\{[^}]*\bid\s*:\s*(\w+)\.id/);
+    if (pipM) {
+      const id = symbolToArmId(pipM[1]);
+      if (id) properties.publicIPAddress = { id };
+    }
+
+    // ipConfigurations: [{ properties: { subnet: {id}, publicIPAddress: {id} } }]
+    // Handle NICs — collect every ipConfig subnet + PIP ref
+    if (/ipConfigurations\s*:/i.test(body)) {
+      const cfgSubs = [...body.matchAll(/\bsubnet\s*:\s*\{[^}]*\bid\s*:\s*(\w+)\.id/g)];
+      const cfgPips = [...body.matchAll(/\bpublicIPAddress\s*:\s*\{[^}]*\bid\s*:\s*(\w+)\.id/g)];
+      const first = cfgSubs[0]?.[1];
+      const firstPip = cfgPips[0]?.[1];
+      const cfg = { name: 'ipconfig1', properties: {} };
+      if (first)    cfg.properties.subnet          = { id: symbolToArmId(first) };
+      if (firstPip) cfg.properties.publicIPAddress = { id: symbolToArmId(firstPip) };
+      if (cfg.properties.subnet || cfg.properties.publicIPAddress) {
+        properties.ipConfigurations = [cfg];
+      }
+    }
+
+    // networkInterfaces: [{ id: nicVar.id }]  — used by VMs
+    const nicIds = [...body.matchAll(/\bnetworkInterfaces\s*:\s*\[[\s\S]*?\bid\s*:\s*(\w+)\.id/g)];
+    if (nicIds.length > 0) {
+      properties.networkProfile = {
+        networkInterfaces: nicIds.map(m => ({ id: symbolToArmId(m[1]) })).filter(x => !!x.id),
+      };
+    }
+
+    // serverFarmId: appPlanVar.id  — App Service → ASP
+    const spM = body.match(/\bserverFarmId\s*:\s*(\w+)\.id/);
+    if (spM) {
+      const id = symbolToArmId(spM[1]);
+      if (id) properties.serverFarmId = id;
+    }
+
+    // Location
+    const locMatch = body.match(/\blocation\s*:\s*'([^']+)'/);
+    const location = locMatch ? locMatch[1] : 'unknown';
+
     results.push(normalizeResource({
-      id: `/bicep/${azureType}/${varName}`,
+      id: synthesizeResourceId(azureType, resolvedName, RG, SUB_ID),
       type: azureType,
-      name: nameMatch ? nameMatch[1] : varName,
-      location: locMatch ? locMatch[1] : 'unknown',
-      properties: {},
+      name: resolvedName,
+      location,
+      resourceGroupName: RG,
+      subscriptionId: SUB_ID,
+      properties,
     }));
   }
   return results;
@@ -364,21 +522,17 @@ function matchBrace(str, startIdx) {
   return str.length - 1;
 }
 
-// ── Terraform HCL — delegate to existing parser via re-mapping ──────────
-// We convert TF parser items back into internal shape.
+// ── Terraform HCL — convert to ARM shape first, then normalize ──────────
+// The enricher extracts property references (subnet_id, network_interface_ids,
+// route_table_id, etc.) into an ARM-style properties tree so the same
+// relationship inference used for ARM works for Terraform too.
 function parseTerraformHcl(text) {
-  const result = parseTerraformFile(text, 'main.tf');
-  return result.items.map(item => {
-    const azureType = tfToArmType(item.metadata?.terraformType) || 'Microsoft.Resources/deployments';
-    return normalizeResource({
-      id: `/terraform/${item.metadata?.terraformType}/${item.metadata?.terraformName || item.id}`,
-      type: azureType,
-      name: item.name || item.label,
-      location: 'unknown',
-      resourceGroupName: item.metadata?.rgRef || 'default',
-      properties: {},
-    });
-  }).filter(r => !!r.azureType);
+  // Detect resource-group name from any azurerm_resource_group in the HCL
+  const rgMatch = text.match(/resource\s+"azurerm_resource_group"\s+"[^"]+"\s*\{[\s\S]*?\bname\s*=\s*"([^"]+)"/);
+  const rgName = rgMatch ? rgMatch[1] : 'terraform';
+
+  const armLike = terraformHclToArmResources(text, rgName);
+  return armLike.map(r => normalizeResource(r)).filter(r => !!r.azureType);
 }
 
 // ── Single resource ─────────────────────────────────────────────────────
