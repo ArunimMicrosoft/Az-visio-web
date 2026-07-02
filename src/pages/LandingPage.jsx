@@ -245,7 +245,7 @@ const LandingPage = () => {
             <span className="section-badge">🆕 New · Pro Feature</span>
             <h2 className="section-title">Architecture Discovery</h2>
             <p className="section-subtitle">
-              Turn any Azure export — IaC code <em>or</em> a live-environment snapshot — into a professional architecture diagram. See exactly how your running resources connect, score against WAF pillars, and spot issues in seconds.
+              Turn any Azure export into a professional architecture diagram — automatically. See how everything connects, get a health score, and spot risks in seconds. No drawing needed.
             </p>
           </div>
 
@@ -253,9 +253,9 @@ const LandingPage = () => {
           <div className="discovery-live-banner">
             <span className="discovery-live-icon">🛰️</span>
             <div>
-              <div className="discovery-live-title">Visualize your live Azure environment, not just IaC</div>
+              <div className="discovery-live-title">See your live Azure setup as a picture — instantly</div>
               <div className="discovery-live-text">
-                Run one Azure CLI or PowerShell command to snapshot your <b>currently running</b> subscription, resource group, or single resource — then upload the file here. Discovery reconstructs the actual traffic flows and dependencies from real deployed state, so you can finally see how everything is wired without hunting through the portal.
+                Run one short command in your Azure account to get a file that lists everything you have running today. Upload it here and we&apos;ll draw a full diagram showing exactly how each piece connects — <b>no manual mapping, no whiteboards, no guesswork</b>.
               </div>
             </div>
           </div>
@@ -265,19 +265,19 @@ const LandingPage = () => {
             <div className="discovery-landing-info">
               <h3 className="discovery-landing-heading">Drop a file. Get a diagram.</h3>
               <p className="discovery-landing-desc">
-                Upload an ARM template, Bicep file, Terraform HCL, Terraform state, Azure Resource Graph result, Az CLI JSON, PowerShell export, or a Cloud Canvas Discovery (.ccd) file. Our engine identifies every resource, infers relationships, traces traffic flows, and lays it all out in tiered Azure Architecture Center style.
+                Have a file from Azure? Drop it in and we do the rest. We read every resource in the file, work out how they connect, and lay everything out as a clean, easy-to-read diagram — the way Microsoft would draw it.
               </p>
 
               <ul className="discovery-landing-features">
-                <li><span className="disc-check">✓</span> Detects 11 export types automatically</li>
-                <li><span className="disc-check">✓</span> Infers subnet, backend pool, private endpoint & identity links</li>
-                <li><span className="disc-check">✓</span> Scores against all 5 Well-Architected pillars</li>
-                <li><span className="disc-check">✓</span> Flags public storage, missing NSGs, no-backup VMs, and more</li>
-                <li><span className="disc-check">✓</span> Groups by Resource Group and Region visually</li>
+                <li><span className="disc-check">✓</span> Works with all common Azure files — you don&apos;t need to know which</li>
+                <li><span className="disc-check">✓</span> Draws every connection: what talks to what, and how</li>
+                <li><span className="disc-check">✓</span> Gives you a health score on 5 Microsoft best-practice areas</li>
+                <li><span className="disc-check">✓</span> Flags common risks: open storage, missing firewalls, no backups</li>
+                <li><span className="disc-check">✓</span> Groups everything neatly by team and region for quick review</li>
               </ul>
 
               <div className="discovery-landing-cta">
-                <a href="/signup" className="discovery-landing-btn-primary">Try Discovery Free →</a>
+                <a href="/signup" className="discovery-landing-btn-primary">Try It Free →</a>
                 <a href="#pricing" className="discovery-landing-btn-secondary">See pricing</a>
               </div>
             </div>
@@ -287,8 +287,8 @@ const LandingPage = () => {
               <div className="discovery-landing-howto-header">
                 <span className="discovery-landing-howto-icon">📤</span>
                 <div>
-                  <div className="discovery-landing-howto-title">How to export your Azure infrastructure</div>
-                  <div className="discovery-landing-howto-sub">Pick the method you already use — no agent, no install.</div>
+                  <div className="discovery-landing-howto-title">How to get your Azure file</div>
+                  <div className="discovery-landing-howto-sub">Any of these works — pick whichever is easiest. No install, no plugin.</div>
                 </div>
               </div>
 
@@ -328,15 +328,15 @@ const LandingPage = () => {
 
               <div className="discovery-landing-method">
                 <div className="discovery-landing-method-name">
-                  <span className="disc-badge">IaC</span> Terraform / Bicep
+                  <span className="disc-badge">Code</span> Already have infra-as-code?
                 </div>
                 <p className="discovery-landing-method-note">
-                  Upload your <code>main.tf</code>, <code>terraform.tfstate</code>, or <code>main.bicep</code> directly. We parse it on the client — nothing is sent to any external LLM.
+                  If your team uses Terraform or Bicep, just drop the file in — we read it directly. No export step needed.
                 </p>
               </div>
 
               <div className="discovery-landing-privacy">
-                🔒 Your file is parsed in your browser. Nothing gets uploaded to third-party services.
+                🔒 Your file stays in your browser. Nothing is sent to any external service or AI.
               </div>
             </div>
           </div>
