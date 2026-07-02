@@ -45,7 +45,7 @@ export async function runDiscovery(rawText, options = {}) {
   emit(2, 'Parse resources', 'Extracting resources from the file…', 'running');
   let resources = [];
   try {
-    resources = await parseByFormat(format, rawText);
+    resources = await parseByFormat(format, rawText, { filename });
   } catch (err) {
     emit(2, 'Parse resources', `Parse error: ${err.message}`, 'error');
     throw err;

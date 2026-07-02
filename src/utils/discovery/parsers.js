@@ -67,25 +67,80 @@ function normalizeResource(raw, defaults = {}) {
   };
 }
 
-// Detect the Resource Group name from ARM template parameters — many exports
-// embed cross-resource references as full ARM IDs (e.g. externalid parameters)
-// which contain `/resourceGroups/<name>/`. Falls back to placeholder.
+// Detect the Resource Group name from an ARM template using several strategies:
+//   1. Scan every string value in the whole JSON for `/resourceGroups/<name>/`
+//   2. Look for a parameter whose NAME contains "rg" or "resourceGroup" and
+//      whose defaultValue looks like a plausible RG name
+//   3. Look for a tag `resourceGroup` or `rg` on any resource
+//   4. Fall back to the placeholder
 function detectArmResourceGroup(json) {
+  // Strategy 1 — deep scan for `/resourceGroups/X/` (case-insensitive)
+  const found = scanJsonForRg(json);
+  if (found) return found;
+
+  // Strategy 2 — parameter naming
   const params = json?.parameters || {};
-  for (const p of Object.values(params)) {
-    const v = p?.defaultValue;
-    if (typeof v === 'string') {
-      const m = v.match(/\/resourceGroups\/([^/]+)\//i);
-      if (m) return m[1];
+  for (const [name, meta] of Object.entries(params)) {
+    const v = meta?.defaultValue;
+    const lower = name.toLowerCase();
+    if ((lower.includes('resourcegroup') || lower === 'rg' || lower.endsWith('_rg') || lower.endsWith('rgname')) &&
+        typeof v === 'string' && v.length > 0 && v.length < 90 &&
+        /^[a-z0-9._()\-]+$/i.test(v)) {
+      return v;
     }
   }
+
+  // Strategy 3 — resource tags
+  for (const r of (json?.resources || [])) {
+    const tag = r?.tags?.resourceGroup || r?.tags?.rg || r?.tags?.ResourceGroup;
+    if (typeof tag === 'string' && tag.length > 0 && tag.length < 90) return tag;
+  }
+
+  // Fallback
   return ARM_PLACEHOLDERS.resourceGroup;
+}
+
+// Recursively walk any JS value; return the first RG name found in a
+// `/resourceGroups/<name>/` substring.
+function scanJsonForRg(node) {
+  if (node == null) return null;
+  if (typeof node === 'string') {
+    const m = node.match(/\/resourceGroups\/([^/'"\s]+)\//i);
+    return m ? m[1] : null;
+  }
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const hit = scanJsonForRg(item);
+      if (hit) return hit;
+    }
+    return null;
+  }
+  if (typeof node === 'object') {
+    for (const v of Object.values(node)) {
+      const hit = scanJsonForRg(v);
+      if (hit) return hit;
+    }
+  }
+  return null;
 }
 
 // ── ARM Template / ARM Export ────────────────────────────────────────────
 
-function parseArm(json) {
-  const detectedRg = detectArmResourceGroup(json);
+function parseArm(json, options = {}) {
+  let detectedRg = detectArmResourceGroup(json);
+  // If detection came up empty AND we have a filename hint, use it. Users
+  // typically export ARM templates as "<rgname>.json" or "template-<rg>.json".
+  if (detectedRg === ARM_PLACEHOLDERS.resourceGroup && options.filename) {
+    const clean = String(options.filename)
+      .replace(/\.[a-z]+$/i, '')                 // strip extension
+      .replace(/^template[-_]?/i, '')            // strip generic prefix
+      .replace(/[-_]?template$/i, '')            // strip generic suffix
+      .replace(/[-_]?export$/i, '')
+      .trim();
+    if (clean && clean.length > 0 && clean.length < 90 && /^[a-z0-9._()\-]+$/i.test(clean)) {
+      detectedRg = clean;
+    }
+  }
   const evaluator = createEvaluator(json, { resourceGroup: detectedRg });
 
   const evalOne = (r) => ({
@@ -543,17 +598,17 @@ function parseSingle(json) {
 
 // ── Master dispatcher ────────────────────────────────────────────────────
 
-export async function parseByFormat(format, rawText) {
+export async function parseByFormat(format, rawText, options = {}) {
   const parsed = tryJson(rawText);
-  const results = await parseByFormatInternal(format, rawText, parsed);
+  const results = await parseByFormatInternal(format, rawText, parsed, options);
   return keepArchitectural(results);
 }
 
-async function parseByFormatInternal(format, rawText, parsed) {
+async function parseByFormatInternal(format, rawText, parsed, options = {}) {
   switch (format) {
     case FORMAT.ARM_TEMPLATE:
     case FORMAT.ARM_EXPORT:
-      return parseArm(parsed || {});
+      return parseArm(parsed || {}, options);
 
     case FORMAT.RESOURCE_GRAPH:
       return parseResourceGraph(parsed || []);
