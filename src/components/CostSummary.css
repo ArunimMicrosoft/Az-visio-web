@@ -963,3 +963,17 @@
   color: #212529;
   margin-right: 4px;
 }
+
+
+/* Always-on live pricing badge (replaces the old toggle button) */
+.real-time-badge {
+  cursor: default !important;
+  border-color: rgba(0, 120, 212, 0.4) !important;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+  color: #0369a1 !important;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  transform: none !important;
+  user-select: none;
+}
+.real-time-badge:hover { transform: none !important; }

@@ -870,7 +870,6 @@ function App() {
           currency={selectedCurrency}
           onRegionChange={setSelectedRegion}
           onCurrencyChange={setSelectedCurrency}
-          useRealTimeAPI={true}
         />
       </div>
       <Footer />      <ValidationPanel 

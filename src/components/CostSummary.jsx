@@ -3,7 +3,7 @@ import { calculateCost, formatCost, getCostCategory, getCostOptimizations, azure
 import { getArchitecturePricingSummary } from '../utils/azureRetailPricesAPI';
 import './CostSummary.css';
 
-const CostSummary = ({ items, region, currency, onRegionChange, onCurrencyChange, useRealTimeAPI = false }) => {
+const CostSummary = ({ items, region, currency, onRegionChange, onCurrencyChange /* , useRealTimeAPI */ }) => {
   const [costData, setCostData] = useState(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [showOptimizations, setShowOptimizations] = useState(false);
@@ -17,7 +17,12 @@ const CostSummary = ({ items, region, currency, onRegionChange, onCurrencyChange
   useEffect(() => {
     if (currency && currency !== selectedCurrency) setSelectedCurrency(currency);
   }, [currency]); // eslint-disable-line react-hooks/exhaustive-deps
-  const [useRealTimePricing, setUseRealTimePricing] = useState(useRealTimeAPI);
+
+  // Live Azure Retail Prices API is now MANDATORY for any diagram on canvas.
+  // The toggle has been removed — if the API fails we still fall back to
+  // static estimates internally so the UI never breaks, but the user cannot
+  // opt out of live pricing.
+  const useRealTimePricing = true;
   const [loadingRealTime, setLoadingRealTime] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   useEffect(() => {
@@ -36,64 +41,61 @@ const CostSummary = ({ items, region, currency, onRegionChange, onCurrencyChange
         return;
       }
 
-      if (useRealTimePricing) {
-        console.log('🌐 Fetching LIVE pricing from Azure API...');
-        console.log('   Items to price:', items.map(i => ({ id: i.id, name: i.name, type: i.serviceType || i.type })));
-        if (!cancelled) setLoadingRealTime(true);
+      // Always fetch pricing live from the Azure Retail Prices API.
+      // Static estimates are only used as an emergency fallback when the API
+      // is unreachable or returns zero priced items.
+      console.log('🌐 Fetching LIVE pricing from Azure Retail Prices API...');
+      if (!cancelled) setLoadingRealTime(true);
 
-        try {
-          const realTimeCost = await getArchitecturePricingSummary(items, selectedRegion, selectedCurrency);
-          console.log('✅ Azure API Response:', realTimeCost);
-          if (!cancelled) {
-            if (realTimeCost.totalMonthly === 0 || realTimeCost.pricedItemCount === 0) {
-              console.warn('⚠️ Azure API returned $0 or no priced items. Falling back to static pricing.');
-              const staticCost = calculateCost(items, selectedRegion, selectedCurrency);
-              setCostData({ ...staticCost, dataSource: 'Static Estimates (API returned $0)' });
-              setLoadingRealTime(false);
-              return;
-            }
-            setCostData({
-              totalMonthly: realTimeCost.totalMonthly,
-              totalYearly: realTimeCost.totalMonthly * 12,
-              breakdown: realTimeCost.serviceBreakdown.map(s => ({
-                name: s.name,
-                serviceType: s.serviceType,
-                cost: s.monthlyEstimate,
-                isRetired: s.isRetired || false,
-                retiredInfo: s.retiredInfo || null,
-                isNotMapped: s.isNotMapped || false,
-                isNotAvailable: s.isNotAvailable || false,
-                isFree: s.isFree || false,
-                freeInfo: s.freeInfo || null,
-                message: s.message || null
-              })),
-              region: realTimeCost.region,
-              dataSource: 'Azure Retail Prices API (Official)',
-              pricedItemCount: realTimeCost.pricedItemCount || 0,
-              freeItemCount: realTimeCost.freeItemCount || 0,
-              notAvailableItemCount: realTimeCost.notAvailableItemCount || 0,
-              retiredItemCount: realTimeCost.retiredItemCount || 0,
-              notMappedItemCount: realTimeCost.notMappedItemCount || 0
-            });
+      try {
+        const realTimeCost = await getArchitecturePricingSummary(items, selectedRegion, selectedCurrency);
+        if (!cancelled) {
+          if (realTimeCost.totalMonthly === 0 || realTimeCost.pricedItemCount === 0) {
+            console.warn('⚠️ Azure API returned no priced items — using static estimates as fallback.');
+            const staticCost = calculateCost(items, selectedRegion, selectedCurrency);
+            setCostData({ ...staticCost, dataSource: 'Static Estimates (Azure API returned no data)' });
             setLoadingRealTime(false);
+            return;
           }
-        } catch (error) {
-          if (!cancelled) {
-            console.error('❌ Error fetching real-time pricing:', error);
-            const cost = calculateCost(items, selectedRegion, selectedCurrency);
-            setCostData({ ...cost, dataSource: 'Static Estimates (API Error)' });
-            setLoadingRealTime(false);
-          }
+          setCostData({
+            totalMonthly: realTimeCost.totalMonthly,
+            totalYearly: realTimeCost.totalMonthly * 12,
+            breakdown: realTimeCost.serviceBreakdown.map(s => ({
+              name: s.name,
+              serviceType: s.serviceType,
+              cost: s.monthlyEstimate,
+              isRetired: s.isRetired || false,
+              retiredInfo: s.retiredInfo || null,
+              isNotMapped: s.isNotMapped || false,
+              isNotAvailable: s.isNotAvailable || false,
+              isFree: s.isFree || false,
+              freeInfo: s.freeInfo || null,
+              message: s.message || null
+            })),
+            region: realTimeCost.region,
+            fxRate: realTimeCost.fxRate,
+            dataSource: 'Azure Retail Prices API (Official)',
+            pricedItemCount: realTimeCost.pricedItemCount || 0,
+            freeItemCount: realTimeCost.freeItemCount || 0,
+            notAvailableItemCount: realTimeCost.notAvailableItemCount || 0,
+            retiredItemCount: realTimeCost.retiredItemCount || 0,
+            notMappedItemCount: realTimeCost.notMappedItemCount || 0
+          });
+          setLoadingRealTime(false);
         }
-      } else {
-        const cost = calculateCost(items, selectedRegion, selectedCurrency);
-        if (!cancelled) setCostData(cost);
+      } catch (error) {
+        if (!cancelled) {
+          console.error('❌ Error fetching live Azure pricing:', error);
+          const cost = calculateCost(items, selectedRegion, selectedCurrency);
+          setCostData({ ...cost, dataSource: 'Static Estimates (Azure API unreachable)' });
+          setLoadingRealTime(false);
+        }
       }
     };
 
     run();
     return () => { cancelled = true; };
-  }, [items, selectedRegion, selectedCurrency, useRealTimePricing]);
+  }, [items, selectedRegion, selectedCurrency]);
 
   const handleRegionChange = (region) => {
     setSelectedRegion(region);
@@ -143,14 +145,13 @@ const CostSummary = ({ items, region, currency, onRegionChange, onCurrencyChange
         <div className="cost-inner">
           <div className="cost-header">
             <h3>💰 Cost Estimate</h3>
-            <button
-              className={`real-time-toggle ${useRealTimePricing ? 'active' : ''}`}
-              onClick={() => setUseRealTimePricing(!useRealTimePricing)}
-              title={useRealTimePricing ? 'Using Azure Retail Prices API' : 'Using estimated pricing'}
-              disabled={loadingRealTime}
+            <span
+              className="real-time-toggle active real-time-badge"
+              title="Prices fetched live from the Azure Retail Prices API and converted using today's FX rates."
+              aria-live="polite"
             >
-              {loadingRealTime ? '⏳' : useRealTimePricing ? '🌐 Live' : '📊 Est'}
-            </button>
+              {loadingRealTime ? '⏳ Fetching…' : '🌐 Live Azure pricing'}
+            </span>
             <div className="cost-selectors">
               <select
                 value={selectedRegion}
