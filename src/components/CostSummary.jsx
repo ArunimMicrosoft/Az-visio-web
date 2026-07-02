@@ -3,12 +3,20 @@ import { calculateCost, formatCost, getCostCategory, getCostOptimizations, azure
 import { getArchitecturePricingSummary } from '../utils/azureRetailPricesAPI';
 import './CostSummary.css';
 
-const CostSummary = ({ items, onRegionChange, onCurrencyChange, useRealTimeAPI = false }) => {
+const CostSummary = ({ items, region, currency, onRegionChange, onCurrencyChange, useRealTimeAPI = false }) => {
   const [costData, setCostData] = useState(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [showOptimizations, setShowOptimizations] = useState(false);
-  const [selectedRegion, setSelectedRegion] = useState('eastus');
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const [selectedRegion, setSelectedRegion] = useState(region || 'eastus');
+  const [selectedCurrency, setSelectedCurrency] = useState(currency || 'USD');
+
+  // Sync internal state when parent region/currency changes (e.g. Discovery import)
+  useEffect(() => {
+    if (region && region !== selectedRegion) setSelectedRegion(region);
+  }, [region]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (currency && currency !== selectedCurrency) setSelectedCurrency(currency);
+  }, [currency]); // eslint-disable-line react-hooks/exhaustive-deps
   const [useRealTimePricing, setUseRealTimePricing] = useState(useRealTimeAPI);
   const [loadingRealTime, setLoadingRealTime] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);

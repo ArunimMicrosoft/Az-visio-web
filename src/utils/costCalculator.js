@@ -32,9 +32,12 @@ export const azureRegions = {
   'canadaeast': { name: 'Canada East', multiplier: 1.07 },
   'southafricanorth': { name: 'South Africa North', multiplier: 1.25 },
   'uaenorth': { name: 'UAE North', multiplier: 1.20 },
-  'indiacentral': { name: 'India Central', multiplier: 0.95 },
-  'southindia': { name: 'South India', multiplier: 0.97 },
-  'koreacentral': { name: 'Korea Central', multiplier: 1.10 }
+  'centralindia': { name: 'Central India (Pune)', multiplier: 0.95 },
+  'southindia': { name: 'South India (Chennai)', multiplier: 0.97 },
+  'westindia': { name: 'West India (Mumbai)', multiplier: 0.98 },
+  'indiacentral': { name: 'India Central (legacy)', multiplier: 0.95 },
+  'koreacentral': { name: 'Korea Central', multiplier: 1.10 },
+  'koreasouth': { name: 'Korea South', multiplier: 1.12 }
 };
 
 /**

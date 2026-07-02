@@ -481,6 +481,48 @@ function App() {
     } else {
       addToCanvas(result.items, result.connections || [], result.boundaries || []);
     }
+
+    // Auto-switch the cost/region context to whatever region the export uses
+    // (most common location across all resources)
+    try {
+      // Normalize Azure location strings — API returns lowercase codes
+      // (`centralindia`) but some tools emit display names (`Central India`).
+      const REGION_ALIASES = {
+        'central india':      'centralindia',
+        'south india':        'southindia',
+        'west india':         'westindia',
+        'east us':            'eastus',
+        'east us 2':          'eastus2',
+        'west us':            'westus',
+        'west us 2':          'westus2',
+        'west us 3':          'westus3',
+        'central us':         'centralus',
+        'north europe':       'northeurope',
+        'west europe':        'westeurope',
+        'uk south':           'uksouth',
+        'uk west':            'ukwest',
+        'south east asia':    'southeastasia',
+        'southeast asia':     'southeastasia',
+        'east asia':          'eastasia',
+        'japan east':         'japaneast',
+        'japan west':         'japanwest',
+        'australia east':     'australiaeast',
+        'canada central':     'canadacentral',
+        'indiacentral':       'centralindia',      // legacy alias
+      };
+      const counts = new Map();
+      for (const r of (result.resources || [])) {
+        let loc = (r.location || '').toLowerCase().trim();
+        if (!loc || loc === 'unknown' || loc === 'global') continue;
+        loc = REGION_ALIASES[loc] || loc.replace(/\s+/g, '');
+        counts.set(loc, (counts.get(loc) || 0) + 1);
+      }
+      if (counts.size > 0) {
+        const [best] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+        setSelectedRegion(best);
+      }
+    } catch { /* ignore */ }
+
     // Fire-and-forget analytics
     try { trackTemplateUsed?.(user?.id, `discovery-${result.format}`); } catch { /* ignore */ }
   };
@@ -824,6 +866,8 @@ function App() {
         />
         <CostSummary 
           items={items} 
+          region={selectedRegion}
+          currency={selectedCurrency}
           onRegionChange={setSelectedRegion}
           onCurrencyChange={setSelectedCurrency}
           useRealTimeAPI={true}
