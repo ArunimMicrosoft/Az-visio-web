@@ -42,12 +42,15 @@ const isData    = (r) => /^microsoft\.(compute\/snapshots|compute\/disks|storage
 
 // ── Main entry ───────────────────────────────────────────────────────────
 export function buildLayout(resources, edges) {
-  // 1) Build canvas items for every recognised resource
+  // 1) Build canvas items for every recognised resource EXCEPT VNets —
+  //    VNets become boundary boxes, not cards. This removes the redundant
+  //    "VNet card floating above its own box" clutter.
   const items = [];
   const resourceToItem = new Map();
   resources.forEach((r, idx) => {
     const meta = mapAzureType(r.azureType);
     if (!meta) return;
+    if (isVNet(r)) return;   // rendered as a boundary instead
     const item = {
       id: `disc-${idx}`,
       serviceType: meta.serviceType,
@@ -70,7 +73,8 @@ export function buildLayout(resources, edges) {
     items.push(item);
     resourceToItem.set(r, item);
   });
-  const kept = resources.filter(r => resourceToItem.has(r));
+  // kept = resources that have items OR are VNets (VNets kept for grouping)
+  const kept = resources.filter(r => resourceToItem.has(r) || isVNet(r));
 
   // 2) Group resources by VNet
   const groups = groupByVNet(kept);
@@ -79,9 +83,11 @@ export function buildLayout(resources, edges) {
   let cursorX = RG_PAD_X;
   const startY = RG_PAD_Y + 30;   // leave room for RG label at top
 
-  // 3a) Isolated route tables / firewalls first (top-left strip)
+  // 3a) Isolated route tables / firewalls / gateways along the top strip.
+  //     Also remove them from otherOrphans so they don't get placed twice.
+  const placedElsewhere = new Set();
   const isolatedNetTop = kept.filter(r => (
-    !resourceToItem.has(r) ? false :
+    resourceToItem.has(r) &&
     !groups.assignedResources.has(r) && (
       T(r, 'Microsoft.Network/routeTables') ||
       T(r, 'Microsoft.Network/azureFirewalls') ||
@@ -97,6 +103,7 @@ export function buildLayout(resources, edges) {
       const it = resourceToItem.get(r);
       it.x = RG_PAD_X + i * COL_W;
       it.y = startY;
+      placedElsewhere.add(r);
     });
     topStripHeight = ROW_H;
   }
@@ -143,10 +150,12 @@ export function buildLayout(resources, edges) {
     });
   }
 
-  // 3e) Any remaining orphan resources → right side of the diagram
-  if (groups.otherOrphans.length > 0) {
-    groups.otherOrphans.forEach((r, i) => {
+  // 3e) Any remaining orphan resources (not already placed) → right side
+  const trueOrphans = groups.otherOrphans.filter(r => !placedElsewhere.has(r));
+  if (trueOrphans.length > 0) {
+    trueOrphans.forEach((r, i) => {
       const it = resourceToItem.get(r);
+      if (!it) return;
       it.x = cursorX + (i % 3) * COL_W;
       it.y = vnetY + Math.floor(i / 3) * ROW_H;
     });
@@ -367,85 +376,49 @@ function placeVNetGroup(g, r2i, originX, originY) {
   const boxContentX = originX + VNET_PAD_X;
   const boxContentY = originY + VNET_PAD_Y;
 
+  // Each column represents one subnet. Within a column we stack top→bottom:
+  //   Row 0: subnet
+  //   Row 1: NIC          (only if a NIC uses this subnet)
+  //   Row 2: PIP          (only if the NIC has a Public IP)
+  //   Row 3: NSG          (only if the NIC has an NSG)
+  //   Row 4: VM           (only if the NIC is attached to a VM)
+  // Pure vertical stacking = zero horizontal overflow = clean short edges.
+  let maxRow = 0;
+
   const subnets = g.subnets;
-  // If VNet has no subnets, still render the VNet card at least
-  if (subnets.length === 0) {
-    const vnetItem = r2i.get(g.vnet);
-    if (vnetItem) {
-      vnetItem.x = boxContentX;
-      vnetItem.y = boxContentY;
-    }
-    return { boxX: originX, boxY: originY, boxW: CARD_W + 2 * VNET_PAD_X, boxH: CARD_H + 2 * VNET_PAD_Y };
-  }
+  const cols = Math.max(1, subnets.length);
 
-  // We do NOT render the VNet card itself inside the box — the boundary IS the VNet.
-  // Hide the VNet item off-canvas (canvas skips items outside boundary though) — instead just leave at 0,0.
-  // Actually, best UX: keep the VNet card, place it at box top-left small; but for now suppress it.
-  const vnetItem = r2i.get(g.vnet);
-  if (vnetItem) {
-    // Place invisibly at top-left of box (users will still see it if they scroll but
-    // it doesn't add visual clutter because the box label already names the VNet)
-    vnetItem.x = boxContentX;
-    vnetItem.y = boxContentY - CARD_H - 10;  // above the box; container itself carries the name
-  }
-
-  let maxCol = 0;
   subnets.forEach((subnet, colIdx) => {
     const colX = boxContentX + colIdx * COL_W;
-    const subnetItem = r2i.get(subnet);
-    if (subnetItem) {
-      subnetItem.x = colX;
-      subnetItem.y = boxContentY;
-    }
+    let row = 0;
+    const place = (item) => {
+      if (!item) return;
+      item.x = colX;
+      item.y = boxContentY + row * ROW_H;
+      maxRow = Math.max(maxRow, row);
+      row++;
+    };
+
+    place(r2i.get(subnet));
 
     const nics = g.subnetToNics.get(subnet) || [];
-    nics.forEach((nic, nicIdx) => {
-      const nicX = colX + nicIdx * COL_W;    // if >1 NIC per subnet, offset horizontally
-      const nicItem = r2i.get(nic);
-      if (nicItem) {
-        nicItem.x = nicX;
-        nicItem.y = boxContentY + ROW_H;
-      }
-
-      // PIP + NSG at nicX (side by side underneath)
-      const pip = g.nicToPip.get(nic);
-      const nsg = g.nicToNsg.get(nic);
-      const pipItem = pip && r2i.get(pip);
-      const nsgItem = nsg && r2i.get(nsg);
-      if (pipItem) {
-        pipItem.x = nicX - Math.floor((CARD_W + H_GAP) / 2);
-        pipItem.y = boxContentY + 2 * ROW_H;
-      }
-      if (nsgItem) {
-        nsgItem.x = nicX + Math.floor((CARD_W + H_GAP) / 2);
-        nsgItem.y = boxContentY + 2 * ROW_H;
-      }
-
-      // VM directly below NIC (row 3)
-      const vm = g.nicToVm.get(nic);
-      const vmItem = vm && r2i.get(vm);
-      if (vmItem) {
-        vmItem.x = nicX;
-        vmItem.y = boxContentY + 3 * ROW_H;
-      }
-
-      maxCol = Math.max(maxCol, colIdx + nicIdx);
-    });
-    maxCol = Math.max(maxCol, colIdx);
+    for (const nic of nics) {
+      place(r2i.get(nic));
+      place(g.nicToPip.get(nic) && r2i.get(g.nicToPip.get(nic)));
+      place(g.nicToNsg.get(nic) && r2i.get(g.nicToNsg.get(nic)));
+      place(g.nicToVm.get(nic)  && r2i.get(g.nicToVm.get(nic)));
+    }
   });
 
-  const cols  = Math.max(1, maxCol + 1);
-  // account for PIP+NSG width flanking the NIC — need extra half-column on left/right
-  const boxW  = cols * COL_W + 2 * VNET_PAD_X + H_GAP;
-  const rows  = 4;                          // subnet, NIC, PIP+NSG, VM
-  const boxH  = rows * ROW_H + VNET_PAD_Y + 20;
+  // Minimum width ensures the boundary label ("🔷 vnet-name") always fits
+  const MIN_LABEL_W = 280;
+  const rawW = cols * COL_W + 2 * VNET_PAD_X;
+  const boxW = Math.max(MIN_LABEL_W, rawW);
 
-  return {
-    boxX: originX - Math.floor((CARD_W + H_GAP) / 4),
-    boxY: originY,
-    boxW,
-    boxH,
-  };
+  const usedRows = maxRow + 1;
+  const boxH = usedRows * ROW_H + VNET_PAD_Y + 24;
+
+  return { boxX: originX, boxY: originY, boxW, boxH };
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
