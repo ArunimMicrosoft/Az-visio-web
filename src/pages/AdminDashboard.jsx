@@ -675,6 +675,7 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                     <Th k="is_active" label="Status" />
                     <Th k="last_active_at" label="Last Active" />
                     <Th k="login_count" label="Logins" />
+                    <Th k="failed_login_attempts" label="Fails" />
                     <Th k="total_exports" label="Exports" />
                     <Th k="created_at" label="Joined" />
                     <th>Actions</th>
@@ -742,6 +743,15 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                           {u.last_active_at ? new Date(u.last_active_at).toLocaleDateString('en-IN') : '—'}
                         </td>
                         <td className="ad-center">{u.login_count || 0}</td>
+                        <td className="ad-center">
+                          {u.locked_at ? (
+                            <span className="ad-fails ad-fails-locked" title="Account is LOCKED">3/3 🔒</span>
+                          ) : (
+                            <span className={`ad-fails ${(u.failed_login_attempts || 0) >= 2 ? 'ad-fails-warn' : ''}`}>
+                              {u.failed_login_attempts || 0}/3
+                            </span>
+                          )}
+                        </td>
                         <td className="ad-center">{u.total_exports || 0}</td>
                         <td>
                           {u.created_at ? new Date(u.created_at).toLocaleDateString('en-IN') : '—'}

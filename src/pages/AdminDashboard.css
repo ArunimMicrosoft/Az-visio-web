@@ -521,3 +521,28 @@
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: #ffffff;
 }
+
+
+/* Sign-in fail counter column — visible on every row so the lockout
+   feature is discoverable without needing to trigger it first. */
+.ad-fails {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: #f0fdf4;
+  color: #14532d;
+  border: 1px solid #bbf7d0;
+}
+.ad-fails-warn {
+  background: #fef3c7;
+  color: #78350f;
+  border-color: #fcd34d;
+}
+.ad-fails-locked {
+  background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
+  color: #ffffff;
+  border: 1px solid #dc2626;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.25);
+}
