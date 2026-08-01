@@ -128,7 +128,16 @@ export const onRequestPost = async ({ request, env }) => {
 
     return jsonResponse(
       200,
-      { orderId: data.id, amount: data.amount, currency: data.currency },
+      {
+        orderId: data.id,
+        amount: data.amount,
+        currency: data.currency,
+        // Return the public key_id used to create the order so the browser
+        // opens Razorpay checkout with the SAME merchant account. Prevents
+        // key/merchant mismatch when frontend build env drifts from
+        // Cloudflare runtime env.
+        keyId,
+      },
       request,
     );
   } catch (err) {

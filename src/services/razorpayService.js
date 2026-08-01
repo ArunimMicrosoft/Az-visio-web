@@ -90,7 +90,8 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
 
     // Step 1: Create order via backend (server-side, uses secret key)
     let orderId = null;
-    let orderCreationDetail = null; // for diagnostics
+    let serverKeyId = null;             // key_id the server used for this order
+    let orderCreationDetail = null;     // for diagnostics
     try {
       const resp = await fetch('/api/razorpay-create-order', {
         method: 'POST',
@@ -107,6 +108,7 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
       orderCreationDetail = { status: resp.status, ok: resp.ok, ...data };
       if (resp.ok) {
         orderId = data.orderId || null;
+        serverKeyId = data.keyId || null;
       }
       console.info('[Razorpay] create-order response:', orderCreationDetail);
     } catch (e) {
@@ -124,10 +126,23 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
       );
     }
 
+    // Use the server's key_id if the order was created there. Guarantees the
+    // checkout modal and the order live in the same Razorpay merchant.
+    const activeKeyId = serverKeyId || RAZORPAY_KEY_ID;
+    if (serverKeyId && RAZORPAY_KEY_ID && serverKeyId !== RAZORPAY_KEY_ID) {
+      console.warn(
+        '[Razorpay] merchant key drift detected. server=',
+        serverKeyId,
+        'frontend=',
+        RAZORPAY_KEY_ID,
+        '→ using server key for checkout to prevent "Payment Failed".',
+      );
+    }
+
     // Step 2: Open Razorpay checkout
     return new Promise((resolve, reject) => {
       const options = {
-        key: RAZORPAY_KEY_ID,
+        key: activeKeyId,
         amount: amount * 100,
         currency: 'INR',
         name: 'Cloud Canvas Designer',
