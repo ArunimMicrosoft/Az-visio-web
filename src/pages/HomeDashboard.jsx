@@ -50,6 +50,8 @@ function daysBetween(a, b) {
   return Math.floor(Math.abs(new Date(b) - new Date(a)) / 86_400_000);
 }
 
+const THEME_STORAGE_KEY = 'ccd_theme';
+
 const HomeDashboard = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -61,6 +63,24 @@ const HomeDashboard = () => {
   // Full diagram bodies (items/connections/boundaries) for the 5 most recent —
   // used only to feed the personalised blog recommender.
   const [signalDiagrams, setSignalDiagrams] = useState([]);
+
+  // Theme (light | dark) — persists to localStorage and applies to <html>.
+  const [theme, setTheme] = useState(() => {
+    try {
+      const stored = localStorage.getItem(THEME_STORAGE_KEY);
+      if (stored === 'light' || stored === 'dark') return stored;
+      // Default to user's OS preference on first visit
+      if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark';
+    } catch {
+      /* localStorage may be unavailable in some sandboxes */
+    }
+    return 'light';
+  });
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem(THEME_STORAGE_KEY, theme); } catch { /* noop */ }
+  }, [theme]);
+  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
 
   // Redirect anonymous users
   useEffect(() => {
@@ -236,10 +256,22 @@ const HomeDashboard = () => {
     <div className="hd-root">
       {/* Top nav */}
       <header className="hd-nav">
-        <Link to="/" className="hd-brand">
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="none">
-            <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#0078D4" />
-            <path d="M2 17L12 22L22 17V7L12 12L2 7V17Z" fill="#50E6FF" />
+        <Link to="/" className="hd-brand" aria-label="Cloud Canvas Designer">
+          <svg viewBox="0 0 32 32" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="hdBrandFill" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#0B5FBF" />
+                <stop offset="55%" stopColor="#0078D4" />
+                <stop offset="100%" stopColor="#50E6FF" />
+              </linearGradient>
+              <linearGradient id="hdBrandStroke" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#0078D4" stopOpacity="0.55" />
+                <stop offset="100%" stopColor="#50E6FF" stopOpacity="0.45" />
+              </linearGradient>
+            </defs>
+            <path d="M16 2.6 27.4 9v14L16 29.4 4.6 23V9z" fill="none" stroke="url(#hdBrandStroke)" strokeWidth="1.6" strokeLinejoin="round" />
+            <path d="M11.4 20.2c-1.85 0-3.35-1.5-3.35-3.35 0-1.7 1.27-3.1 2.9-3.32.36-2.19 2.27-3.86 4.56-3.86 2.1 0 3.86 1.4 4.42 3.32.28-.08.57-.12.88-.12 1.85 0 3.35 1.5 3.35 3.35 0 1.68-1.24 3.07-2.85 3.31l-.05.01H11.4z" fill="url(#hdBrandFill)" />
+            <circle cx="22.4" cy="10.6" r="1.15" fill="#50E6FF" />
           </svg>
           <span>Cloud Canvas <b>Designer</b></span>
         </Link>
@@ -249,13 +281,25 @@ const HomeDashboard = () => {
           {user.role === 'admin' && (
             <Link to="/admin" className="hd-nav-link hd-nav-admin">Admin</Link>
           )}
+          <button
+            type="button"
+            className="hd-theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
           <Link to="/app" className="hd-nav-cta">+ New Diagram</Link>
         </nav>
       </header>
 
-      {/* Welcome banner */}
+      {/* Welcome banner — blueprint frame + hex mark visual */}
       <section className="hd-hero">
-        <div>
+        <div className="hd-hero-copy">
+          <span className="hd-hero-eyebrow">
+            <span style={{ fontSize: 12 }}>◆</span> Your workspace
+          </span>
           <h1 className="hd-hero-title">
             Welcome back, <span className="hd-hero-name">{displayName}</span>
           </h1>
@@ -268,10 +312,71 @@ const HomeDashboard = () => {
               <> · streak <b className="hd-streak">{streak} day{streak === 1 ? '' : 's'} 🔥</b></>
             )}
           </p>
+          <div className="hd-hero-actions">
+            <Link to="/app" className="hd-hero-cta">
+              <span aria-hidden="true">🎨</span> Open Canvas
+            </Link>
+            <Link to="/blog" className="hd-hero-cta-ghost">
+              📖 Learn
+            </Link>
+          </div>
         </div>
-        <Link to="/app" className="hd-hero-cta">
-          Open Canvas →
-        </Link>
+
+        {/* Signature hex-service mark on the right — nods to canvas + Azure */}
+        <div className="hd-hero-visual" aria-hidden="true">
+          <svg viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="hdHexBg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#0091EA" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#50E6FF" stopOpacity="0.10" />
+              </linearGradient>
+              <linearGradient id="hdHexStroke" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#50E6FF" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#0078D4" stopOpacity="0.6" />
+              </linearGradient>
+              <linearGradient id="hdHexCore" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#0B5FBF" />
+                <stop offset="60%" stopColor="#0078D4" />
+                <stop offset="100%" stopColor="#50E6FF" />
+              </linearGradient>
+            </defs>
+
+            {/* Outer decorative hexes representing services on the canvas */}
+            <g opacity="0.9">
+              <path d="M60 40 L92 22 L124 40 L124 76 L92 94 L60 76 Z" fill="url(#hdHexBg)" stroke="url(#hdHexStroke)" strokeWidth="1.5" />
+              <path d="M170 30 L198 14 L226 30 L226 62 L198 78 L170 62 Z" fill="url(#hdHexBg)" stroke="url(#hdHexStroke)" strokeWidth="1.5" />
+              <path d="M40 150 L68 134 L96 150 L96 182 L68 198 L40 182 Z" fill="url(#hdHexBg)" stroke="url(#hdHexStroke)" strokeWidth="1.5" />
+              <path d="M180 170 L208 154 L236 170 L236 202 L208 218 L180 202 Z" fill="url(#hdHexBg)" stroke="url(#hdHexStroke)" strokeWidth="1.5" />
+            </g>
+
+            {/* Connection lines (dashed = "canvas connections") */}
+            <g stroke="url(#hdHexStroke)" strokeWidth="1.4" strokeDasharray="4 4" fill="none" opacity="0.7">
+              <path d="M96 58 L 130 130" />
+              <path d="M198 46 L 130 130" />
+              <path d="M68 166 L 130 130" />
+              <path d="M208 186 L 130 130" />
+            </g>
+
+            {/* Central hex — the brand mark */}
+            <g>
+              <path
+                d="M130 60 L200 100 L200 180 L130 220 L60 180 L60 100 Z"
+                fill="url(#hdHexCore)"
+                opacity="0.18"
+              />
+              <path
+                d="M130 80 L185 110 L185 170 L130 200 L75 170 L75 110 Z"
+                fill="url(#hdHexCore)"
+              />
+              <path
+                d="M108 158 c-6 0 -11 -5 -11 -11 c0 -5.5 4 -10 9.5 -10.7 c1.2 -6.7 7.1 -11.8 14.3 -11.8 c6.5 0 12 4.3 13.8 10.2 c0.9 -0.3 1.9 -0.4 2.9 -0.4 c6 0 11 5 11 11 c0 5.5 -4 10 -9.4 10.7 z"
+                fill="#ffffff"
+                opacity="0.95"
+              />
+              <circle cx="165" cy="105" r="3.5" fill="#50E6FF" />
+            </g>
+          </svg>
+        </div>
       </section>
 
       {/* Stats strip */}
