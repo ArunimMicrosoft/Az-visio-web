@@ -67,7 +67,7 @@ const TemplateGallery = ({ isOpen, onClose, onSelectTemplate, user, onUpgrade })
       <div className="template-modal" onClick={e => e.stopPropagation()}>
         <div className="template-header">
           <h2>📐 Architecture Templates</h2>
-          <button className="template-close-btn" onClick={onClose}>✕</button>
+          <button className="template-close-btn" onClick={onClose} aria-label="Close">✕</button>
         </div>
 
         {hasCap && (
@@ -92,7 +92,7 @@ const TemplateGallery = ({ isOpen, onClose, onSelectTemplate, user, onUpgrade })
               <button
                 className="template-usage-upgrade"
                 onClick={() => onUpgrade({
-                  reason: `Trial plan lets you load ${limits.total} templates. Upgrade for unlimited.`,
+                  reason: `${tier === 'trial' ? 'Trial' : 'Your'} plan lets you load ${limits.total} templates. Upgrade for unlimited.`,
                   feature: 'Unlimited Templates',
                   requiredTier: 'starter',
                 })}
@@ -126,6 +126,7 @@ const TemplateGallery = ({ isOpen, onClose, onSelectTemplate, user, onUpgrade })
             const gate = canUseTemplate(user, template);
             const tierMeta = TIER_META[template.minTier || 'trial'] || TIER_META.trial;
             const locked = !gate.ok;
+            const meta = templateMeta[template.id];
             return (
               <div
                 key={template.id}
@@ -134,26 +135,29 @@ const TemplateGallery = ({ isOpen, onClose, onSelectTemplate, user, onUpgrade })
                 onMouseLeave={() => setHoveredTemplate(null)}
                 onClick={() => handleSelect(template)}
                 title={locked ? gate.message : `Load ${template.name}`}
+                role="button"
+                tabIndex={0}
               >
-                <div className="template-card-tier"
-                  style={{ background: tierMeta.bg, color: tierMeta.color }}
-                  title={`Available from ${tierMeta.label} plan`}
-                >
-                  {locked && <span aria-hidden="true">🔒</span>}
-                  {tierMeta.label}
+                <div className="template-card-top">
+                  <span className="template-card-icon">{template.icon}</span>
+                  <span
+                    className="template-card-tier"
+                    style={{ background: tierMeta.bg, color: tierMeta.color }}
+                    title={`Available from ${tierMeta.label} plan`}
+                  >
+                    {tierMeta.label}
+                  </span>
                 </div>
-                <div className="template-card-icon">{template.icon}</div>
                 <h3 className="template-card-title">{template.name}</h3>
                 <p className="template-card-desc">{template.description}</p>
                 <div className="template-card-meta">
-                  <span>{templateMeta[template.id]?.itemCount || 0} services</span>
-                  <span>{templateMeta[template.id]?.connCount || 0} connections</span>
+                  <span>{meta?.itemCount || 0} services</span>
+                  <span>{meta?.connCount || 0} connections</span>
                 </div>
                 {locked && (
-                  <div className="template-card-lock-overlay">
-                    <span>🔒</span>
-                    <span>{gate.requiredTier ? `Upgrade to ${gate.requiredTier}` : 'Locked'}</span>
-                  </div>
+                  <span className="template-card-lock" title={gate.message}>
+                    🔒 {gate.requiredTier ? `Upgrade to ${gate.requiredTier}` : 'Locked'}
+                  </span>
                 )}
               </div>
             );

@@ -1,158 +1,84 @@
+/* ============================================================
+   Template Gallery — modern light-theme modal.
+   Matches the rest of the app; supports tier badges + lock states.
+   ============================================================ */
+
 .template-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(15, 23, 42, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
+  padding: 20px;
 }
 
 .template-modal {
-  background: #1e1e2e;
-  border-radius: 16px;
-  width: 90%;
-  max-width: 900px;
-  max-height: 80vh;
+  background: #ffffff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 1120px;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  border: 1px solid #333;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 24px 60px -20px rgba(15, 23, 42, 0.30);
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #0f172a;
 }
 
+/* ---- Header ---- */
 .template-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #333;
+  padding: 20px 26px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
 }
-
 .template-header h2 {
   margin: 0;
-  color: #e0e0e0;
-  font-size: 1.3rem;
+  color: #0f172a;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
 }
-
 .template-close-btn {
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 1.4rem;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-
-.template-close-btn:hover {
-  background: #333;
-  color: #fff;
-}
-
-.template-categories {
-  display: flex;
-  gap: 8px;
-  padding: 16px 24px;
-  flex-wrap: wrap;
-  border-bottom: 1px solid #2a2a3a;
-}
-
-.template-cat-btn {
-  padding: 6px 16px;
-  border-radius: 20px;
-  border: 1px solid #444;
   background: transparent;
-  color: #aaa;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  width: 34px;
+  height: 34px;
+  font-size: 16px;
   cursor: pointer;
-  font-size: 0.85rem;
-  transition: all 0.2s;
+  border-radius: 8px;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.template-close-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
 }
 
-.template-cat-btn:hover {
-  border-color: #0078d4;
-  color: #0078d4;
-}
-
-.template-cat-btn.active {
-  background: #0078d4;
-  border-color: #0078d4;
-  color: #fff;
-}
-
-.template-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-  padding: 20px 24px;
-  overflow-y: auto;
-}
-
-.template-card {
-  background: #252535;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.25s;
-}
-
-.template-card:hover,
-.template-card.hovered {
-  border-color: #0078d4;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 120, 212, 0.15);
-}
-
-.template-card-icon {
-  font-size: 2rem;
-  margin-bottom: 10px;
-}
-
-.template-card-title {
-  color: #e0e0e0;
-  font-size: 1rem;
-  margin: 0 0 8px;
-}
-
-.template-card-desc {
-  color: #888;
-  font-size: 0.82rem;
-  line-height: 1.4;
-  margin: 0 0 12px;
-}
-
-.template-card-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 0.75rem;
-  color: #666;
-}
-
-.template-card-meta span {
-  background: #1a1a2a;
-  padding: 3px 8px;
-  border-radius: 4px;
-}
-
-
-/* ============================================================
-   Tier-gating additions — usage bar, tier badge, lock overlay
-   ============================================================ */
-
+/* ---- Usage bar (trial cap tracker) ---- */
 .template-usage-bar {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
-  margin: 0 20px 16px;
-  border-radius: 10px;
+  padding: 12px 18px;
+  margin: 16px 26px 0;
+  border-radius: 12px;
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   border: 1px solid rgba(0, 120, 212, 0.20);
   color: #0f172a;
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 .template-usage-bar-full {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
@@ -163,7 +89,7 @@
 .template-usage-text strong { color: #0068B8; font-weight: 700; }
 .template-usage-bar-full .template-usage-text strong { color: #b45309; }
 .template-usage-upgrade {
-  padding: 6px 14px;
+  padding: 7px 16px;
   border: none;
   border-radius: 8px;
   background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
@@ -172,62 +98,190 @@
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 4px 10px -4px rgba(124, 58, 237, 0.5);
+  box-shadow: 0 6px 14px -4px rgba(124, 58, 237, 0.4);
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
 .template-usage-upgrade:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 14px -4px rgba(124, 58, 237, 0.6);
+  box-shadow: 0 8px 18px -4px rgba(124, 58, 237, 0.55);
 }
 
-/* Tier pill on each template card */
+/* ---- Categories tab strip ---- */
+.template-categories {
+  display: flex;
+  gap: 6px;
+  padding: 16px 26px 14px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+}
+.template-cat-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+  font-family: inherit;
+}
+.template-cat-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+.template-cat-btn.active {
+  background: linear-gradient(135deg, #0078D4 0%, #0091EA 100%);
+  border-color: #0078D4;
+  color: #ffffff;
+  box-shadow: 0 4px 10px -3px rgba(0, 120, 212, 0.4);
+}
+
+/* ---- Grid ---- */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  padding: 20px 26px 26px;
+  overflow-y: auto;
+  background: #f8fafc;
+  flex: 1 1 auto;
+}
+
+/* ---- Card ---- */
 .template-card {
   position: relative;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 18px 16px;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 190px;
   overflow: hidden;
 }
+.template-card:hover,
+.template-card.hovered {
+  border-color: rgba(0, 120, 212, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -14px rgba(15, 23, 42, 0.18);
+}
+
+/* Row 1: icon on the left, tier pill on the right */
+.template-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.template-card-icon {
+  font-size: 30px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
 .template-card-tier {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 999px;
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  z-index: 2;
+  gap: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
-/* Locked-template treatment — grays it, and adds a hover-only unlock overlay */
+/* Row 2+: text content */
+.template-card-title {
+  color: #0f172a;
+  font-size: 14.5px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.template-card-desc {
+  color: #64748b;
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.template-card-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: auto;
+  padding-top: 6px;
+}
+.template-card-meta span {
+  background: #f1f5f9;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+/* ---- Locked state ---- */
 .template-card-locked {
-  opacity: 0.68;
-  filter: grayscale(0.15);
-  cursor: pointer;
+  border-color: rgba(148, 163, 184, 0.5);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+.template-card-locked .template-card-icon {
+  filter: grayscale(0.35);
+}
+.template-card-locked .template-card-title,
+.template-card-locked .template-card-desc {
+  color: #64748b;
 }
 .template-card-locked:hover {
-  opacity: 0.9;
-  filter: grayscale(0);
+  border-color: #7c3aed;
+  box-shadow: 0 12px 28px -14px rgba(124, 58, 237, 0.28);
 }
-.template-card-lock-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
+.template-card-lock {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 6px;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0), rgba(15, 23, 42, 0.55) 60%, rgba(15, 23, 42, 0.85));
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  opacity: 0;
-  transition: opacity 180ms ease;
-  pointer-events: none;
-  text-transform: capitalize;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.10), rgba(124, 58, 237, 0.18));
+  color: #6d28d9;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border: 1px solid rgba(124, 58, 237, 0.30);
 }
-.template-card-lock-overlay span:first-child { font-size: 22px; }
-.template-card-locked:hover .template-card-lock-overlay { opacity: 1; }
+
+/* ---- Responsive ---- */
+@media (max-width: 700px) {
+  .template-modal { border-radius: 14px; max-height: 94vh; }
+  .template-header { padding: 16px 18px; }
+  .template-header h2 { font-size: 1rem; }
+  .template-categories { padding: 12px 18px; }
+  .template-cat-btn { padding: 6px 11px; font-size: 12px; }
+  .template-grid { padding: 16px 18px 20px; grid-template-columns: 1fr; }
+  .template-usage-bar { margin: 12px 18px 0; padding: 10px 14px; font-size: 12px; }
+}
