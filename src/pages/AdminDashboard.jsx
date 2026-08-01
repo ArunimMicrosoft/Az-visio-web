@@ -86,6 +86,26 @@ const AdminDashboard = () => {
   const [auditPage, setAuditPage] = useState(1);
   const AUDIT_PAGE_SIZE = 50;
 
+  // Login-sequence map — for every LOGIN event in the loaded audit logs,
+  // computes which login # it is for that user (1st, 2nd, ... N-th).
+  // Sorts a user's LOGIN events by time ASC and assigns 1..N.
+  // Absolute total per user still lives on profiles.login_count.
+  const loginSeqByLogId = React.useMemo(() => {
+    const map = new Map();
+    const byUser = new Map();
+    for (const log of auditLogs) {
+      if (log.event === 'LOGIN' && log.user_id) {
+        if (!byUser.has(log.user_id)) byUser.set(log.user_id, []);
+        byUser.get(log.user_id).push(log);
+      }
+    }
+    for (const events of byUser.values()) {
+      events.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      events.forEach((e, i) => map.set(e.id, i + 1));
+    }
+    return map;
+  }, [auditLogs]);
+
   useEffect(() => {
     if (user && !ADMIN_EMAILS.includes(user.email?.toLowerCase()) && user.role !== 'admin') {
       navigate('/app');
@@ -477,6 +497,8 @@ const AdminDashboard = () => {
   const auditStats = {
     total: auditLogs.length,
     logins: auditLogs.filter((l) => l.event === 'LOGIN').length,
+    // Repeat logins = LOGIN events that are NOT the user's first login within the view
+    repeatLogins: auditLogs.filter((l) => l.event === 'LOGIN' && (loginSeqByLogId.get(l.id) || 1) >= 2).length,
     signups: auditLogs.filter((l) => l.event === 'SIGNUP').length,
     failures: auditLogs.filter((l) => l.event === 'LOGIN_FAILED' || l.event === 'SIGNUP_FAILED').length,
     adminActions: auditLogs.filter((l) =>
@@ -742,7 +764,45 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                         <td className="ad-center" title={u.last_active_at ? new Date(u.last_active_at).toLocaleString('en-IN') : ''}>
                           {u.last_active_at ? new Date(u.last_active_at).toLocaleDateString('en-IN') : '—'}
                         </td>
-                        <td className="ad-center">{u.login_count || 0}</td>
+                        <td className="ad-center">
+                          {(() => {
+                            const n = u.login_count || 0;
+                            const tier = n === 0
+                              ? { label: 'Never', bg: '#f3f4f6', color: '#6b7280', icon: '—' }
+                              : n === 1
+                                ? { label: '1st', bg: '#dbeafe', color: '#0078D4', icon: '👋' }
+                                : n === 2
+                                  ? { label: '2nd 🔁', bg: '#d1fae5', color: '#059669', icon: '' }
+                                  : n < 5
+                                    ? { label: `${n}× 🔁`, bg: '#d1fae5', color: '#059669', icon: '' }
+                                    : n < 20
+                                      ? { label: `${n}× 🔁`, bg: '#ede9fe', color: '#7c3aed', icon: '' }
+                                      : { label: `${n}× 🌟`, bg: '#fef3c7', color: '#b45309', icon: '' };
+                            return (
+                              <span
+                                className="ad-login-count-badge"
+                                title={`Total successful logins: ${n}${n >= 2 ? ' — returning user' : ''}`}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 4,
+                                  padding: '3px 10px',
+                                  borderRadius: 999,
+                                  background: tier.bg,
+                                  color: tier.color,
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  letterSpacing: 0.2,
+                                  minWidth: 44,
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                {tier.icon && <span>{tier.icon}</span>}
+                                {tier.label}
+                              </span>
+                            );
+                          })()}
+                        </td>
                         <td className="ad-center">
                           {u.locked_at ? (
                             <span className="ad-fails ad-fails-locked" title="Account is LOCKED">3/3 🔒</span>
@@ -850,11 +910,23 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
             {[
               { label: 'Total Events', value: auditStats.total, icon: '📋', color: '#0078D4' },
               { label: 'Logins', value: auditStats.logins, icon: '🔐', color: '#10b981' },
+              {
+                label: 'Repeat Logins',
+                value: auditStats.repeatLogins,
+                icon: '🔁',
+                color: '#059669',
+                title: '2nd, 3rd, ... N-th logins for the same user within the loaded logs',
+              },
               { label: 'Sign Ups', value: auditStats.signups, icon: '✨', color: '#7c3aed' },
               { label: 'Failures', value: auditStats.failures, icon: '🚫', color: '#ef4444' },
               { label: 'Admin Actions', value: auditStats.adminActions, icon: '⚙️', color: '#f59e0b' },
             ].map((s) => (
-              <div className="ad-audit-stat" key={s.label} style={{ borderLeft: `4px solid ${s.color}` }}>
+              <div
+                className="ad-audit-stat"
+                key={s.label}
+                style={{ borderLeft: `4px solid ${s.color}` }}
+                title={s.title || ''}
+              >
                 <span className="ad-audit-stat-icon">{s.icon}</span>
                 <span className="ad-audit-stat-value" style={{ color: s.color }}>
                   {s.value}
@@ -986,6 +1058,42 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                             ) : (
                               <span className="ad-audit-anon">Anonymous</span>
                             )}
+                            {log.event === 'LOGIN' && loginSeqByLogId.get(log.id) && (() => {
+                              const seq = loginSeqByLogId.get(log.id);
+                              const userProfile = users.find(u => u.id === log.user_id);
+                              const totalLogins = userProfile?.login_count;
+                              const totalLabel = totalLogins ? ` of ${totalLogins} total` : '';
+                              const isFirst = seq === 1;
+                              const isRepeat = seq >= 2;
+                              const badgeColor = isFirst ? '#0078D4' : seq >= 5 ? '#7c3aed' : '#059669';
+                              const badgeBg = isFirst ? '#dbeafe' : seq >= 5 ? '#ede9fe' : '#d1fae5';
+                              const label = isFirst
+                                ? '1st login'
+                                : seq === 2 ? '2nd login 🔁'
+                                : seq === 3 ? '3rd login 🔁'
+                                : `${seq}th login 🔁`;
+                              return (
+                                <span
+                                  className="ad-login-seq"
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    marginLeft: 8,
+                                    padding: '2px 8px',
+                                    borderRadius: 999,
+                                    background: badgeBg,
+                                    color: badgeColor,
+                                    fontSize: 10.5,
+                                    fontWeight: 700,
+                                    letterSpacing: 0.2,
+                                    lineHeight: 1.4,
+                                  }}
+                                  title={`This was login #${seq} for ${log.email || 'this user'}${totalLabel}${isRepeat ? ' — user is a returning user' : ''}`}
+                                >
+                                  {label}
+                                </span>
+                              );
+                            })()}
                           </td>
                           <td className="ad-audit-details">
                             {details && typeof details === 'object' ? (
