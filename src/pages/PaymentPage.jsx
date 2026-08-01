@@ -12,6 +12,8 @@ const PaymentPage = () => {
   const [error, setError] = useState('');
   const [currency, setCurrency] = useState('INR');
   
+  const [debug, setDebug] = useState(null);
+
   const planType = searchParams.get('plan') || 'professional';
   const pricingPlans = getPricingPlans();
   const plan = pricingPlans.find(p => p.id === planType);
@@ -81,10 +83,16 @@ const PaymentPage = () => {
       }
     } catch (err) {
       console.error('Payment error:', err);
+      // Always capture the full debug payload for on-screen display
+      setDebug({
+        message: err.message || String(err),
+        razorpay: err.razorpay || null,
+        diagnostics: err.diagnostics || null,
+        capturedAt: new Date().toISOString(),
+      });
       if (err.message === 'Payment cancelled by user') {
         setError('Payment was cancelled. Please try again when ready.');
       } else {
-        // Surface the full Razorpay error structure if it was attached
         const rzpErr = err.razorpay || null;
         if (rzpErr) {
           const parts = [
@@ -203,6 +211,31 @@ const PaymentPage = () => {
                 <div className="error-message">
                   <span>⚠️</span>
                   <p>{error}</p>
+                </div>
+              )}
+
+              {debug && (
+                <div
+                  style={{
+                    marginTop: '12px',
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    background: '#0f172a',
+                    color: '#e2e8f0',
+                    fontFamily: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace',
+                    fontSize: '11.5px',
+                    lineHeight: 1.55,
+                    border: '1px solid #1e293b',
+                    overflow: 'auto',
+                    maxHeight: '340px',
+                  }}
+                >
+                  <div style={{ color: '#38bdf8', fontWeight: 700, marginBottom: '6px' }}>
+                    Payment diagnostics — share this whole block if you need help
+                  </div>
+                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    {JSON.stringify(debug, null, 2)}
+                  </pre>
                 </div>
               )}
 

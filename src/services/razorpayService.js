@@ -165,7 +165,9 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
             if (verified.verified) {
               resolve({ success: true, ...paymentData, mode: verified.mode });
             } else {
-              reject(new Error('Payment verification failed. Contact support if amount was deducted.'));
+              const e = new Error('Payment verification failed. Contact support if amount was deducted.');
+              e.diagnostics = { orderCreationDetail, activeKeyId, verified };
+              reject(e);
             }
           } catch (verifyErr) {
             // Verification endpoint unreachable — payment already captured at Razorpay
@@ -213,6 +215,13 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
           source: err.source || null,
           step: err.step || null,
           metadata: err.metadata || null,
+        };
+        // Attach create-order + key-in-use diagnostics for full-picture UI display
+        bubble.diagnostics = {
+          orderCreationDetail,
+          activeKeyId,
+          frontendFallbackKeyId: RAZORPAY_KEY_ID,
+          keyDrift: serverKeyId && RAZORPAY_KEY_ID && serverKeyId !== RAZORPAY_KEY_ID,
         };
         reject(bubble);
       });
