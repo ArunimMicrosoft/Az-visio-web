@@ -15,6 +15,7 @@ import BlogArticle from './pages/BlogArticle';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import App from './App';
+import HomeDashboard from './pages/HomeDashboard';
 
 const AppWithAuth = () => {
   return (
@@ -47,7 +48,7 @@ const AppWithAuth = () => {
             } 
           />
           
-          {/* Protected route - main application */}
+          {/* Protected route - main application (canvas) */}
           <Route 
             path="/app" 
             element={
@@ -55,6 +56,16 @@ const AppWithAuth = () => {
                 <App />
               </ProtectedRoute>
             } 
+          />
+
+          {/* Protected route - post-login home dashboard */}
+          <Route
+            path="/home"
+            element={
+              <ProtectedRoute>
+                <HomeDashboard />
+              </ProtectedRoute>
+            }
           />
           
           {/* Redirect unknown routes to landing */}

@@ -61,7 +61,9 @@ const LoginPage = () => {
       if (result.user.role === 'admin') {
         navigate('/admin');
       } else {
-        navigate('/app');
+        // Land on the home dashboard, not the blank canvas — gives returning
+        // users a reason to poke around instead of bouncing.
+        navigate('/home');
       }
     } else {
       setError(result.error || 'Login failed. Please try again.');
@@ -74,7 +76,7 @@ const LoginPage = () => {
     setIsLoading(false);
     
     if (result.success) {
-      navigate('/app');
+      navigate('/home');
     } else {
       setError(result.error || 'Demo login failed');
     }

@@ -78,7 +78,7 @@ const SignupPage = () => {
       } else {
         // Show branded welcome screen before navigating
         setShowWelcome(true);
-        setTimeout(() => navigate('/app'), 5000);
+        setTimeout(() => navigate('/home'), 5000);
       }
     } else {
       setError(result.error || 'Signup failed. Please try again.');
@@ -152,7 +152,7 @@ const SignupPage = () => {
             </div>
 
             <button
-              onClick={() => navigate('/app')}
+              onClick={() => navigate('/home')}
               className="auth-button primary"
               style={{ width: '100%', fontSize: '16px', padding: '14px' }}
             >

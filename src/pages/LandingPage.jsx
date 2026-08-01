@@ -46,7 +46,7 @@ const LandingPage = () => {
                       <span className="status-dot"></span>
                       <span className="status-text">{user?.name || 'Signed In'}</span>
                     </div>
-                    <Link to="/app" className="btn-secondary">Dashboard</Link>
+                    <Link to="/home" className="btn-secondary">Dashboard</Link>
                     <button onClick={logout} className="btn-signout">Sign Out</button>
                   </>
                 ) : (

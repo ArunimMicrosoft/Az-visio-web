@@ -1,0 +1,61 @@
+name: Weekly Digest Email
+
+# Runs every Monday at 03:30 UTC = 09:00 IST
+# Also allows manual trigger from the Actions tab (workflow_dispatch)
+on:
+  schedule:
+    - cron: '30 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: 'Dry-run (do not actually send emails)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      email:
+        description: 'Send only to this email (leave blank for all users)'
+        required: false
+        default: ''
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Call weekly-digest endpoint on Cloudflare Pages
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DRY_RUN: ${{ github.event.inputs.dryRun || 'false' }}
+          TARGET_EMAIL: ${{ github.event.inputs.email || '' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET GitHub Actions secret is not set"
+            exit 1
+          fi
+
+          body='{}'
+          if [ "$DRY_RUN" = "true" ] || [ -n "$TARGET_EMAIL" ]; then
+            body=$(printf '{"dryRun": %s, "email": "%s"}' "$DRY_RUN" "$TARGET_EMAIL")
+          fi
+
+          echo "Calling weekly-digest endpoint with body: $body"
+
+          response=$(curl -sS -w "\n%{http_code}" \
+            -X POST https://cloudcanvas.co/api/cron/weekly-digest \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            --data "$body")
+
+          body_out=$(echo "$response" | head -n -1)
+          status=$(echo "$response" | tail -n 1)
+
+          echo "HTTP $status"
+          echo "$body_out"
+
+          if [ "$status" != "200" ]; then
+            echo "::error::weekly-digest endpoint returned HTTP $status"
+            exit 1
+          fi
