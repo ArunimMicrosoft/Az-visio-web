@@ -168,6 +168,17 @@ const ControlPanel = ({
 
         <div className="cp-topbar-actions">
 
+          {/* Dedicated Home button — one-click back to the personal dashboard */}
+          <button
+            className="cp-home-btn"
+            onClick={() => navigate('/home')}
+            title="Back to your dashboard"
+            aria-label="Back to dashboard"
+          >
+            <span className="cp-home-icon" aria-hidden="true">🏠</span>
+            <span className="cp-home-label">Home</span>
+          </button>
+
           <div className="user-menu-container">
             <button
               className="user-menu-btn"
@@ -188,6 +199,10 @@ const ControlPanel = ({
                     <div className="user-email">{user?.email || ''}</div>
                   </div>
                 </div>
+                <div className="user-menu-divider" />
+                <button className="user-menu-item" onClick={() => { setShowUserMenu(false); navigate('/home'); }}>
+                  <span className="menu-icon">🏠</span>My Dashboard
+                </button>
                 <div className="user-menu-divider" />
                 {userIsAdmin && (
                   <>
