@@ -130,9 +130,42 @@ const ControlPanel = ({
           </button>
         </div>
 
-        <div className="cp-brand">
-          <span className="cp-brand-icon">☁️</span>
-          <span className="cp-brand-name">Cloud Canvas Designer</span>
+        <div className="cp-brand" role="banner" aria-label="Cloud Canvas Designer">
+          <span className="cp-brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="cpBrandFill" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#0B5FBF" />
+                  <stop offset="55%" stopColor="#0078D4" />
+                  <stop offset="100%" stopColor="#50E6FF" />
+                </linearGradient>
+                <linearGradient id="cpBrandStroke" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#0078D4" stopOpacity="0.45" />
+                  <stop offset="100%" stopColor="#50E6FF" stopOpacity="0.35" />
+                </linearGradient>
+              </defs>
+              {/* hex frame — architecture / azure hallmark */}
+              <path
+                d="M16 2.6 27.4 9v14L16 29.4 4.6 23V9z"
+                fill="none"
+                stroke="url(#cpBrandStroke)"
+                strokeWidth="1.4"
+                strokeLinejoin="round"
+              />
+              {/* stylised cloud + spark inside the hex */}
+              <path
+                d="M11.4 20.2c-1.85 0-3.35-1.5-3.35-3.35 0-1.7 1.27-3.1 2.9-3.32.36-2.19 2.27-3.86 4.56-3.86 2.1 0 3.86 1.4 4.42 3.32.28-.08.57-.12.88-.12 1.85 0 3.35 1.5 3.35 3.35 0 1.68-1.24 3.07-2.85 3.31l-.05.01H11.4z"
+                fill="url(#cpBrandFill)"
+              />
+              <circle cx="22.4" cy="10.6" r="1.15" fill="#50E6FF" />
+            </svg>
+          </span>
+          <span className="cp-brand-name">
+            <span className="cp-brand-word cp-brand-word--strong">Cloud Canvas</span>
+            <span className="cp-brand-word cp-brand-word--soft">Designer</span>
+          </span>
+          <span className="cp-brand-divider" aria-hidden="true" />
+          <span className="cp-brand-badge" aria-hidden="true">Azure</span>
         </div>
 
         <div className="cp-topbar-actions">

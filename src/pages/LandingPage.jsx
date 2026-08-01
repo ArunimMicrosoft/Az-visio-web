@@ -28,8 +28,11 @@ const LandingPage = () => {
               <path d="M2 17L12 22L22 17V7L12 12L2 7V17Z" fill="#50E6FF"/>
             </svg>
             <div className="brand-info">
-              <span className="brand-name">Cloud Canvas Designer</span>
-              <span className="brand-tagline">Powered by Arunim's IT Café</span>
+              <span className="brand-name">
+                <span className="brand-name-strong">Cloud Canvas</span>
+                <span className="brand-name-soft">Designer</span>
+              </span>
+              <span className="brand-tagline">Powered by Arunim&apos;s IT Café</span>
             </div>
           </div>          <div className="landing-nav-actions">
             <Link to="/blog" className="btn-secondary" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)' }}>Learn</Link>

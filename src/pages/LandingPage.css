@@ -82,9 +82,29 @@
 }
 
 .brand-name {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: white;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 1.35rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
+  white-space: nowrap;
+}
+.brand-name-strong {
+  font-weight: 800;
+  background: linear-gradient(120deg, #ffffff 0%, #d9efff 45%, #50E6FF 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+          color: transparent;
+  text-shadow: 0 1px 12px rgba(80, 230, 255, 0.35);
+}
+.brand-name-soft {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
+  letter-spacing: -0.01em;
 }
 
 .brand-tagline {
