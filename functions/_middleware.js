@@ -97,6 +97,13 @@ function attachDiagnostics(res, info) {
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
 }
 
+// ── Static-asset paths that must never be rewritten to index.html.
+//     If Vite's hashed JS/CSS/wasm/map is genuinely missing (e.g. a stale
+//     browser holding an old HTML that references a since-purged hash),
+//     return a clean 404 instead of HTML with a JS Content-Type — that is
+//     what causes "Failed to load module script: MIME type text/html".
+const STATIC_ASSET_EXT = /\.(js|mjs|cjs|css|map|json|wasm|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot|otf|pdf|txt)$/i;
+
 // ── Main handler ─────────────────────────────────────────────────────────
 export const onRequest = async (context) => {
   const { request } = context;
@@ -190,7 +197,38 @@ export const onRequest = async (context) => {
     }
   }
 
-  // ── 4. Continue and attach diagnostic headers ───────────────────────────
+  // ── 4. Continue to the underlying static/asset/Function response ────────
   const res = await context.next();
-  return attachDiagnostics(res, { country, rateLimit: rateInfo });
+
+  // ── 4a. Static assets: if a hashed JS/CSS was rewritten to index.html
+  //         (Cloudflare Pages SPA fallback), force a proper 404 instead.
+  //         Prevents blank-app "Failed to load module script: MIME text/html".
+  if (STATIC_ASSET_EXT.test(url.pathname)) {
+    const ct = (res.headers.get('content-type') || '').toLowerCase();
+    if (ct.startsWith('text/html')) {
+      return new Response('Not found', {
+        status: 404,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'no-store',
+          'X-CCD-Fallback-Guard': 'static-asset-missing',
+        },
+      });
+    }
+  }
+
+  // ── 4b. SPA HTML routes must never be cached (fresh HTML → fresh asset hashes).
+  //         Assets get their own immutable Cache-Control via _headers.
+  const ct = (res.headers.get('content-type') || '').toLowerCase();
+  const isHtml = ct.startsWith('text/html');
+  let out = res;
+  if (isHtml) {
+    const h = new Headers(res.headers);
+    h.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    h.set('Pragma', 'no-cache');
+    h.set('Expires', '0');
+    out = new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
+  }
+
+  return attachDiagnostics(out, { country, rateLimit: rateInfo });
 };
