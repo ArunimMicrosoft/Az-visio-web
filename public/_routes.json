@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "description": "Route only /api/* through Pages Functions. Everything else is static content + SPA fallback via _redirects.",
+  "include": ["/api/*"],
+  "exclude": []
+}

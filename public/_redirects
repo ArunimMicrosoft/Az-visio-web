@@ -1,3 +1,11 @@
-# Cloudflare Pages: SPA fallback — everything not a real file goes to index.html
-# /api/* is handled by Pages Functions in /functions/api/*
-/*    /index.html   200
+# Cloudflare Pages routing rules.
+#
+# Order matters — first match wins. Rules are evaluated AFTER Pages Functions,
+# but we make the /api/* pass-through explicit so it can never be caught by
+# the SPA fallback even if Function loading is delayed on cold start.
+
+# Never rewrite /api/* to index.html — those paths belong to Pages Functions.
+/api/*   /api/:splat   200
+
+# SPA fallback — everything else that isn't a real file goes to index.html.
+/*       /index.html   200
