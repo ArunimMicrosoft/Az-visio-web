@@ -135,3 +135,99 @@
   padding: 3px 8px;
   border-radius: 4px;
 }
+
+
+/* ============================================================
+   Tier-gating additions — usage bar, tier badge, lock overlay
+   ============================================================ */
+
+.template-usage-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  margin: 0 20px 16px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid rgba(0, 120, 212, 0.20);
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.template-usage-bar-full {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: rgba(180, 83, 9, 0.30);
+}
+.template-usage-icon { font-size: 18px; line-height: 1; }
+.template-usage-text { flex: 1; }
+.template-usage-text strong { color: #0068B8; font-weight: 700; }
+.template-usage-bar-full .template-usage-text strong { color: #b45309; }
+.template-usage-upgrade {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px -4px rgba(124, 58, 237, 0.5);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.template-usage-upgrade:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -4px rgba(124, 58, 237, 0.6);
+}
+
+/* Tier pill on each template card */
+.template-card {
+  position: relative;
+  overflow: hidden;
+}
+.template-card-tier {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 2;
+}
+
+/* Locked-template treatment — grays it, and adds a hover-only unlock overlay */
+.template-card-locked {
+  opacity: 0.68;
+  filter: grayscale(0.15);
+  cursor: pointer;
+}
+.template-card-locked:hover {
+  opacity: 0.9;
+  filter: grayscale(0);
+}
+.template-card-lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0), rgba(15, 23, 42, 0.55) 60%, rgba(15, 23, 42, 0.85));
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  opacity: 0;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+  text-transform: capitalize;
+}
+.template-card-lock-overlay span:first-child { font-size: 22px; }
+.template-card-locked:hover .template-card-lock-overlay { opacity: 1; }

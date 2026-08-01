@@ -171,6 +171,56 @@ export function hasTier(user, minTier) {
 }
 
 // ============================================================
+// Template usage limits per subscription tier.
+// Enterprise-tier gets the same access as professional in-app; the value
+// difference is service level, support and audit — not template count.
+// ============================================================
+export const TEMPLATE_LIMITS = {
+  trial:        { total: 2,        allowedMinTier: 'trial' },
+  starter:      { total: 20,       allowedMinTier: 'starter' },
+  professional: { total: Infinity, allowedMinTier: 'professional' },
+  enterprise:   { total: Infinity, allowedMinTier: 'enterprise' },
+};
+
+/**
+ * Decide whether the user can load a given template right now.
+ * @param {object} user
+ * @param {{ minTier?: string }} template
+ * @returns {{ ok: boolean, reason?: string, requiredTier?: string, message?: string }}
+ */
+export function canUseTemplate(user, template) {
+  if (isAdminUser(user)) return { ok: true };
+
+  const tier = user?.subscriptionTier || 'trial';
+  const templatesUsed = user?.templatesUsed || 0;
+  const templateMinTier = template?.minTier || 'trial';
+  const limits = TEMPLATE_LIMITS[tier] || TEMPLATE_LIMITS.trial;
+
+  // 1) Per-template tier requirement
+  if (!hasTier(user, templateMinTier)) {
+    const cap = templateMinTier.charAt(0).toUpperCase() + templateMinTier.slice(1);
+    return {
+      ok: false,
+      reason: 'tier-required',
+      requiredTier: templateMinTier,
+      message: `This template requires the ${cap} plan or above.`,
+    };
+  }
+
+  // 2) Total usage cap for this tier
+  if (limits.total !== Infinity && templatesUsed >= limits.total) {
+    return {
+      ok: false,
+      reason: 'cap-reached',
+      requiredTier: tier === 'trial' ? 'starter' : 'professional',
+      message: `You have used all ${limits.total} template loads available on the ${tier.charAt(0).toUpperCase() + tier.slice(1)} plan. Upgrade for unlimited templates.`,
+    };
+  }
+
+  return { ok: true, remaining: limits.total === Infinity ? Infinity : limits.total - templatesUsed };
+}
+
+// ============================================================
 // DB Write Functions (Supabase)
 // ============================================================
 

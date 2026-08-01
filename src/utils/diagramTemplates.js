@@ -59,7 +59,15 @@ const I = {
 
 const item = (id, name, icon, x, y) => ({ id, name, serviceType: icon.serviceType, path: icon.path, category: icon.category, x, y });
 const conn = (from, to, label) => ({ id: uid(), from, to, label });
-const tpl = (id, name, desc, cat, icon, buildFn) => ({ id, name, description: desc, category: cat, icon, build: buildFn });
+// tpl(id, name, description, category, icon, buildFn, minTier?)
+// minTier is the lowest subscription that can load this template:
+//   'trial'         — all users
+//   'starter'       — paid Starter and above (blocked for trial)
+//   'professional'  — Professional and above (blocked for trial + Starter)
+//   'enterprise'    — Enterprise only
+const tpl = (id, name, desc, cat, icon, buildFn, minTier = 'trial') => ({
+  id, name, description: desc, category: cat, icon, build: buildFn, minTier,
+});
 
 // ============================================================
 // WEB (10)
@@ -292,6 +300,277 @@ const serverlessTemplates = [
 ];
 
 // ============================================================
+// AI PLATFORMS (3) — unique, hard to find on the web
+// ============================================================
+const aiPlatformTemplates = [
+  tpl('ai-private-rag', 'Private Enterprise RAG', 'Azure OpenAI + AI Search + Content Safety + Private Endpoints + Log Analytics', 'AI Platforms', '🧠', () => {
+    const ids = { agw: uid(), apim: uid(), fn: uid(), openai: uid(), search: uid(), cog: uid(), kv: uid(), stor: uid(), logw: uid() };
+    return { items: [
+      item(ids.agw,'App Gateway + WAF',I.agw,400,60),
+      item(ids.apim,'APIM (Private)',I.apim,400,200),
+      item(ids.fn,'RAG Orchestrator',I.func,400,340),
+      item(ids.openai,'Azure OpenAI (Private)',I.openai,150,340),
+      item(ids.search,'AI Search (Private)',I.search,650,340),
+      item(ids.cog,'Content Safety',I.cog,150,480),
+      item(ids.stor,'Docs (Blob, Private)',I.stor,400,480),
+      item(ids.kv,'Key Vault (HSM)',I.kv,650,480),
+      item(ids.logw,'Log Analytics',I.logw,400,620),
+    ], connections: [
+      conn(ids.agw,ids.apim,'HTTPS'),
+      conn(ids.apim,ids.fn,'REST'),
+      conn(ids.fn,ids.search,'Retrieve chunks'),
+      conn(ids.fn,ids.openai,'Prompt + context'),
+      conn(ids.fn,ids.cog,'Safety check'),
+      conn(ids.search,ids.stor,'Index source'),
+      conn(ids.openai,ids.kv,'Client cert'),
+      conn(ids.fn,ids.logw,'Audit prompts'),
+    ], boundaries: [] };
+  }, 'starter'),
+
+  tpl('ai-llmops-guardrails', 'LLM Ops with Guardrails', 'Multi-model routing + Content Safety + Sentinel + Rate limits + Cost tracking', 'AI Platforms', '🛡️', () => {
+    const ids = { fd: uid(), apim: uid(), fn: uid(), o1: uid(), o2: uid(), cog: uid(), rd: uid(), co: uid(), sen: uid(), logw: uid() };
+    return { items: [
+      item(ids.fd,'Front Door',I.fd,400,60),
+      item(ids.apim,'APIM (rate + auth)',I.apim,400,200),
+      item(ids.fn,'Router Function',I.func,400,340),
+      item(ids.o1,'GPT-4o Deployment',I.openai,150,340),
+      item(ids.o2,'GPT-3.5 (Fallback)',I.openai,650,340),
+      item(ids.cog,'Content Safety',I.cog,150,480),
+      item(ids.rd,'Response Cache',I.redis,400,480),
+      item(ids.co,'Prompt/Cost Log',I.cosmos,650,480),
+      item(ids.sen,'Sentinel',I.sentinel,150,620),
+      item(ids.logw,'Log Analytics',I.logw,650,620),
+    ], connections: [
+      conn(ids.fd,ids.apim,'HTTPS'),
+      conn(ids.apim,ids.fn,'Auth-gated'),
+      conn(ids.fn,ids.o1,'Primary'),
+      conn(ids.fn,ids.o2,'Fallback'),
+      conn(ids.fn,ids.cog,'Prompt + response scan'),
+      conn(ids.fn,ids.rd,'Cache hit skip'),
+      conn(ids.fn,ids.co,'Token + cost record'),
+      conn(ids.co,ids.logw,'Export'),
+      conn(ids.logw,ids.sen,'Prompt-injection alerts'),
+    ], boundaries: [] };
+  }, 'professional'),
+
+  tpl('ai-multitenant-copilot', 'Multi-Tenant AI Copilot', 'Per-tenant key vaults + isolated OpenAI + shared APIM + tenant-scoped Cosmos', 'AI Platforms', '🏢', () => {
+    const ids = { fd: uid(), apim: uid(), fn: uid(), openai: uid(), kv1: uid(), kv2: uid(), co: uid(), search: uid(), rd: uid() };
+    return { items: [
+      item(ids.fd,'Front Door + WAF',I.fd,400,60),
+      item(ids.apim,'APIM (tenant claims)',I.apim,400,200),
+      item(ids.fn,'Tenant Router',I.func,400,340),
+      item(ids.openai,'OpenAI (per-region)',I.openai,650,340),
+      item(ids.search,'AI Search (per-tenant idx)',I.search,150,340),
+      item(ids.kv1,'Key Vault: Tenant A',I.kv,150,480),
+      item(ids.kv2,'Key Vault: Tenant B',I.kv,650,480),
+      item(ids.co,'Cosmos (tenant partition)',I.cosmos,400,480),
+      item(ids.rd,'Redis (tenant sessions)',I.redis,400,620),
+    ], connections: [
+      conn(ids.fd,ids.apim,'HTTPS'),
+      conn(ids.apim,ids.fn,'JWT claims'),
+      conn(ids.fn,ids.search,'Search (idx-per-tenant)'),
+      conn(ids.fn,ids.openai,'Prompt'),
+      conn(ids.fn,ids.kv1,'A secrets'),
+      conn(ids.fn,ids.kv2,'B secrets'),
+      conn(ids.fn,ids.co,'Chat history'),
+      conn(ids.fn,ids.rd,'Session'),
+    ], boundaries: [] };
+  }, 'professional'),
+];
+
+// ============================================================
+// REGULATED (3) — compliance-first patterns
+// ============================================================
+const regulatedTemplates = [
+  tpl('reg-pci-payment', 'PCI-DSS Payment Gateway', 'Scoped CDE — WAF, HSM Key Vault, private SQL, Sentinel, Defender, isolated VNet', 'Regulated', '💳', () => {
+    const ids = { fd: uid(), agw: uid(), apim: uid(), aks: uid(), kv: uid(), sq: uid(), stor: uid(), sen: uid(), def: uid(), logw: uid() };
+    return { items: [
+      item(ids.fd,'Front Door + WAF',I.fd,400,60),
+      item(ids.agw,'App Gateway (mTLS)',I.agw,400,200),
+      item(ids.apim,'APIM (tokenised)',I.apim,400,340),
+      item(ids.aks,'AKS (CDE Pods)',I.aks,400,480),
+      item(ids.kv,'Key Vault (HSM)',I.kv,150,480),
+      item(ids.sq,'SQL (Private, TDE)',I.sql,650,480),
+      item(ids.stor,'PAN Vault (Blob)',I.stor,150,340),
+      item(ids.sen,'Sentinel (SIEM)',I.sentinel,650,340),
+      item(ids.def,'Defender for Cloud',I.defender,150,620),
+      item(ids.logw,'Log Analytics',I.logw,650,620),
+    ], connections: [
+      conn(ids.fd,ids.agw,'HTTPS'),
+      conn(ids.agw,ids.apim,'mTLS'),
+      conn(ids.apim,ids.aks,'Tokenised card ref'),
+      conn(ids.aks,ids.kv,'HSM keys'),
+      conn(ids.aks,ids.sq,'Encrypted PAN idx'),
+      conn(ids.aks,ids.stor,'PAN vault'),
+      conn(ids.aks,ids.logw,'Immutable audit'),
+      conn(ids.logw,ids.sen,'Correlated alerts'),
+      conn(ids.def,ids.sen,'Findings feed'),
+    ], boundaries: [] };
+  }, 'professional'),
+
+  tpl('reg-hipaa-portal', 'HIPAA Healthcare Portal', 'FHIR API + private Cosmos + BAA-compliant Key Vault + audit-immutable logs', 'Regulated', '🏥', () => {
+    const ids = { fd: uid(), apim: uid(), fn: uid(), fhir: uid(), co: uid(), kv: uid(), stor: uid(), sen: uid(), logw: uid() };
+    return { items: [
+      item(ids.fd,'Front Door + WAF',I.fd,400,60),
+      item(ids.apim,'APIM (OAuth2 + PHI scope)',I.apim,400,200),
+      item(ids.fn,'App Layer',I.func,400,340),
+      item(ids.fhir,'FHIR Service',I.app,150,340),
+      item(ids.co,'Cosmos (Private, geo)',I.cosmos,650,340),
+      item(ids.kv,'Key Vault (BAA)',I.kv,150,480),
+      item(ids.stor,'Immutable Blob (WORM)',I.stor,400,480),
+      item(ids.logw,'Log Analytics (7 yr)',I.logw,650,480),
+      item(ids.sen,'Sentinel',I.sentinel,400,620),
+    ], connections: [
+      conn(ids.fd,ids.apim,'HTTPS'),
+      conn(ids.apim,ids.fn,'REST'),
+      conn(ids.fn,ids.fhir,'FHIR'),
+      conn(ids.fhir,ids.co,'Resource store'),
+      conn(ids.fn,ids.kv,'Secrets'),
+      conn(ids.fn,ids.stor,'Attachments (WORM)'),
+      conn(ids.fn,ids.logw,'PHI access log'),
+      conn(ids.logw,ids.sen,'Alert on anomaly'),
+    ], boundaries: [] };
+  }, 'professional'),
+
+  tpl('reg-sebi-fin-platform', 'India SEBI/RBI Financial Data Platform', 'Localised DC + private Databricks + Purview equivalent + immutable audit', 'Regulated', '🇮🇳', () => {
+    const ids = { agw: uid(), apim: uid(), aks: uid(), dbr: uid(), stor: uid(), kv: uid(), co: uid(), logw: uid(), sen: uid(), def: uid() };
+    return { items: [
+      item(ids.agw,'App Gateway (Central India)',I.agw,400,60),
+      item(ids.apim,'APIM (Private)',I.apim,400,200),
+      item(ids.aks,'AKS (Private, no egress)',I.aks,400,340),
+      item(ids.dbr,'Databricks (Central India)',I.dbr,150,340),
+      item(ids.stor,'Data Lake (LRS local only)',I.stor,650,340),
+      item(ids.kv,'Key Vault (HSM, India)',I.kv,150,480),
+      item(ids.co,'Cosmos (Zone-redundant local)',I.cosmos,650,480),
+      item(ids.logw,'Log Analytics',I.logw,400,480),
+      item(ids.sen,'Sentinel (7-yr retention)',I.sentinel,150,620),
+      item(ids.def,'Defender for Cloud',I.defender,650,620),
+    ], connections: [
+      conn(ids.agw,ids.apim,'HTTPS'),
+      conn(ids.apim,ids.aks,'Private link'),
+      conn(ids.aks,ids.dbr,'JDBC'),
+      conn(ids.dbr,ids.stor,'Delta lake'),
+      conn(ids.aks,ids.co,'App state'),
+      conn(ids.aks,ids.kv,'HSM'),
+      conn(ids.aks,ids.logw,'Immutable logs'),
+      conn(ids.logw,ids.sen,'Correlated'),
+      conn(ids.def,ids.sen,'Posture findings'),
+    ], boundaries: [] };
+  }, 'enterprise'),
+];
+
+// ============================================================
+// ENTERPRISE (4) — patterns you rarely find written up publicly
+// ============================================================
+const enterpriseTemplates = [
+  tpl('ent-zero-trust-lz', 'Zero-Trust Landing Zone', 'Hub-spoke + Bastion + Defender + Sentinel + Private Endpoints for every PaaS', 'Enterprise', '🛡️', () => {
+    const ids = { fw: uid(), bas: uid(), vpn: uid(), s1: uid(), s2: uid(), kv: uid(), stor: uid(), sq: uid(), sen: uid(), def: uid() };
+    return { items: [
+      item(ids.fw,'Azure Firewall Premium',I.fw,400,200),
+      item(ids.bas,'Bastion',I.bastion,150,60),
+      item(ids.vpn,'VPN Gateway',I.vpn,650,60),
+      item(ids.s1,'Prod Spoke (AKS)',I.aks,150,340),
+      item(ids.s2,'Data Spoke (SQL/Storage)',I.sql,650,340),
+      item(ids.kv,'Key Vault (Private)',I.kv,150,480),
+      item(ids.stor,'Storage (Private)',I.stor,400,480),
+      item(ids.sq,'SQL (Private)',I.sql,650,480),
+      item(ids.sen,'Sentinel',I.sentinel,150,620),
+      item(ids.def,'Defender for Cloud',I.defender,650,620),
+    ], connections: [
+      conn(ids.vpn,ids.fw,'IPSec'),
+      conn(ids.bas,ids.fw,'RDP/SSH JIT'),
+      conn(ids.fw,ids.s1,'Inspect'),
+      conn(ids.fw,ids.s2,'Inspect'),
+      conn(ids.s1,ids.kv,'Private endpoint'),
+      conn(ids.s1,ids.stor,'Private endpoint'),
+      conn(ids.s1,ids.sq,'Private endpoint'),
+      conn(ids.def,ids.sen,'Findings'),
+    ], boundaries: [] };
+  }, 'professional'),
+
+  tpl('ent-active-active-global', 'Global Active-Active Multi-Region', 'Cosmos multi-region write + Front Door + 3-region AKS + geo-replicated Redis', 'Enterprise', '🌍', () => {
+    const ids = { fd: uid(), a1: uid(), a2: uid(), a3: uid(), co: uid(), rd1: uid(), rd2: uid(), rd3: uid(), tm: uid() };
+    return { items: [
+      item(ids.fd,'Front Door (Anycast)',I.fd,400,60),
+      item(ids.a1,'AKS East US 2',I.aks,150,220),
+      item(ids.a2,'AKS West EU',I.aks,400,220),
+      item(ids.a3,'AKS Central India',I.aks,650,220),
+      item(ids.co,'Cosmos (Multi-Write)',I.cosmos,400,380),
+      item(ids.rd1,'Redis East US 2',I.redis,150,380),
+      item(ids.rd2,'Redis West EU',I.redis,400,540),
+      item(ids.rd3,'Redis Central India',I.redis,650,380),
+      item(ids.tm,'Traffic Manager (DR)',I.tm,400,700),
+    ], connections: [
+      conn(ids.fd,ids.a1,'Route'),
+      conn(ids.fd,ids.a2,'Route'),
+      conn(ids.fd,ids.a3,'Route'),
+      conn(ids.a1,ids.co,'Multi-write'),
+      conn(ids.a2,ids.co,'Multi-write'),
+      conn(ids.a3,ids.co,'Multi-write'),
+      conn(ids.a1,ids.rd1,'Local cache'),
+      conn(ids.a2,ids.rd2,'Local cache'),
+      conn(ids.a3,ids.rd3,'Local cache'),
+      conn(ids.tm,ids.fd,'DNS-level failback'),
+    ], boundaries: [] };
+  }, 'professional'),
+
+  tpl('ent-data-mesh-federated', 'Data Mesh — Federated Domains', 'Per-domain Databricks + Synapse + shared Purview-equivalent governance + Cosmos catalog', 'Enterprise', '🕸️', () => {
+    const ids = { plat: uid(), d1: uid(), d2: uid(), d3: uid(), syn: uid(), cat: uid(), stor: uid(), logw: uid(), sen: uid() };
+    return { items: [
+      item(ids.plat,'Self-Service Platform (IaC)',I.devops,400,60),
+      item(ids.d1,'Domain: Sales (Databricks)',I.dbr,150,220),
+      item(ids.d2,'Domain: Ops (Databricks)',I.dbr,400,220),
+      item(ids.d3,'Domain: Finance (Databricks)',I.dbr,650,220),
+      item(ids.syn,'Federated Query (Synapse)',I.syn,400,380),
+      item(ids.stor,'Shared Data Lake (Bronze)',I.stor,150,380),
+      item(ids.cat,'Catalog + Lineage (Cosmos)',I.cosmos,650,380),
+      item(ids.logw,'Log Analytics',I.logw,150,540),
+      item(ids.sen,'Sentinel',I.sentinel,650,540),
+    ], connections: [
+      conn(ids.plat,ids.d1,'Provision'),
+      conn(ids.plat,ids.d2,'Provision'),
+      conn(ids.plat,ids.d3,'Provision'),
+      conn(ids.d1,ids.stor,'Bronze read'),
+      conn(ids.d1,ids.cat,'Register product'),
+      conn(ids.d2,ids.cat,'Register product'),
+      conn(ids.d3,ids.cat,'Register product'),
+      conn(ids.syn,ids.cat,'Lookup'),
+      conn(ids.syn,ids.d1,'Query'),
+      conn(ids.syn,ids.d2,'Query'),
+      conn(ids.syn,ids.d3,'Query'),
+      conn(ids.cat,ids.logw,'Audit'),
+      conn(ids.logw,ids.sen,'Alerts'),
+    ], boundaries: [] };
+  }, 'enterprise'),
+
+  tpl('ent-retail-omnichannel', 'Retail Omni-Channel Backbone', 'APIM + AKS microservices + Cosmos + AI Search + Personalizer + Event Grid saga', 'Enterprise', '🏬', () => {
+    const ids = { fd: uid(), apim: uid(), aks: uid(), co: uid(), search: uid(), personal: uid(), eg: uid(), sb: uid(), sq: uid(), stor: uid() };
+    return { items: [
+      item(ids.fd,'Front Door',I.fd,400,60),
+      item(ids.apim,'APIM',I.apim,400,180),
+      item(ids.aks,'AKS Microservices',I.aks,400,320),
+      item(ids.co,'Cosmos (Catalog + Basket)',I.cosmos,150,320),
+      item(ids.search,'AI Search',I.search,650,320),
+      item(ids.personal,'Personalizer',I.cog,650,460),
+      item(ids.eg,'Event Grid',I.eg,400,460),
+      item(ids.sb,'Service Bus (Saga)',I.sb,150,460),
+      item(ids.sq,'SQL (Orders, ACID)',I.sql,400,600),
+      item(ids.stor,'Blob (Product images)',I.stor,650,600),
+    ], connections: [
+      conn(ids.fd,ids.apim,'HTTPS'),
+      conn(ids.apim,ids.aks,'REST'),
+      conn(ids.aks,ids.co,'Catalog + basket'),
+      conn(ids.aks,ids.search,'Product search'),
+      conn(ids.aks,ids.personal,'Recommendations'),
+      conn(ids.aks,ids.eg,'Domain events'),
+      conn(ids.eg,ids.sb,'Route to saga'),
+      conn(ids.sb,ids.sq,'Order commit'),
+      conn(ids.aks,ids.stor,'Assets'),
+    ], boundaries: [] };
+  }, 'professional'),
+];
+
+// ============================================================
 // COMBINE & EXPORT
 // ============================================================
 export const diagramTemplates = [
@@ -300,6 +579,9 @@ export const diagramTemplates = [
   ...containerTemplates,
   ...analyticsTemplates,
   ...serverlessTemplates,
+  ...aiPlatformTemplates,
+  ...regulatedTemplates,
+  ...enterpriseTemplates,
 ];
 
 export const templateCategories = [...new Set(diagramTemplates.map(t => t.category))];

@@ -298,7 +298,9 @@ function App() {
     isLoadingDiagram.current = false;
   };
 
-  // Template selection handler
+  // Template selection handler.
+  // Note: gating (tier + trial cap) already happens inside TemplateGallery via
+  // canUseTemplate(); this handler only runs on approved loads.
   const handleSelectTemplate = (template) => {
     const mode = askReplaceOrAdd('template');
     if (!mode) return;
@@ -312,6 +314,9 @@ function App() {
     } else {
       addToCanvas(template.items, template.connections, template.boundaries);
     }
+    // Refresh user so the usage counter (templatesUsed) reflects the new value
+    // immediately — powers the trial cap and the "X of 2 used" bar.
+    setTimeout(() => refreshUser?.(), 800);
   };
 
   // Version history handlers
@@ -953,6 +958,15 @@ function App() {
         isOpen={templateGalleryOpen}
         onClose={() => setTemplateGalleryOpen(false)}
         onSelectTemplate={handleSelectTemplate}
+        user={user}
+        onUpgrade={({ reason, feature, requiredTier }) => {
+          setUpgradeReason(reason || 'Upgrade to unlock this template.');
+          setUpgradeFeature(feature || 'Premium Templates');
+          setUpgradeModalOpen(true);
+          setTemplateGalleryOpen(false);
+          // requiredTier is available if UpgradeModal wants to preselect a plan
+          void requiredTier;
+        }}
       />
       <VersionHistoryPanel
         versions={versionHistory.versions}
