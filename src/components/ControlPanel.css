@@ -587,100 +587,79 @@
   gap: 8px;
 }
 
-/* Brand wordmark — enterprise product mark */
+/* Brand wordmark — modern product mark */
 .cp-brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   justify-self: center;                 /* stays perfectly centered in the middle column */
-  padding: 4px 12px 4px 6px;
-  border-radius: 999px;
+  padding: 5px 14px 5px 5px;
+  border-radius: 12px;
   background: transparent;
-  transition: background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  transition: background-color 200ms ease, box-shadow 200ms ease;
   user-select: none;
+  cursor: default;
 }
 .cp-brand:hover {
-  background: linear-gradient(180deg, rgba(0, 120, 212, 0.045), rgba(80, 230, 255, 0.06));
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 120, 212, 0.10),
-    0 4px 14px -6px rgba(0, 120, 212, 0.22);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.025), rgba(15, 23, 42, 0.04));
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
-/* Icon tile — a proper mark, not an emoji */
+/* Icon tile — squircle with subtle depth, single color accent */
 .cp-brand-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background:
-    linear-gradient(135deg, #ffffff 0%, #f5faff 100%);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #ffffff;
   box-shadow:
-    inset 0 0 0 1px rgba(0, 120, 212, 0.18),
-    inset 0 -1px 0 rgba(0, 120, 212, 0.10),
-    0 1px 2px rgba(0, 120, 212, 0.10),
-    0 6px 14px -8px rgba(0, 120, 212, 0.30);
+    inset 0 0 0 1px rgba(15, 23, 42, 0.08),
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 18px -10px rgba(0, 120, 212, 0.35);
   line-height: 0;
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
 }
-.cp-brand-icon svg { display: block; }
+.cp-brand-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 80% at 50% 0%, rgba(80, 230, 255, 0.14), transparent 70%);
+  pointer-events: none;
+}
+.cp-brand-icon svg { display: block; position: relative; z-index: 1; }
 
-/* Wordmark container */
+/* Wordmark container — tight, modern, geometric */
 .cp-brand-name {
   display: inline-flex;
   align-items: baseline;
-  gap: 6px;
-  font-family: var(--font-sans);
-  font-size: 18px;
+  gap: 7px;
+  font-family: 'Inter', var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-size: 19px;
   line-height: 1;
-  letter-spacing: -0.4px;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
+  letter-spacing: -0.028em;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01', 'ss03';
   white-space: nowrap;
 }
 
-/* Split-weight, two-tone wordmark — !important to defeat any legacy rule */
+/* Two-tone, mono-accent wordmark. Deep slate + Azure gradient on the primary,
+   muted slate on the secondary. Cleaner and more modern than tri-stop gradient. */
 .cp-brand .cp-brand-name .cp-brand-word { display: inline-block !important; }
 .cp-brand .cp-brand-name .cp-brand-word--strong {
-  font-weight: 800 !important;
-  background: linear-gradient(120deg, #0b3d91 0%, #0078D4 45%, #00A9E0 100%) !important;
+  font-weight: 700 !important;
+  background: linear-gradient(92deg, #0078D4 0%, #0091EA 100%) !important;
   -webkit-background-clip: text !important;
           background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
           color: transparent !important;
-  text-shadow: 0 0 1px rgba(11, 61, 145, 0.05);
 }
 .cp-brand .cp-brand-name .cp-brand-word--soft {
   font-weight: 500 !important;
   color: #64748b !important;
-  letter-spacing: -0.25px;
-}
-
-/* Thin vertical divider between wordmark and product badge */
-.cp-brand-divider {
-  width: 1px;
-  height: 18px;
-  background: linear-gradient(180deg, transparent, #cbd5e1 30%, #cbd5e1 70%, transparent);
-  margin: 0 2px;
-  flex-shrink: 0;
-}
-
-/* Product badge — signals the product line, not a marketing shout */
-.cp-brand-badge {
-  display: inline-flex;
-  align-items: center;
-  height: 20px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, rgba(0, 120, 212, 0.10), rgba(80, 230, 255, 0.14));
-  color: #0068B8;
-  font-family: var(--font-sans);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.7px;
-  text-transform: uppercase;
-  box-shadow: inset 0 0 0 1px rgba(0, 120, 212, 0.22);
-  flex-shrink: 0;
+  letter-spacing: -0.018em;
 }
 
 .cp-topbar-actions {
@@ -693,10 +672,8 @@
 /* Collapse to single row on narrow screens */
 @media (max-width: 700px) {
   .cp-topbar { grid-template-columns: auto 1fr auto !important; }
-  .cp-brand-name { font-size: 15px; }
+  .cp-brand-name { font-size: 16px; }
   .cp-brand-word--soft { display: none; }
-  .cp-brand-divider,
-  .cp-brand-badge { display: none; }
   .cp-topbar-left .cp-help-btn span:last-child { display: none; }
 }
 
@@ -932,8 +909,6 @@
 @media (max-width: 900px) {
   .cp-menu-trigger span:not(.cp-menu-caret):not(.cp-menu-icon) { display: none; }
   .cp-brand-name { display: none; }
-  .cp-brand-divider,
-  .cp-brand-badge { display: none; }
   .cp-primary-btn { padding: 8px 12px; }
   .cp-primary-btn span:not(:first-child) { display: none; }
   .cp-menu-dropdown { min-width: 260px; }

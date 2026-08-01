@@ -164,8 +164,6 @@ const ControlPanel = ({
             <span className="cp-brand-word cp-brand-word--strong">Cloud Canvas</span>
             <span className="cp-brand-word cp-brand-word--soft">Designer</span>
           </span>
-          <span className="cp-brand-divider" aria-hidden="true" />
-          <span className="cp-brand-badge" aria-hidden="true">Azure</span>
         </div>
 
         <div className="cp-topbar-actions">
