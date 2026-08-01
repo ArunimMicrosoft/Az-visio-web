@@ -14,6 +14,7 @@ export const categoryColors = {
   'Observability':  { bg: 'linear-gradient(135deg, #14b8a6 0%, #0ea5e9 100%)', solid: '#0ea5e9', tint: '#ecfeff' },
   'Migration':      { bg: 'linear-gradient(135deg, #f97316 0%, #db2777 100%)', solid: '#db2777', tint: '#fdf2f8' },
   'Architecture':   { bg: 'linear-gradient(135deg, #7c3aed 0%, #0891b2 100%)', solid: '#7c3aed', tint: '#f5f3ff' },
+  'Product Guide':  { bg: 'linear-gradient(135deg, #0078D4 0%, #50E6FF 100%)', solid: '#0078D4', tint: '#e0f2fe' },
 };
 
 export const blogArticles = [
@@ -697,6 +698,16 @@ export const blogArticles = [
     readTime: '14 min',
     date: '2026-08-01',
     icon: '🗺️',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'cloud-canvas-designer-sop',
+    title: 'How to Use Cloud Canvas Designer: The Complete SOP',
+    excerpt: 'The definitive step-by-step guide to designing, validating, and shipping an Azure architecture with Cloud Canvas Designer — with diagrams, keyboard shortcuts, and recommended workflows for common scenarios.',
+    category: 'Product Guide',
+    readTime: '16 min',
+    date: '2026-08-01',
+    icon: '📘',
     author: "Arunim's IT Café",
   },
 ];
@@ -7736,3 +7747,262 @@ If any of those still take you back into the portal to check, you're not done.
 ## Closing
 
 Reverse-engineering an estate is a solvable problem in one day if you follow the layers: network → compute → data → identity → cost. Skip the temptation to boil the ocean. A crisp, honest diagram with clearly labeled unknowns is worth more than an exhaustive audit that no one reads.`;
+
+
+
+// ============================================================
+// ARTICLE: cloud-canvas-designer-sop
+// ============================================================
+articleContent['cloud-canvas-designer-sop'] = `# How to Use Cloud Canvas Designer: The Complete SOP
+
+Cloud Canvas Designer turns Azure architecture design into a visual, validated, and exportable workflow. This guide walks the app end to end — from your first sign-in to shipping a Terraform-ready diagram — with the exact clicks, menus, and design patterns that make the tool actually save time.
+
+Read once. Bookmark. Come back to the sections you need.
+
+{{diagram:sopWorkflow}}
+
+## What the app does at a glance
+
+- Drag-and-drop canvas with 700+ official Microsoft Azure service icons across 22 categories.
+- Live WAF (Well-Architected Framework) validation against all 5 pillars with per-service scoring.
+- Real-time cost estimation via the official Azure Retail Prices API, in INR or USD.
+- Export to Terraform HCL, Bicep, ARM templates, PNG, PDF, or portable JSON.
+- Discovery — upload an ARM export / CLI dump / Terraform and get an auto-generated diagram.
+- Cloud-saved diagrams, version history, share links, presentation mode.
+
+## Step 0 — Sign in
+
+Go to \`cloudcanvas.co\` and click **Sign In** (top-right) or **Get Started**.
+
+- **New users** — Sign up with email + password. You get a 7-day free trial (no card): 3 diagrams, 5 PNG exports, WAF validation, cost estimation.
+- **Existing users** — Sign in. If MFA is on, complete it.
+- **Forgot password** — Use the reset link. Delivery is via Supabase Auth.
+
+For paid tiers (Starter ₹499, Professional ₹1,200, Enterprise ₹6,699 per month), pay via Razorpay through the Payment page. All plans grant more diagrams, cloud saves, IaC exports, and premium features (Region Compare, Version History, Presentation Mode).
+
+## Step 1 — Know the UI
+
+{{diagram:sopUiAnatomy}}
+
+**A · Top bar (brand + user menu)** — logo, session status, user dropdown with Log Out (and Admin Dashboard if you're an admin).
+
+**B · Menu bar** — the four dropdown menus (File, Import, Export, View) plus the green **Validate** button and the **Clear** button.
+
+**C · Left panel (Azure Services)** — 22 collapsible categories with 700+ Azure icons. Live search at the top. Each service in the panel is draggable.
+
+**D · Canvas (center)** — the grid where your diagram lives. Drag services here. Right-click a service to start a connection. Multi-select with a rubber-band drag.
+
+**E · Right panel (Cost estimator)** — live cost roll-up in your chosen region and currency. Empty at first; every service you drop in adds a row.
+
+Bottom-right corner has a floating **Help** button that opens the tips overlay.
+
+## Step 2 — Start a diagram (three ways)
+
+You have three onramps. Pick the one that fits your goal.
+
+### 2a. Blank canvas — for green-field design
+File → **New** (or just start dragging on the empty canvas). Best for designing something from scratch. You will spend the most time here.
+
+### 2b. Templates — for common patterns
+File → **Templates**. The gallery ships with 50+ reference architectures:
+- 3-tier web app
+- Hub-spoke network
+- Multi-region active-passive DR
+- AKS production cluster
+- Landing zone
+- Event-driven e-commerce
+- RAG on Azure
+- IoT lambda architecture
+- and more
+
+Click a template to preload it into the canvas. Then customize.
+
+### 2c. Discovery / Import — for reverse engineering
+Import → **Discovery** (or the Discovery button on the landing page).
+
+Drop in any of these files (nothing leaves your browser):
+- **ARM template** — Portal → Resource Group → Export template → \`template.json\`
+- **Azure CLI dump** — \`az resource list > resources.json\`
+- **Azure Resource Graph** — \`az graph query -q "Resources | ..." > graph.json\`
+- **PowerShell** — \`Get-AzResource | ConvertTo-Json > resources.json\`
+- **Terraform** or **Bicep** files — direct file drop
+
+The app parses everything, places services on the canvas, draws connections, groups them by resource group and region, and runs WAF validation automatically. You go from "no diagram" to "full picture" in under a minute.
+
+For pure Terraform, there's also a dedicated **TF Paste** button — paste HCL directly, no file needed.
+
+## Step 3 — Add services
+
+Two ways.
+
+**Drag from the left panel** — expand a category, drag the icon onto the canvas. The default name comes from the service (e.g. "Virtual Machine 1"). Drop wherever.
+
+**Search-and-drop** — type in the search box (top of the left panel). Matching services filter live. Drag from the filtered list.
+
+Tips:
+- **Rename immediately** — double-click the label under the icon. Use meaningful names (\`web-prod-eastus\`) not defaults (\`Virtual Machine 3\`). Both diagram readability and Terraform export quality depend on names.
+- **Duplicate** — select a service and press \`Ctrl+D\` to duplicate it in place.
+- **Delete** — select and press \`Delete\` or \`Backspace\`.
+- **Multi-select** — hold \`Shift\` and click, or drag a rectangle over multiple items.
+
+## Step 4 — Connect services
+
+Connections show how things talk to each other. Optional labels give the connection meaning (protocol, port, purpose).
+
+- **Right-click a service** → the cursor turns into a connection start marker. Move to the target service and click. A line is drawn.
+- **Double-click the connection line** → edit its label (e.g. "HTTPS 443", "SQL 1433", "Event Hub topic").
+- The connection color reflects validation state — green (valid), yellow (warning), red (invalid, e.g. compute directly reaching public storage without a private endpoint).
+
+Rule of thumb: draw the *primary* data flow, not every possible one. Diagrams full of arrows are unreadable.
+
+## Step 5 — Draw boundaries
+
+Boundaries are grouping zones. They tell readers "these things share fate" — same resource group, same VNet, same subnet, same trust zone, same region. Boundaries are also read by WAF (some pillars only apply within a boundary) and by the IaC export (an RG boundary maps to \`resource "azurerm_resource_group"\`).
+
+- Click the **Boundary** tab at the top of the canvas → choose Resource Group / VNet / Subnet / Availability Zone / Region.
+- Draw a rectangle over the services you want to group.
+- The boundary label is editable inline.
+- Nested boundaries are allowed and encouraged: Subscription → Resource Group → VNet → Subnet, from outside in.
+
+## Step 6 — Validate against WAF
+
+Click the green **Validate** button in the top-right.
+
+A panel opens with:
+- Overall WAF score out of 100.
+- Score per pillar — Reliability, Security, Cost Optimization, Operational Excellence, Performance Efficiency.
+- A ranked list of findings, most critical first. Each finding is linked to the specific service that triggered it.
+- Recommended fix per finding.
+- **Export WAF Report** button — one-click PDF for compliance packages.
+
+Common findings you'll see:
+- Storage account with public access → move to Private Endpoint.
+- VM without availability zone → pin to a zone or move to a zone-redundant equivalent.
+- Databases with no backup configured → enable geo-redundant backups.
+- No monitoring extension → add Azure Monitor Agent.
+- Single-region critical path → recommend paired region.
+
+Validation is live. Fix a finding, click Validate again, the score updates.
+
+## Step 7 — Estimate cost
+
+The right-side cost panel is always on. As you drop services, it queries the Azure Retail Prices API and rolls up:
+- Region + currency selector at the top (change either → prices update).
+- Per-service monthly estimate.
+- Total at the bottom.
+- **Export cost report** button — CSV for finance / procurement.
+
+Notes:
+- Costs are retail (list price). Enterprise Agreement discounts, reserved instances, and Savings Plans are not modeled.
+- Some services (Azure Firewall Standard, AKS control plane) have fixed monthly bases + variable overages — the tool shows the base.
+- For Egress cost modeling, add explicit egress line items via **View → Cost overrides**.
+
+## Step 8 — Export
+
+**File → Save** — saves as portable JSON. Reload later with **File → Load**.
+
+**Export menu** — six formats:
+- **PNG** — flat image. Print-quality at 2× scale.
+- **PDF** — vector, one page or paginated for large diagrams. Includes WAF summary if validation is fresh.
+- **Terraform HCL** — full \`.tf\` file with \`azurerm_*\` resources, dependencies, and provider block.
+- **Bicep** — full \`.bicep\` file with modules if you used boundaries as RG scopes.
+- **ARM** — deployable \`azuredeploy.json\`.
+- **JSON diagram** — the canvas itself, for save + reload + share.
+
+For Terraform / Bicep / ARM, the export preserves your names verbatim. That's why naming is worth doing before you export.
+
+## Recommended workflows for common scenarios
+
+### Workflow A — Design a new architecture from scratch
+1. File → New (blank canvas).
+2. Optionally File → Templates and pick a starter that's close to your target.
+3. Add missing services from the left panel.
+4. Connect them (right-click → click target).
+5. Draw boundaries (Subscription → RG → VNet → subnet, outer to inner).
+6. Validate. Fix red findings, review yellows.
+7. Set region + currency in the cost panel; note the monthly estimate.
+8. Export to Terraform. Commit to the repo. Open PR.
+
+### Workflow B — Reverse-engineer an existing Azure environment
+1. Import → Discovery.
+2. Drop in your ARM export / CLI dump / Terraform.
+3. Wait ~10-30 seconds for parsing.
+4. Review auto-generated diagram. Rearrange as needed.
+5. Validate to see the current WAF posture.
+6. Export as JSON (baseline). Save to My Diagrams.
+7. Next month, re-run Discovery and compare — you'll see net-new and net-lost resources.
+
+### Workflow C — Turn existing Terraform into a diagram
+1. Import → **TF Paste** (or drop the \`.tf\` file into Discovery).
+2. Paste your HCL, click Parse.
+3. Diagram appears with services placed by \`azurerm_*\` resource type.
+4. Rename, group, or reposition to match your team's mental model.
+5. Export as PNG for a wiki page or as PDF for a design doc.
+
+### Workflow D — Compare Azure regions before deploying
+1. Design once with a placeholder region.
+2. Menu → **Region Compare** (Starter plan and above).
+3. Pick up to 3 regions. Each column shows monthly cost + which services are unavailable in that region.
+4. Pick the best one. Set it in the cost panel.
+5. Continue with export.
+
+### Workflow E — Present a diagram in a meeting
+1. Open your saved diagram.
+2. Menu → **Present** (Starter plan and above).
+3. Full-screen, no chrome. Arrow keys advance through logical layers if you used boundaries.
+4. Press \`Esc\` to exit.
+
+## Keyboard shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| Save | \`Ctrl + S\` |
+| Undo | \`Ctrl + Z\` |
+| Redo | \`Ctrl + Y\` or \`Ctrl + Shift + Z\` |
+| Duplicate selection | \`Ctrl + D\` |
+| Delete selection | \`Delete\` or \`Backspace\` |
+| Select all | \`Ctrl + A\` |
+| Zoom in | \`Ctrl + =\` |
+| Zoom out | \`Ctrl + -\` |
+| Fit to screen | \`Ctrl + 0\` |
+| Presentation mode | \`F5\` |
+| Validate | \`Ctrl + Enter\` |
+| Open templates | \`Ctrl + T\` |
+
+## Tips and habits that make the tool 10× better
+
+1. **Name things immediately.** Diagrams and IaC exports live and die on names. Follow a convention: \`<workload>-<env>-<region>-<n>\`.
+2. **Use boundaries early.** Grouping services into RG/VNet/subnet boundaries fixes 60% of WAF findings by giving the validator context.
+3. **Save frequently, in the cloud.** \`Ctrl + S\` writes local. Menu → My Diagrams → Save to Cloud (Starter+) syncs across devices and enables version history.
+4. **Version history is free undo across sessions.** Menu → Versions. Roll back to any snapshot; Cloud Canvas keeps the last 30.
+5. **One diagram per purpose.** Don't put "the whole company" in one file. One diagram per workload, per environment. Link them from the wiki.
+6. **Validate as you design, not at the end.** If you validate after everything is built, you'll be tempted to skip the fixes.
+7. **Cost panel is a design gate.** If a template balloons cost 5× over what the sponsor approved, catch it before Terraform apply, not after.
+8. **Export Terraform, then diff.** For a change to an existing environment, export the new Terraform and \`git diff\` against last week's export. That diff is the change request.
+9. **Share links, not screenshots.** Menu → Share (Starter+) generates a read-only public URL. Reviewers see the live diagram, not a stale image.
+
+## Troubleshooting
+
+**Q. My services vanish when I refresh.**
+You didn't save. Local drafts are session-only. \`Ctrl + S\` writes local storage; My Diagrams → Save to Cloud persists across sessions.
+
+**Q. Cost panel shows 0 for everything.**
+Region isn't set, or the Retail Prices API is throttling. Change the region dropdown to force a refetch. If it stays 0, wait 30 seconds and retry.
+
+**Q. Validate says "green" but I know something is wrong.**
+Validate scores what you drew. If you didn't draw the Private Endpoint or the NSG, it's not evaluated. WAF is a diagram-level lens; things not on the canvas are invisible to it.
+
+**Q. Terraform export won't apply — some resource is missing an attribute.**
+Check the service's properties panel (click the service → right side of the canvas). Some resources need SKU, region, or replication set explicitly. Set them in the panel and re-export.
+
+**Q. Discovery Import placed all my resources in one big blob.**
+Some export formats don't include VNet / subnet metadata (e.g. \`az resource list\` without \`--include-details\`). Re-run the export with the flag, or use an ARM template export which always includes topology.
+
+**Q. Payment failed on upgrade.**
+Payment issues are usually one of: Razorpay method not enabled in your account, insufficient card limits, or CSP block on the checkout script. If it persists, screenshot the diagnostics panel (visible under the error on the Payment page) and email support.
+
+## Closing
+
+Cloud Canvas Designer's promise is: your Azure architecture should not live in a whiteboard photo, a stale Visio, or someone's head. It should live in a source-of-truth diagram that validates, costs, and exports itself.
+
+Follow this SOP for two weeks and diagrams stop being the artifact you dread — they become the artifact you reach for first.`;

@@ -754,6 +754,138 @@ export const dataMeshSvg = `
 </svg>
 `;
 
+// ============== PRODUCT-GUIDE (SOP) DIAGRAMS ==============
+
+// End-to-end workflow of using Cloud Canvas Designer
+export const sopWorkflowSvg = `
+<svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cloud Canvas Designer end-to-end workflow">
+  <defs>
+    <linearGradient id="sopStep" x1="0" x2="1">
+      <stop offset="0" stop-color="${COLORS.azure}"/><stop offset="1" stop-color="${COLORS.cyan}"/>
+    </linearGradient>
+    <marker id="sopArr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="${COLORS.slate}"/>
+    </marker>
+  </defs>
+  <rect width="900" height="320" fill="#f8fafc" rx="14"/>
+  <text x="450" y="34" text-anchor="middle" font-family="Segoe UI" font-size="17" font-weight="800" fill="${COLORS.navy}">Cloud Canvas Designer — End-to-End Workflow</text>
+
+  ${[
+    { x: 30,  icon: '👤', title: 'Sign In', sub: 'Free trial · No card' },
+    { x: 175, icon: '🎨', title: 'Start', sub: 'Blank / Template / Import' },
+    { x: 320, icon: '🖱️', title: 'Design', sub: 'Drag · Connect · Group' },
+    { x: 465, icon: '🏛️', title: 'Validate', sub: 'WAF 5 pillars' },
+    { x: 610, icon: '💰', title: 'Cost', sub: 'Live INR / USD' },
+    { x: 755, icon: '📦', title: 'Export', sub: 'TF / Bicep / PNG / PDF' },
+  ].map(s => `
+    <g>
+      <rect x="${s.x}" y="130" width="120" height="120" rx="14" fill="url(#sopStep)"/>
+      <text x="${s.x + 60}" y="170" text-anchor="middle" font-size="34">${s.icon}</text>
+      <text x="${s.x + 60}" y="205" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="13" font-weight="800">${s.title}</text>
+      <text x="${s.x + 60}" y="228" text-anchor="middle" fill="#e0f2fe" font-family="Segoe UI" font-size="10.5">${s.sub}</text>
+    </g>
+  `).join('')}
+
+  ${[
+    { x1: 150, x2: 175 },
+    { x1: 295, x2: 320 },
+    { x1: 440, x2: 465 },
+    { x1: 585, x2: 610 },
+    { x1: 730, x2: 755 },
+  ].map(a => `<line x1="${a.x1}" y1="190" x2="${a.x2}" y2="190" stroke="${COLORS.slate}" stroke-width="2.5" marker-end="url(#sopArr)"/>`).join('')}
+
+  <!-- iterative feedback loop -->
+  <g>
+    <path d="M 525 130 C 525 80, 380 80, 380 130" fill="none" stroke="${COLORS.rose}" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#sopArr)"/>
+    <text x="453" y="76" text-anchor="middle" font-family="Segoe UI" font-size="11" font-weight="700" fill="${COLORS.rose}">↻ Iterate — validation feedback drives re-design</text>
+  </g>
+
+  <text x="450" y="290" text-anchor="middle" font-family="Segoe UI" font-size="12" fill="${COLORS.slate}">Each step is a menu / panel in the app. You can jump back and forth at any time — nothing is one-way.</text>
+</svg>
+`;
+
+// UI anatomy — labeled regions of the app screen
+export const sopUiAnatomySvg = `
+<svg viewBox="0 0 900 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cloud Canvas Designer UI anatomy">
+  <rect width="900" height="460" fill="#f8fafc" rx="14"/>
+  <text x="450" y="30" text-anchor="middle" font-family="Segoe UI" font-size="17" font-weight="800" fill="${COLORS.navy}">Cloud Canvas Designer — UI Anatomy</text>
+
+  <!-- Browser chrome frame -->
+  <rect x="60" y="60" width="780" height="360" rx="12" fill="#ffffff" stroke="${COLORS.mist}" stroke-width="1.5"/>
+
+  <!-- Top toolbar row -->
+  <rect x="60" y="60" width="780" height="42" rx="12" fill="${COLORS.navy}"/>
+  <rect x="60" y="90" width="780" height="12" fill="${COLORS.navy}"/>
+  <circle cx="80" cy="81" r="5" fill="#ef4444"/>
+  <circle cx="96" cy="81" r="5" fill="#f59e0b"/>
+  <circle cx="112" cy="81" r="5" fill="#10b981"/>
+  <text x="450" y="86" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="12" font-weight="700">☁️ Cloud Canvas · Designer</text>
+  <text x="800" y="86" text-anchor="end" fill="#94a3b8" font-family="Segoe UI" font-size="11">👤 User ▾</text>
+
+  <!-- Menu bar -->
+  <rect x="60" y="102" width="780" height="34" fill="#f1f5f9"/>
+  <text x="88" y="123" font-family="Segoe UI" font-size="11" font-weight="600" fill="${COLORS.navy}">📁 File</text>
+  <text x="150" y="123" font-family="Segoe UI" font-size="11" font-weight="600" fill="${COLORS.navy}">📥 Import</text>
+  <text x="230" y="123" font-family="Segoe UI" font-size="11" font-weight="600" fill="${COLORS.navy}">📤 Export</text>
+  <text x="310" y="123" font-family="Segoe UI" font-size="11" font-weight="600" fill="${COLORS.navy}">👁️ View</text>
+  <rect x="670" y="107" width="70" height="22" rx="4" fill="#fee2e2"/>
+  <text x="705" y="122" text-anchor="middle" font-family="Segoe UI" font-size="11" font-weight="700" fill="#b91c1c">Clear</text>
+  <rect x="748" y="107" width="80" height="22" rx="4" fill="#10b981"/>
+  <text x="788" y="122" text-anchor="middle" font-family="Segoe UI" font-size="11" font-weight="700" fill="#fff">Validate</text>
+
+  <!-- Left service panel -->
+  <rect x="60" y="136" width="150" height="284" fill="#0078D4"/>
+  <text x="135" y="158" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="12" font-weight="700">Azure Services</text>
+  <rect x="76" y="170" width="118" height="20" rx="4" fill="#ffffff" opacity="0.15"/>
+  <text x="82" y="184" font-family="Segoe UI" font-size="10" fill="#e0f2fe">🔍 Search services…</text>
+  ${['AI + Machine Learning','Analytics','App Services','Compute','Databases','Networking','Security','Storage'].map((c,i)=>`
+    <text x="82" y="${212 + i*22}" font-family="Segoe UI" font-size="11" font-weight="600" fill="#fff">▸ ${c}</text>
+  `).join('')}
+
+  <!-- Canvas center -->
+  <rect x="210" y="136" width="500" height="284" fill="#ffffff"/>
+  <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e2e8f0" stroke-width="0.5"/></pattern>
+  <rect x="210" y="136" width="500" height="284" fill="url(#grid)"/>
+  <text x="460" y="270" text-anchor="middle" font-family="Segoe UI" font-size="14" font-weight="600" fill="#94a3b8">Drag Azure services here</text>
+  <text x="460" y="290" text-anchor="middle" font-family="Segoe UI" font-size="11" fill="#94a3b8">Double-click a name to edit · Right-click a service to start a connection</text>
+
+  <!-- Right cost panel -->
+  <rect x="710" y="136" width="130" height="284" fill="#fff8eb" stroke="${COLORS.amber}" stroke-width="1"/>
+  <text x="775" y="158" text-anchor="middle" font-family="Segoe UI" font-size="12" font-weight="700" fill="${COLORS.navy}">💰 Cost</text>
+  <text x="775" y="180" text-anchor="middle" font-family="Segoe UI" font-size="10.5" fill="${COLORS.slate}">Region: East US 2</text>
+  <text x="775" y="200" text-anchor="middle" font-family="Segoe UI" font-size="10.5" fill="${COLORS.slate}">Currency: INR</text>
+  <line x1="720" y1="215" x2="830" y2="215" stroke="${COLORS.mist}"/>
+  <text x="775" y="236" text-anchor="middle" font-family="Segoe UI" font-size="10.5" fill="${COLORS.slate}">Add services to</text>
+  <text x="775" y="250" text-anchor="middle" font-family="Segoe UI" font-size="10.5" fill="${COLORS.slate}">see live estimate</text>
+
+  <!-- Callout labels -->
+  <g font-family="Segoe UI" font-size="11" font-weight="700" fill="${COLORS.emerald}">
+    <line x1="30" y1="83" x2="60" y2="83" stroke="${COLORS.emerald}" stroke-width="1.5"/>
+    <text x="10" y="88" text-anchor="end">A</text>
+
+    <line x1="30" y1="119" x2="60" y2="119" stroke="${COLORS.emerald}" stroke-width="1.5"/>
+    <text x="10" y="124" text-anchor="end">B</text>
+
+    <line x1="30" y1="270" x2="60" y2="270" stroke="${COLORS.emerald}" stroke-width="1.5"/>
+    <text x="10" y="275" text-anchor="end">C</text>
+
+    <line x1="460" y1="440" x2="460" y2="425" stroke="${COLORS.emerald}" stroke-width="1.5"/>
+    <text x="460" y="454" text-anchor="middle">D</text>
+
+    <line x1="870" y1="270" x2="840" y2="270" stroke="${COLORS.emerald}" stroke-width="1.5"/>
+    <text x="890" y="275" text-anchor="start">E</text>
+  </g>
+
+  <!-- Legend -->
+  <g font-family="Segoe UI" font-size="10" fill="${COLORS.navy}">
+    <text x="60" y="452" font-weight="700">A</text>
+    <text x="80" y="452">Brand · user menu</text>
+    <text x="230" y="452" font-weight="700">B</text>
+    <text x="250" y="452">Menus (File/Import/Export/View) + Validate</text>
+  </g>
+</svg>
+`;
+
 // Map diagram IDs to SVGs for easy lookup from markdown
 export const diagramBySlug = {
   hubSpoke: hubSpokeSvg,
@@ -770,6 +902,8 @@ export const diagramBySlug = {
   drActivePassive: drActivePassiveSvg,
   paymentsArch: paymentsArchSvg,
   dataMesh: dataMeshSvg,
+  sopWorkflow: sopWorkflowSvg,
+  sopUiAnatomy: sopUiAnatomySvg,
 };
 
 // ============== ADDITIONAL DIAGRAMS ==============
