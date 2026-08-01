@@ -639,6 +639,66 @@ export const blogArticles = [
     icon: '🏛️',
     author: "Arunim's IT Café",
   },
+  {
+    slug: 'azure-resource-id-anatomy',
+    title: 'The Anatomy of an Azure Resource ID: Read /subscriptions/... Like a Pro',
+    excerpt: 'Every Azure error, permission, and policy touches a resource ID. Learn to parse them fluently and cut half your troubleshooting time.',
+    category: 'Best Practices',
+    readTime: '10 min',
+    date: '2026-08-01',
+    icon: '🔬',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'blast-radius-analysis-azure',
+    title: 'Blast Radius Analysis on Azure: Predicting What Breaks When One Thing Fails',
+    excerpt: 'Turn any architecture diagram into a failure-domain map. A repeatable method to answer "if this dies, what dies with it?".',
+    category: 'Architecture',
+    readTime: '12 min',
+    date: '2026-08-01',
+    icon: '💥',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'availability-zones-sets-regions',
+    title: 'Availability Zones vs Availability Sets vs Regions: The Real Failure Domains',
+    excerpt: 'The three concepts most Azure architecture reviews get wrong. What each protects against, when they overlap, and what to draw on the diagram.',
+    category: 'Best Practices',
+    readTime: '11 min',
+    date: '2026-08-01',
+    icon: '🌐',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'reading-terraform-plan-reviewer',
+    title: 'Reading a Terraform Plan Like a Reviewer: The Signal in the Noise',
+    excerpt: 'A pull-request checklist for HCL changes — replace-not-update, drift, blast radius, and the ten diffs that should always block a merge.',
+    category: 'DevOps',
+    readTime: '12 min',
+    date: '2026-08-01',
+    icon: '🔍',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'azure-resource-graph-20-queries',
+    title: 'Azure Resource Graph: 20 Queries That Save Hours Every Week',
+    excerpt: 'ARG is the SELECT * FROM every-resource-in-your-tenant that most engineers never learn. Twenty copy-paste queries organized by real problems.',
+    category: 'Observability',
+    readTime: '13 min',
+    date: '2026-08-01',
+    icon: '📊',
+    author: "Arunim's IT Café",
+  },
+  {
+    slug: 'reverse-engineering-azure-estate',
+    title: 'Reverse-Engineering an Azure Estate: From Chaos to Diagram in a Day',
+    excerpt: 'You inherit a subscription. Nobody knows what runs where. A one-day method to turn 4,000 undocumented resources into an accurate architecture diagram.',
+    category: 'Architecture',
+    readTime: '14 min',
+    date: '2026-08-01',
+    icon: '🗺️',
+    author: "Arunim's IT Café",
+  },
 ];
 
 export const articleContent = {};
@@ -6835,3 +6895,844 @@ Payroll, accounting, HR — common enterprise systems often have SaaS alternativ
 ## Closing
 
 Mainframe migration is a portfolio decision. Rehost the complex stuff, replace the commodity stuff, rewrite only what truly needs it. Patience and pragmatism win.`;
+
+
+// ============================================================
+// ARTICLE: azure-resource-id-anatomy
+// ============================================================
+articleContent['azure-resource-id-anatomy'] = `# The Anatomy of an Azure Resource ID: Read /subscriptions/... Like a Pro
+
+Every Azure error message, every RBAC assignment, every Azure Policy exemption, every deployment log — they all boil down to the same thing: a resource ID. Yet most engineers scan past those long slash-separated strings, only pattern-matching for the resource name.
+
+Learn to read a resource ID in full and half your Azure troubleshooting time disappears.
+
+## The shape
+
+The canonical form:
+
+\`\`\`
+/subscriptions/{subscription-id}
+/resourceGroups/{resource-group-name}
+/providers/{provider-namespace}
+/{resource-type}/{resource-name}
+[/{child-resource-type}/{child-resource-name}]
+\`\`\`
+
+A real example:
+
+\`\`\`
+/subscriptions/12345678-abcd-1234-abcd-1234567890ab
+/resourceGroups/rg-prod-eastus2-networking
+/providers/Microsoft.Network
+/virtualNetworks/vnet-hub-prod
+/subnets/snet-firewall
+\`\`\`
+
+Read left-to-right and the ID tells you a story:
+
+- Which subscription owns it
+- Which resource group it lives in
+- Which Azure resource provider handles it
+- What kind of resource it is
+- Its human-friendly name
+- Any nested child under it
+
+## Why every segment matters
+
+### /subscriptions/{id}
+This is where the billing lives. Cost queries, quota limits, spending alerts — all scoped here.
+Also RBAC inheritance boundary: role assignments at this level apply to everything below.
+
+### /resourceGroups/{name}
+Not just a container. The RG has:
+- Its own location (the metadata region; different from the resources' region)
+- Lifecycle boundary — \`az group delete\` nukes everything under it
+- Its own RBAC scope, lock scope, tag inheritance
+
+If someone deleted 60 VMs "by accident", 90% of the time they deleted the RG.
+
+### /providers/{namespace}
+The service family. \`Microsoft.Compute\`, \`Microsoft.Storage\`, \`Microsoft.Network\`. Every provider ships its own resource types, its own API versions, its own throttle limits.
+
+When you see \`ProviderNotRegistered\`, this is what needs registering:
+\`\`\`bash
+az provider register --namespace Microsoft.ContainerService
+\`\`\`
+
+### /{resource-type}/{resource-name}
+The provider-specific type. Under \`Microsoft.Compute\` you get \`virtualMachines\`, \`disks\`, \`availabilitySets\`. The name is unique within its parent scope.
+
+### Child resources
+Nested things: a subnet under a VNet, a container under a storage account, a rule under a firewall policy. Same rules as parent but the ID keeps chaining.
+
+## What resource IDs solve
+
+### 1. Debugging permissions
+
+Error: \`AuthorizationFailed: 'user@corp.com' does not have permission to perform action 'Microsoft.Storage/storageAccounts/listKeys/action' over scope '/subscriptions/.../resourceGroups/rg-x/providers/Microsoft.Storage/storageAccounts/stprod01'\`.
+
+Read the ID: the user needs \`Microsoft.Storage/storageAccounts/listKeys/action\` on \`stprod01\`. The fix is a role assignment scoped exactly there — not a subscription-wide grant.
+
+### 2. Cross-region and cross-subscription references
+
+Bicep and Terraform accept resource IDs directly. To attach a VM in subscription A to a Log Analytics workspace in subscription B, you don't need a special construct — just pass the workspace's full resource ID.
+
+### 3. Diagnostic settings, policies, private endpoints
+
+All of them are just: "apply this behavior to this resource ID". If you write policies or diagnostic exports as code, resource IDs are your entire vocabulary.
+
+### 4. Cost analysis
+
+Cost Management exports include the resource ID. You can group cost by provider, by RG, by resource type — but only if you know how to slice the ID.
+
+## Common patterns and quirks
+
+**Resource groups aren't in the providers section.** Their ID stops at \`/resourceGroups/{name}\`. Everything else has the provider namespace.
+
+**Tenant-level resources exist too.** Management groups look like \`/providers/Microsoft.Management/managementGroups/{name}\` — no subscription, no RG.
+
+**Case-insensitivity is a lie.** Azure treats resource IDs as case-insensitive at the API layer, but many downstream tools (Terraform state, Log Analytics queries) are case-sensitive. Pick a case (lowercase segments) and stick to it.
+
+**Subscription IDs are GUIDs, not names.** Never hard-code them in templates. Reference them via variables or the current context (\`data.azurerm_client_config.current.subscription_id\`).
+
+## A trick: turn any Azure Portal URL into a resource ID
+
+Open any resource in the portal. The URL fragment looks like:
+
+\`\`\`
+https://portal.azure.com/#@tenant/resource
+  /subscriptions/12345.../resourceGroups/rg-x/providers/Microsoft.Web/sites/app-prod
+/overview
+\`\`\`
+
+The resource ID is the middle chunk. Copy from \`/subscriptions/\` to just before \`/overview\` and you have a canonical ID you can paste into any CLI, template, or ticket.
+
+## Portable helpers
+
+\`\`\`bash
+# Get the resource ID of anything by name
+az resource show --name my-vm --resource-group rg-x --resource-type Microsoft.Compute/virtualMachines --query id -o tsv
+
+# List all resource IDs in an RG
+az resource list --resource-group rg-x --query "[].id" -o tsv
+\`\`\`
+
+## Closing
+
+The resource ID is Azure's primary key. Every service, every access decision, every automation flows through it. Learn it once, save a career's worth of debugging time.`;
+
+
+// ============================================================
+// ARTICLE: blast-radius-analysis-azure
+// ============================================================
+articleContent['blast-radius-analysis-azure'] = `# Blast Radius Analysis on Azure: Predicting What Breaks When One Thing Fails
+
+Reliability reviews usually ask "what happens if this fails?" and then people wave hands about "we have HA". That is not an answer. **Blast radius analysis** turns the question into a repeatable table: for every component on your diagram, list what dies with it.
+
+Every architecture review, WAF assessment, and disaster recovery drill starts from this table. Yet almost nobody builds it.
+
+## Three failure planes
+
+Every Azure resource lives on three planes, and each has its own blast radius:
+
+1. **Data plane** — the thing that serves customer traffic (VM CPU, blob reads, cosmos queries).
+2. **Control plane** — the thing that changes the resource (ARM, portal, CLI, RBAC checks).
+3. **Management plane** — the thing that observes the resource (Azure Monitor, alerts, diagnostics).
+
+When people say "AKS is down" they usually mean one of these. Being precise about which one lets you make different design choices per plane.
+
+Example: an ARM outage in Azure US-East-2 means you cannot deploy new resources or change RBAC, but existing workloads that don't call ARM keep serving traffic. That's a control-plane blast radius, not data-plane.
+
+## The blast-radius table
+
+For each component on your diagram, fill this table:
+
+| Layer | What fails | Direct blast | Cascade blast | Blast time |
+|-------|-----------|--------------|---------------|-----------|
+| Data | VM disk corrupt | This VM | Any app pinned to it | Seconds |
+| Data | AZ down | All resources in that AZ | Any single-AZ resource | Minutes |
+| Data | Region down | Whole region | Any single-region service | Hours |
+| Control | ARM regional outage | New deploys blocked | Scaling out blocked | Minutes-hours |
+| Control | Entra ID outage | Every AAD-authenticated call | Any service using AAD tokens | Hours (global) |
+| Mgmt | Log Analytics outage | Metrics/logs lost | Auto-scaling that relies on metrics | Hours |
+
+## How to run the analysis
+
+### Step 1 — Enumerate the atoms
+
+Every VM, every subnet, every managed disk, every DNS zone, every VNet peering. On a Cloud Canvas diagram this is just "list every icon".
+
+### Step 2 — Classify by shared fate
+
+Group resources by what they share:
+- Same AZ (single AZ = single fate)
+- Same region (regional = shared fate for regional outages)
+- Same subscription (subscription throttle limits are shared)
+- Same private endpoint (private DNS resolution failure = every consumer breaks)
+- Same identity (compromised managed identity = every resource it can touch)
+
+### Step 3 — Draw the fault tree
+
+For each "root failure" (AZ down, disk lost, cert expired, region gone), draw arrows to everything that dies with it. This is your fault tree.
+
+The number of arrows out of a single node = its blast radius.
+
+### Step 4 — Score and rank
+
+The three questions:
+1. **Blast size** — how many things break?
+2. **Blast probability** — how often does the root fail?
+3. **Blast recovery** — how long until we're back?
+
+Multiply and rank. Fix the top three.
+
+## Common Azure blast-radius traps
+
+### Trap 1 — Regional Front Door with global back-end
+Azure Front Door is a global service, but each origin is regional. If your only origin is East US 2, you have a globally-fronted, single-region app. That is a very common misdesign.
+
+### Trap 2 — Single Key Vault, everywhere
+Every AKS pull, every function config load, every managed-identity secret request routes through a Key Vault. If that Key Vault is single-region, all consumers become effectively single-region on secret rotation.
+
+### Trap 3 — Private DNS zone with one link
+A private DNS zone linked only to the hub VNet works fine — until the hub is being maintained. Now every spoke loses name resolution.
+
+### Trap 4 — One route table, many spokes
+Central UDR pointing to Azure Firewall = every packet from every spoke transits one appliance. Blast radius = every spoke's traffic.
+
+### Trap 5 — Shared managed identity
+A user-assigned managed identity granted access to many resources becomes a shared credential. Rotating or misconfiguring it breaks every consumer.
+
+### Trap 6 — Cosmos DB single-region write
+Multi-region reads with single-region writes has a distinctive blast radius: reads survive, writes don't. Distinct from "full outage".
+
+## Turn blast-radius into design decisions
+
+Once the table is done, three questions drive design:
+
+- **Can we make the blast smaller?** (segment tenants into separate storage accounts, separate identities)
+- **Can we make the recovery faster?** (paired region with data replication + Traffic Manager)
+- **Can we make the failure detectable?** (health probes on the specific plane that fails first)
+
+Not everything needs mitigation. Some blast radius is acceptable — a batch job that reruns fine tomorrow may deserve zero mitigation. The goal is _consciously accepting_ blast radius, not accidentally shipping it.
+
+## In Cloud Canvas Designer
+
+Boundary zones on the canvas are literally blast radius markers. Wrap every group that shares fate (AZ, region, subscription, identity) in a boundary. Now the blast radius is visible in the diagram itself, not hidden in a spreadsheet nobody opens.
+
+## Closing
+
+Reliability isn't "our system is up". It's "we know what falls with what, and we chose those coupling points on purpose". Blast radius analysis is how architects move from hope to intent.`;
+
+
+// ============================================================
+// ARTICLE: availability-zones-sets-regions
+// ============================================================
+articleContent['availability-zones-sets-regions'] = `# Availability Zones vs Availability Sets vs Regions: The Real Failure Domains
+
+If you have ever been in an Azure architecture review, you have watched three concepts collide: **regions**, **availability zones**, and **availability sets**. They sound similar, they overlap in Azure Portal dropdowns, and they're constantly used interchangeably in tickets. They protect against very different things.
+
+## Regions — geography
+
+A **region** is a physical geography. West Europe. Central India. East US 2. Each region has multiple data centers, its own peering, its own set of services (not every region has every service), and its own compliance posture.
+
+- **Protects against:** country-scale disaster, region-wide network partition, regulatory boundary violation.
+- **Fails together:** every service in that region during a full outage. Historically rare, but has happened (Azure South Central US, September 2018).
+- **Distance from other regions:** hundreds to thousands of kilometers.
+
+**Paired region** is a Microsoft-managed pairing (East US pairs with West US, North Europe with West Europe). Some Azure services (Storage GRS, ASR) use the pair implicitly. Not all regions are paired — check the region docs.
+
+## Availability zones — power/network isolation inside a region
+
+A **zone** is a set of one or more data centers within a region, isolated on power, cooling, and network. A region with zones has at least 3 zones. Physical distance between zones is usually 10-40 km.
+
+- **Protects against:** single data-center failure, single-zone network incident, single power grid failure.
+- **Fails together:** every resource pinned to that specific zone.
+- **Distance:** sub-region, same metro.
+
+Not all regions have zones. Zone-enabled regions include East US 2, West Europe, Central India, Southeast Asia, and about 30 more. Check \`az account list-locations\` output for \`availabilityZoneMappings\`.
+
+**Zone types:**
+- **Zonal** — resource pinned to one specific zone (e.g. a zonal VM in zone 2).
+- **Zone-redundant** — resource spread across all 3 zones by the platform (e.g. zone-redundant storage, standard load balancer).
+
+## Availability sets — anti-affinity, no zones needed
+
+An **availability set** is a logical grouping that tells Azure to spread the VMs inside it across **fault domains** and **update domains** within a single data center (or across old-style non-zonal DCs).
+
+- **Fault domain (FD):** shared rack / power / TOR switch. Default 2 (up to 3).
+- **Update domain (UD):** VMs updated together during Azure host maintenance. Default 5 (up to 20).
+
+- **Protects against:** single rack failure, single host update-cycle downtime.
+- **Fails together:** VMs sharing the same FD or UD (the whole point is to _not_ share).
+- **Does not protect against:** data center failure or zone failure.
+
+Availability sets are the older model, from before zones existed. In every zone-enabled region, prefer zones. Sets remain useful when the region has no zones, or for VMs you want spread by FD/UD without pinning to a zone number.
+
+## The overlap that trips people up
+
+| Failure event | Region protection | AZ protection | AV Set protection |
+|---------------|-------------------|---------------|-------------------|
+| Single rack / TOR switch | ✓ | ✓ | ✓ |
+| Host update reboot | ✓ | ✓ | ✓ (UD) |
+| Whole data center | ✓ (other DC in region) | ✓ (if resources are in other zones) | ✗ |
+| Full zone loss | ✓ | ✓ (if zone-redundant) | ✗ |
+| Full region outage | ✓ (if multi-region) | ✗ | ✗ |
+| Physical site (metro) disaster | ✓ (paired region) | ✗ | ✗ |
+
+## The rules of thumb
+
+1. **In a zone-enabled region:** use zones. Zonal for zone-aware apps, zone-redundant for stateless services.
+2. **In a non-zonal region:** availability sets are your only intra-region option.
+3. **For regional protection:** multi-region deployment + paired region for storage replication.
+4. **Never mix:** an availability set cannot span zones. A single VM cannot be in both an AV set and a zone.
+
+## Common misconceptions
+
+**"Zone-redundant means 3x cost."** Not necessarily. Zone-redundant storage (ZRS) costs the same LRS variant plus a small redundancy premium. Zone-redundant standard load balancer is one LB, not three.
+
+**"Availability sets provide DR."** They don't. Same building.
+
+**"Zones are optional; if I don't pick one, Azure spreads for me."** Only for zone-redundant _services_. A regular VM with no zone specified is pinned to whichever zone Azure picks and shares fate with everything in that zone.
+
+**"Multi-region equals highly available."** Only if you actually route to the healthy one. Traffic Manager / Front Door + health probes are required. A cold standby in another region only helps if you promote it fast.
+
+## Design defaults for a new workload
+
+- Deployment region: pick from paired-and-zonal list. This gives you every resiliency tool.
+- Stateless tier (App Service, AKS worker pools, VM scale sets): span all 3 zones.
+- Stateful tier (SQL MI, storage, Cosmos): zone-redundant configuration.
+- Regional back-up: Geo-Redundant Storage (GRS) or Cosmos multi-region with the paired region as second write region.
+- Global routing: Front Door with health probes on origin.
+
+## What to draw on the diagram
+
+- Region label at the outermost boundary.
+- Zone labels (Z1, Z2, Z3) on subgroups.
+- Any resource with **no zone information** is worth flagging — that's either an implicit zone (bad) or a truly zonal-agnostic service (also fine, but worth being explicit).
+- Availability set → draw as a dashed box around the VMs it groups.
+
+## Closing
+
+Zones, sets, and regions each buy you resilience against a specific class of failure. Pick per class, not by tradition. And whatever you pick — make it explicit on the diagram so the next reviewer doesn't have to guess.`;
+
+
+// ============================================================
+// ARTICLE: reading-terraform-plan-reviewer
+// ============================================================
+articleContent['reading-terraform-plan-reviewer'] = `# Reading a Terraform Plan Like a Reviewer: The Signal in the Noise
+
+Writing Terraform is a taught skill. **Reviewing Terraform** is not. Yet in every mature team, most engineers spend more time reviewing infrastructure PRs than writing them. And most of those reviews are three comments deep and stop at "LGTM".
+
+A Terraform plan is a testable artifact. Read it right and you can catch outages before merge. Here is the reviewer's mental model.
+
+## The three plan states that matter
+
+Every resource in a plan is in one of four states. Two of them are safe. Two of them will ruin your day.
+
+\`\`\`
++ create              → new resource. Safe by default.
+~ update in-place     → existing resource, mutated. Usually safe.
+-/+ replace           → destroy + recreate. Dangerous. Downtime.
+- destroy             → gone. Very dangerous.
+\`\`\`
+
+The first review pass is _mechanical_: grep for \`-/+\` and \`-\`. Anything with those needs justification in the PR description.
+
+\`\`\`bash
+terraform show -no-color tfplan | grep -E "^  [-+~]"
+\`\`\`
+
+## Ten diffs that should always block a merge
+
+1. **Any \`-/+\` on a stateful resource** (database, storage account, disk). Data-plane recreate = data gone unless there is an explicit backup path.
+2. **A rename that becomes replace**. Renaming a resource in HCL usually means Terraform destroys the old and creates a new one under the new name. If it's tied to DNS, IP, or a policy assignment — outage.
+3. **Any resource losing its \`prevent_destroy\`**. This is intentional in most codebases and removing it is a red flag.
+4. **Force-new tags with lifecycle drift**. If \`ignore_changes\` used to cover \`tags\` and someone removed the block, the plan will churn every apply.
+5. **Provider version bump inside a large PR**. Provider upgrades subtly change resource schemas; they should ship in a dedicated PR.
+6. **Backend / state configuration changes**. \`terraform init -migrate-state\` is a live grenade. Backend edits belong in their own commit with a runbook.
+7. **Data source that reads a specific tag / name that a colleague can override**. Non-deterministic plans = drift over time.
+8. **Any resource with \`ignore_changes = all\`**. That's not IaC, that's "please don't touch this". Legitimate for imported legacy, but requires a comment.
+9. **A public IP getting created without an explicit NSG rule**. If the plan opens a public endpoint, that must be intentional and audit-logged.
+10. **A subnet / VNet address space change**. This is not "update in-place" in reality — every resource in that subnet is affected. Usually a full replace.
+
+## Read the plan header, not just the diff
+
+Terraform prints something like:
+
+\`\`\`
+Plan: 14 to add, 3 to change, 7 to destroy.
+\`\`\`
+
+The three numbers are your reviewer sanity check.
+
+- **Adds are cheap** — usually a new module, new environment, new resource.
+- **Changes are the meat** — must be examined for whether they are in-place or replace.
+- **Destroys are the alarm** — any non-zero destroy count on a shared/production workspace deserves a stop-and-explain.
+
+If you review a PR titled "add tag to VM" and the plan says "5 to destroy", something is very wrong — probably a state drift or a moved module.
+
+## Detect the "move" pattern
+
+The \`moved\` block was added to keep refactors from becoming rewrites:
+
+\`\`\`hcl
+moved {
+  from = azurerm_virtual_machine.web
+  to   = azurerm_virtual_machine.web_prod
+}
+\`\`\`
+
+If a PR renames a resource but doesn't add a \`moved\` block, Terraform will destroy + recreate. Ask for the \`moved\` block before approving.
+
+## Detect the "count → for_each" refactor
+
+When someone converts \`count\` to \`for_each\`, the index changes from \`[0]\`, \`[1]\` to string keys. Terraform sees this as "destroy indexed, create keyed" — a full flip.
+
+The mitigation is again \`moved\`, applied per instance. If the PR doesn't have them, every existing instance will be recreated.
+
+## Detect environment cross-talk
+
+Look at the workspace name in the plan header. Watch for:
+- Plan says \`workspace: prod\` but the PR title says "dev change" → wrong workspace selected.
+- Plan says \`workspace: default\` in a monorepo that has environment workspaces → someone deleted the workspace config accidentally.
+
+## The "why is this in the plan" questions
+
+For every \`~\` (update-in-place), scroll past the emoji-heavy output and ask:
+
+- Was the change requested by the PR, or is it drift?
+- Is it a change to an argument I've never seen used before? (Providers add new arguments; sometimes they show as diffs.)
+- Is the change reversible without downtime?
+- Will the change trigger a downstream update (e.g., app restart, container image pull)?
+
+Some \`~\` items are "provider version added a new nullable field" — pure noise. Others are "the SSH port on the jumpbox is being changed to 22 from 2222" — very much not noise.
+
+## Tools that help
+
+- **\`terraform show -json tfplan\`** — structured JSON output. Feed to \`jq\` for programmatic filters.
+- **\`tf-summarize\`** — prints a compact table of adds/changes/destroys per resource type.
+- **OPA / Conftest** — write rules like "no public IPs on any storage account" and fail the plan in CI.
+- **Infracost** — cost diff per plan. Reviewer sees "this PR adds ₹32,000/month" up-front.
+
+## Checklist for reviewers
+
+- [ ] Plan header numbers match the PR description
+- [ ] No \`-\` or \`-/+\` on stateful resources unless explicitly explained
+- [ ] Renames use \`moved\` blocks
+- [ ] Provider upgrade lives in its own PR
+- [ ] Sensitive attributes (secrets, private IPs) not being logged
+- [ ] Blast radius considered (see the blast radius article)
+- [ ] Rollback path is a single git revert + apply (no data-loss steps)
+
+## Closing
+
+Reviewing infra is different from reviewing code. Code has behavior; infra has _state_. The plan is your only view into the state change. Learn to read it and every deploy gets safer.`;
+
+
+// ============================================================
+// ARTICLE: azure-resource-graph-20-queries
+// ============================================================
+articleContent['azure-resource-graph-20-queries'] = `# Azure Resource Graph: 20 Queries That Save Hours Every Week
+
+Azure Resource Graph (ARG) is one of those features that quietly does the work of ten scripts. It is a Kusto-flavored query engine over Microsoft.Resources data for every subscription you can see. One query, one command, thousands of resources scanned in a second. Yet most engineers never open it.
+
+If you spend any time hunting resources in the portal, this article is a permanent tab.
+
+## Getting started
+
+Two ways to run ARG:
+
+1. Portal — search "Resource Graph Explorer".
+2. CLI — \`az graph query -q "..."\`. For output > 1000 rows, add \`--first 1000\` (max page) and paginate with \`--skip-token\`.
+
+Every query below is copy-paste ready.
+
+## Inventory queries
+
+### 1. Every resource in every subscription you can see
+
+\`\`\`kusto
+Resources
+| project id, name, type, location, resourceGroup, subscriptionId
+\`\`\`
+
+### 2. Resource count per subscription per type
+
+\`\`\`kusto
+Resources
+| summarize count() by subscriptionId, type
+| order by count_ desc
+\`\`\`
+
+### 3. Every resource missing a required tag
+
+\`\`\`kusto
+Resources
+| where isnull(tags['owner']) or tags['owner'] == ''
+| project name, type, resourceGroup, subscriptionId
+\`\`\`
+
+Rename \`owner\` to whatever your governance requires.
+
+### 4. Untagged resources by cost weight (heavy hitters first)
+
+\`\`\`kusto
+Resources
+| where isnull(tags)
+| project name, type, location, resourceGroup
+| join kind=leftouter (
+    Resources
+    | where type == "microsoft.consumption/costquery"
+) on name
+| top 100 by name
+\`\`\`
+
+## Networking queries
+
+### 5. Every public IP in your tenant
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.network/publicipaddresses"
+| project name, ip=tostring(properties.ipAddress), sku=tostring(sku.name), attachedTo=tostring(properties.ipConfiguration.id)
+\`\`\`
+
+### 6. Every NSG rule allowing 0.0.0.0/0 inbound
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.network/networksecuritygroups"
+| mv-expand rules = properties.securityRules
+| where rules.properties.direction == "Inbound"
+    and rules.properties.access == "Allow"
+    and rules.properties.sourceAddressPrefix in ("*", "0.0.0.0/0", "Internet")
+| project nsg=name, rule=rules.name, ports=rules.properties.destinationPortRange
+\`\`\`
+
+Every SecOps person should have this bookmarked.
+
+### 7. Orphaned NICs (no VM attached)
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.network/networkinterfaces"
+| where isnull(properties.virtualMachine)
+| project name, resourceGroup, subscriptionId
+\`\`\`
+
+### 8. VNet peerings across subscriptions
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.network/virtualnetworks"
+| mv-expand peer=properties.virtualNetworkPeerings
+| project vnet=name, peerName=peer.name, remoteId=peer.properties.remoteVirtualNetwork.id
+\`\`\`
+
+## Cost hunting queries
+
+### 9. All VMs by size, sorted by count
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.compute/virtualmachines"
+| summarize count() by size=tostring(properties.hardwareProfile.vmSize)
+| order by count_ desc
+\`\`\`
+
+Are you paying for Ds_v3 when Ds_v5 would be cheaper AND faster? This tells you.
+
+### 10. Unused (unattached) managed disks
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.compute/disks"
+| where properties.diskState == "Unattached"
+| project name, resourceGroup, sizeGB=properties.diskSizeGB, sku=tostring(sku.name)
+| order by sizeGB desc
+\`\`\`
+
+Direct cost savings, every time. Standard Azure hygiene.
+
+### 11. Stopped-but-not-deallocated VMs (still charging you)
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.compute/virtualmachines"
+| extend state = properties.extended.instanceView.powerState.code
+| where state == "PowerState/stopped"
+| project name, state
+\`\`\`
+
+\`stopped\` costs money. \`stopped (deallocated)\` doesn't. Fix these.
+
+### 12. Every storage account with GRS (paying 2x for redundancy)
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.storage/storageaccounts"
+| where sku.name has "GRS"
+| project name, sku=tostring(sku.name), resourceGroup
+\`\`\`
+
+Then check: does this workload actually need geo-redundancy?
+
+## Security posture queries
+
+### 13. Storage accounts allowing public blob access
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.storage/storageaccounts"
+| where properties.allowBlobPublicAccess == true
+| project name, resourceGroup, subscriptionId
+\`\`\`
+
+### 14. Key Vaults with soft-delete or purge protection disabled
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.keyvault/vaults"
+| where properties.enableSoftDelete == false
+    or properties.enablePurgeProtection != true
+| project name, softDelete=properties.enableSoftDelete, purgeProtect=properties.enablePurgeProtection
+\`\`\`
+
+### 15. Databases with public endpoint enabled
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.sql/servers"
+| where properties.publicNetworkAccess == "Enabled"
+| project name, resourceGroup
+\`\`\`
+
+## Compute inventory queries
+
+### 16. VMs missing Azure Monitor Agent
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.compute/virtualmachines"
+| join kind=leftouter (
+    Resources
+    | where type == "microsoft.compute/virtualmachines/extensions"
+    | where properties.type in ("AzureMonitorLinuxAgent", "AzureMonitorWindowsAgent")
+    | project vmId=tolower(substring(id, 0, indexof(id, "/extensions/")))
+  ) on $left.id == $right.vmId
+| where isnull(vmId)
+| project name, resourceGroup, subscriptionId
+\`\`\`
+
+### 17. AKS clusters and their versions
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.containerservice/managedclusters"
+| project name, k8sVersion=tostring(properties.kubernetesVersion), rg=resourceGroup, sub=subscriptionId
+| order by k8sVersion asc
+\`\`\`
+
+The lowest-version cluster is your patch target.
+
+### 18. Every resource in an unpaired region
+
+\`\`\`kusto
+Resources
+| where location in ("westindia", "brazilsouth")  // regions without a formal pair
+| summarize count() by type, location
+\`\`\`
+
+## Governance queries
+
+### 19. Resources deployed outside allowed regions
+
+\`\`\`kusto
+Resources
+| where location !in ("eastus2", "westeurope", "centralindia")
+| project name, type, location, resourceGroup
+\`\`\`
+
+Replace the allowed list with your policy scope.
+
+### 20. RBAC role assignments across every subscription
+
+\`\`\`kusto
+AuthorizationResources
+| where type == "microsoft.authorization/roleassignments"
+| project principalId=properties.principalId, role=properties.roleDefinitionId, scope=properties.scope
+\`\`\`
+
+Cross-reference with Entra ID to see who has Owner on what.
+
+## Automation
+
+- Export any of these to CSV: \`az graph query -q "..." --output tsv > out.tsv\`
+- Wrap in an Azure Function on a timer for nightly reports.
+- Feed into Log Analytics for alerting on new drift (e.g., a public IP appearing where none should be).
+
+## Closing
+
+ARG turns "let me open ten portal tabs" into "one query, twenty subscriptions, five seconds". Every governance, cost, and security task in Azure has an ARG one-liner sitting in it. Learn KQL basics, keep this article open, and stop clicking around.`;
+
+
+// ============================================================
+// ARTICLE: reverse-engineering-azure-estate
+// ============================================================
+articleContent['reverse-engineering-azure-estate'] = `# Reverse-Engineering an Azure Estate: From Chaos to Diagram in a Day
+
+You inherit an Azure subscription. There's no runbook, no architecture diagram, no owner Slack channel. The last person who touched it left the company six months ago. You are told to "make sense of it" by Friday.
+
+This is one of the most common real jobs in enterprise Azure — and it doesn't need to take weeks. In one focused day, you can go from a mystery subscription to a defensible architecture diagram. Here is the method.
+
+## Set the scope first
+
+Before pulling any data:
+
+1. What does "make sense of it" actually mean? Diagram? Cost breakdown? Security posture? Migration inventory?
+2. What subscription(s) are in scope? IDs, not names.
+3. Do you have read-only access to every resource type? (Some require Key Vault Reader, Log Analytics Reader, etc.)
+4. What's the reporting artifact? A diagram, a spreadsheet, a slide deck?
+
+Write these down. This is the single artifact you defend at the end of the day.
+
+## Hour 1 — Snapshot everything
+
+Pull a complete resource inventory with metadata. Two ways.
+
+**Fast** — Azure Resource Graph:
+
+\`\`\`bash
+az graph query -q "Resources | project id, name, type, location, resourceGroup, subscriptionId, kind, sku, properties" --first 1000 --output json > estate.json
+\`\`\`
+
+For > 1000 resources, paginate with \`--skip-token\`.
+
+**Complete** — ARM template export per resource group:
+
+\`\`\`bash
+for rg in $(az group list --query "[].name" -o tsv); do
+  az group export --name "$rg" --output-folder ./exports/ 2>/dev/null
+done
+\`\`\`
+
+The ARM export captures the resource wiring (which NIC attaches to which VM, which subnet holds which endpoint) — the ARG snapshot doesn't always.
+
+## Hour 2 — Classify at the resource-group level
+
+Group the resources by RG. Ask two questions per RG:
+
+- What's its **purpose**? (compute, data, network, shared services, monitoring)
+- What's its **environment**? (prod, staging, dev — from tags or naming)
+
+This gives you your first mental partition. Most estates have 3-10 meaningful "logical clusters" hidden inside dozens of resource groups.
+
+If your estate is > 20 RGs and none of this classification is possible from names or tags — that itself is your first finding to report.
+
+## Hour 3 — Map the network
+
+Networking is the skeleton. Everything else hangs off it. Query:
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.network/virtualnetworks"
+| project name, addressSpace=properties.addressSpace.addressPrefixes, subnets=properties.subnets, peerings=properties.virtualNetworkPeerings
+\`\`\`
+
+Draw the VNets, their address spaces, and every peering as an edge. Peerings show you the hub, the spokes, and the isolation seams.
+
+Then:
+
+\`\`\`kusto
+Resources
+| where type == "microsoft.network/networksecuritygroups"
+| project name, rg=resourceGroup, subnet=properties.subnets, nic=properties.networkInterfaces
+\`\`\`
+
+Overlay the NSGs onto their subnets. You now have a defensible network topology.
+
+## Hour 4 — Map compute onto the network
+
+Every workload lives on a subnet. Pull VMs, VMSSes, AKS clusters, App Service ASE, Container Apps, Function App integrations, Private Endpoints:
+
+\`\`\`kusto
+Resources
+| where type in ("microsoft.compute/virtualmachines","microsoft.containerservice/managedclusters","microsoft.web/sites","microsoft.web/serverfarms","microsoft.app/containerapps")
+| project name, type, kind, resourceGroup, subnetOrNic=properties.networkProfile
+\`\`\`
+
+For each workload, drop it into the diagram in the correct subnet. Now the network has _things_ on it.
+
+## Hour 5 — Map data and identity
+
+Same trick for storage, databases, Cosmos, Key Vault, Service Bus, Event Hubs, Redis. Add them to the diagram grouped by RG. Then find their connections:
+
+- Which VMs / apps read which storage? — Look at diagnostic settings, Managed Identity role assignments.
+- Which Key Vault serves which app? — App Service config, AKS CSI, managed identity assignments.
+
+You now have services, network, and data. Identity binds them.
+
+Query all role assignments:
+
+\`\`\`kusto
+AuthorizationResources
+| where type == "microsoft.authorization/roleassignments"
+| project scope=properties.scope, principalId=properties.principalId, roleDefId=properties.roleDefinitionId
+\`\`\`
+
+For every role assignment, draw a dotted line from the principal (VM MI, function MI, user) to the scoped resource. Trust flows appear.
+
+## Hour 6 — Cost overlay
+
+Query Cost Management (last 30 days) grouped by resource:
+
+\`\`\`bash
+az consumption usage list --start-date 2026-07-01 --end-date 2026-07-31 --output json > cost.json
+\`\`\`
+
+Sort resources by cost desc. Top 20 resources = 80% of the bill (Pareto is very reliable here). Label those 20 on the diagram with their monthly cost — that becomes the "what matters" filter for stakeholders.
+
+## Hour 7 — Fill the gaps and note the unknowns
+
+At this point you have 80% of the picture. The remaining 20% is:
+
+- Cross-subscription references (secrets from another sub, private DNS from a hub sub)
+- External integrations (SAP, third-party SaaS, on-prem via ExpressRoute)
+- Undocumented scripts running via Automation Accounts / Runbooks
+- Manual "click-ops" changes not visible in code
+
+Mark each as an **assumption** or **unknown** on the diagram. Do not pretend to know. A diagram with clearly labeled unknowns is far more useful than a diagram that fabricates a complete picture.
+
+## Hour 8 — Package the report
+
+Deliverables:
+
+1. **The diagram** (Cloud Canvas, whatever your team uses) — layered by network → compute → data → identity.
+2. **Top 10 findings** — usually a mix of orphaned resources, public endpoints, missing backup, missing monitoring, cost hot spots.
+3. **The assumption list** — the unknowns that block a full picture, ranked by risk.
+4. **Recommended next steps** — 3-5 concrete actions with owner and effort estimate.
+
+A single deck (10-15 slides) beats a 40-page doc every time.
+
+## Automating the discovery
+
+If you do this repeatedly, wrap the process:
+
+- ARG queries → JSON snapshot → parser → diagram-language import.
+- Cloud Canvas Designer's **Discovery** feature does exactly this — upload an ARM template or ARG export, get an auto-generated diagram with services placed on the correct subnets, connections drawn, and WAF issues flagged.
+- Save the discovery as a **baseline**. Next month's re-run diffs against it, so you see net-new resources and net-lost resources over time.
+
+## What "done" looks like
+
+You should be able to:
+- Point to any resource on the diagram and say what it's for.
+- Explain the flow of one production request from client → LB → app → data → back.
+- Identify at least three architectural risks with evidence.
+- Answer "what breaks if we lose East US 2" from the diagram alone.
+
+If any of those still take you back into the portal to check, you're not done.
+
+## Closing
+
+Reverse-engineering an estate is a solvable problem in one day if you follow the layers: network → compute → data → identity → cost. Skip the temptation to boil the ocean. A crisp, honest diagram with clearly labeled unknowns is worth more than an exhaustive audit that no one reads.`;
