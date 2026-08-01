@@ -84,7 +84,20 @@ const PaymentPage = () => {
       if (err.message === 'Payment cancelled by user') {
         setError('Payment was cancelled. Please try again when ready.');
       } else {
-        setError(err.message || 'Payment processing failed. Please try again.');
+        // Surface the full Razorpay error structure if it was attached
+        const rzpErr = err.razorpay || null;
+        if (rzpErr) {
+          const parts = [
+            rzpErr.description && `Reason: ${rzpErr.description}`,
+            rzpErr.code && `Code: ${rzpErr.code}`,
+            rzpErr.reason && `Cause: ${rzpErr.reason}`,
+            rzpErr.step && `Step: ${rzpErr.step}`,
+            rzpErr.source && `Source: ${rzpErr.source}`,
+          ].filter(Boolean).join(' · ');
+          setError(parts || err.message);
+        } else {
+          setError(err.message || 'Payment processing failed. Please try again.');
+        }
       }
     } finally {
       setLoading(false);

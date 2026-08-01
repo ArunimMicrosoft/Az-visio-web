@@ -175,7 +175,17 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
           err.description ||
           err.reason ||
           `Payment failed (code: ${err.code || 'unknown'})`;
-        reject(new Error(userMsg));
+        const bubble = new Error(userMsg);
+        // Attach the raw Razorpay error so UI can render the full breakdown
+        bubble.razorpay = {
+          code: err.code || null,
+          description: err.description || null,
+          reason: err.reason || null,
+          source: err.source || null,
+          step: err.step || null,
+          metadata: err.metadata || null,
+        };
+        reject(bubble);
       });
       rzp.open();
     });
