@@ -200,7 +200,15 @@ export const onRequest = async (context) => {
   // ── 4. Continue to the underlying static/asset/Function response ────────
   const res = await context.next();
 
-  // ── 4a. Static assets: if a hashed JS/CSS was rewritten to index.html
+  // ── 4a. API responses pass through UNTOUCHED.
+  //         Post-processing here can subtly break POST/JSON flows
+  //         (streaming body, CORS headers, etc). API Functions already own
+  //         their own headers and CORS. Only static+HTML paths get wrapped.
+  if (isApi) {
+    return res;
+  }
+
+  // ── 4b. Static assets: if a hashed JS/CSS was rewritten to index.html
   //         (Cloudflare Pages SPA fallback), force a proper 404 instead.
   //         Prevents blank-app "Failed to load module script: MIME text/html".
   if (STATIC_ASSET_EXT.test(url.pathname)) {
@@ -217,7 +225,7 @@ export const onRequest = async (context) => {
     }
   }
 
-  // ── 4b. SPA HTML routes must never be cached (fresh HTML → fresh asset hashes).
+  // ── 4c. SPA HTML routes must never be cached (fresh HTML → fresh asset hashes).
   //         Assets get their own immutable Cache-Control via _headers.
   const ct = (res.headers.get('content-type') || '').toLowerCase();
   const isHtml = ct.startsWith('text/html');

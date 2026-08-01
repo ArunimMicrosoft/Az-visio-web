@@ -90,6 +90,7 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
 
     // Step 1: Create order via backend (server-side, uses secret key)
     let orderId = null;
+    let orderCreationDetail = null; // for diagnostics
     try {
       const resp = await fetch('/api/razorpay-create-order', {
         method: 'POST',
@@ -102,12 +103,25 @@ export async function createRazorpayOrder({ planName, amount, customerEmail, cus
           customerId,
         }),
       });
+      const data = await resp.json().catch(() => ({}));
+      orderCreationDetail = { status: resp.status, ok: resp.ok, ...data };
       if (resp.ok) {
-        const data = await resp.json();
-        orderId = data.orderId;
+        orderId = data.orderId || null;
       }
+      console.info('[Razorpay] create-order response:', orderCreationDetail);
     } catch (e) {
-      console.warn('Backend order creation unavailable, falling back to client-side:', e.message);
+      orderCreationDetail = { status: 0, ok: false, error: e.message };
+      console.warn('[Razorpay] backend order creation unavailable, falling back to client-side:', e.message);
+    }
+
+    // If backend explicitly said "credentials missing" or returned skipped:true,
+    // that is the actual root cause and must be surfaced — not swallowed.
+    if (orderCreationDetail && orderCreationDetail.skipped) {
+      console.warn(
+        '[Razorpay] server-side order creation SKIPPED. reason=',
+        orderCreationDetail.reason,
+        '→ Razorpay live payments will likely be rejected without an order_id.',
+      );
     }
 
     // Step 2: Open Razorpay checkout
