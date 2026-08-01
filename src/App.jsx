@@ -20,6 +20,7 @@ import { useUndoRedo } from './hooks/useUndoRedo';
 import { useVersionHistory } from './hooks/useVersionHistory';
 import { exportBicepFile } from './utils/bicepGenerator';
 import { writeAuditLog } from './utils/supabase';
+import { loadDiagramFromCloud } from './utils/diagramStorage';
 import { trackActive, trackExport, trackTemplateUsed, trackValidation, trackReferral } from './utils/activityTracker';
 import { 
   exportJSON, 
@@ -176,6 +177,41 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyboard);
   }, [undoRedo]);  // isLoadingDiagram ref — when true, skip trial diagram limit (user is loading saved file)
   const isLoadingDiagram = useRef(false);
+
+  // Auto-load a diagram if the URL has ?open=<diagram-id>. This is how the
+  // Home Dashboard links into a specific saved diagram. Silent replace — the
+  // user's intent is explicit (they clicked the tile). Runs once per URL,
+  // then strips the query param so a refresh won't re-load.
+  useEffect(() => {
+    if (!user?.id) return;
+    const params = new URLSearchParams(window.location.search);
+    const openId = params.get('open');
+    if (!openId) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const diagram = await loadDiagramFromCloud(openId, user.id);
+        if (cancelled || !diagram) return;
+        isLoadingDiagram.current = true;
+        setItems(diagram.items || []);
+        setConnections(diagram.connections || []);
+        setBoundaries(diagram.boundaries || []);
+        // Give react a tick to render before clearing the flag
+        setTimeout(() => { isLoadingDiagram.current = false; }, 0);
+      } catch (err) {
+        console.error('[?open] Failed to load diagram:', err.message);
+        alert(`Could not open that diagram: ${err.message}`);
+      } finally {
+        // Strip ?open= from URL so a refresh does not re-load
+        const url = new URL(window.location.href);
+        url.searchParams.delete('open');
+        window.history.replaceState({}, '', url.pathname + (url.search || '') + url.hash);
+      }
+    })();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Wrapper for setItems — blocks NEW drawing if trial diagram limit (3) reached.
   // Load and Clear are never blocked.
