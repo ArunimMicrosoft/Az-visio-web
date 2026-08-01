@@ -188,11 +188,13 @@ export async function supabaseSignIn(email, password) {
     throw error;
   }
 
-  // Update last_login in profiles
+  // Update last_login AND last_active_at in profiles — both should reflect
+  // "this user is currently active" the moment sign-in succeeds.
   if (data.user) {
+    const nowIso = new Date().toISOString();
     await supabase
       .from('profiles')
-      .update({ last_login: new Date().toISOString() })
+      .update({ last_login: nowIso, last_active_at: nowIso })
       .eq('id', data.user.id);
 
     // Log successful login

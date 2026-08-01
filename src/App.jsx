@@ -76,21 +76,53 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // Session heartbeat — captures device/IP info once per session for existing logged-in users
+  // Session heartbeat — writes SESSION_ACTIVE + referral ONCE per session,
+  // then keeps last_active_at fresh via a periodic ping + visibility change.
+  //
+  // trackActive() has its own 5-min module-level debounce, so calling it more
+  // often than that is a no-op. This effect ensures the DB row reflects
+  // "user was actually here recently", not just "user opened the app once
+  // three weeks ago".
   useEffect(() => {
     if (!user?.id) return;
+
+    // 1) One-time-per-session audit + referral capture
     const heartbeatKey = 'ccd_heartbeat_' + user.id;
-    const lastBeat = sessionStorage.getItem(heartbeatKey);
-    if (lastBeat) return; // already sent this session
-    sessionStorage.setItem(heartbeatKey, Date.now().toString());
+    const alreadyBeat = sessionStorage.getItem(heartbeatKey);
+    if (!alreadyBeat) {
+      sessionStorage.setItem(heartbeatKey, Date.now().toString());
+      trackReferral(user.id);
+      writeAuditLog({
+        userId: user.id,
+        email: user.email,
+        event: 'SESSION_ACTIVE',
+        details: { source: 'app_load' },
+      });
+    }
+
+    // 2) Immediate ping on mount / user change
     trackActive(user.id);
-    trackReferral(user.id);
-    writeAuditLog({
-      userId: user.id,
-      email: user.email,
-      event: 'SESSION_ACTIVE',
-      details: { source: 'app_load' },
-    });
+
+    // 3) Periodic ping every 60s while the tab is open.
+    //    trackActive's internal 5-min debounce keeps DB writes to ~12/hour max.
+    const intervalId = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        trackActive(user.id);
+      }
+    }, 60_000);
+
+    // 4) Ping immediately when the tab becomes visible again after being hidden
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') trackActive(user.id);
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 

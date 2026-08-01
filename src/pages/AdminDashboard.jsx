@@ -60,6 +60,36 @@ function fmtDateTime(iso) {
   });
 }
 
+// Human-readable relative time — "just now", "5m ago", "2h ago", "3d ago", "12 Mar 2026"
+function fmtRelative(iso) {
+  if (!iso) return { label: '—', tone: 'stale' };
+  const then = new Date(iso).getTime();
+  const now = Date.now();
+  const diffSec = Math.round((now - then) / 1000);
+  if (diffSec < 0) return { label: 'just now', tone: 'fresh' };
+  if (diffSec < 60) return { label: 'just now', tone: 'fresh' };
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return { label: `${diffMin}m ago`, tone: diffMin <= 5 ? 'fresh' : 'recent' };
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return { label: `${diffHr}h ago`, tone: diffHr <= 6 ? 'recent' : 'today' };
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return { label: `${diffDay}d ago`, tone: 'recent-days' };
+  if (diffDay < 30) return { label: `${diffDay}d ago`, tone: 'week+' };
+  return {
+    label: new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }),
+    tone: 'stale',
+  };
+}
+
+const LAST_ACTIVE_TONE = {
+  fresh:       { bg: '#d1fae5', color: '#047857', dot: '#10b981', label: 'Active now' },
+  recent:      { bg: '#dbeafe', color: '#1d4ed8', dot: '#3b82f6', label: 'Active recently' },
+  today:       { bg: '#e0f2fe', color: '#0369a1', dot: '#0891b2', label: 'Active today' },
+  'recent-days': { bg: '#f3f4f6', color: '#374151', dot: '#6b7280', label: 'Within a week' },
+  'week+':     { bg: '#fef3c7', color: '#92400e', dot: '#f59e0b', label: 'Over a week ago' },
+  stale:       { bg: '#f3f4f6', color: '#6b7280', dot: '#9ca3af', label: 'Long inactive' },
+};
+
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -85,6 +115,15 @@ const AdminDashboard = () => {
   const [auditDateTo, setAuditDateTo] = useState('');
   const [auditPage, setAuditPage] = useState(1);
   const AUDIT_PAGE_SIZE = 50;
+
+  // Re-render every 60s so relative-time labels ("5m ago", "2h ago") stay accurate
+  // without needing a manual refresh. Cheap: just bumps a state counter.
+  // eslint-disable-next-line no-unused-vars
+  const [_relTick, setRelTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setRelTick((t) => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   // Login-sequence map — for every LOGIN event in the loaded audit logs,
   // computes which login # it is for that user (1st, 2nd, ... N-th).
@@ -761,8 +800,53 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                             {u.is_active !== false ? '● Active' : '● Banned'}
                           </span>
                         </td>
-                        <td className="ad-center" title={u.last_active_at ? new Date(u.last_active_at).toLocaleString('en-IN') : ''}>
-                          {u.last_active_at ? new Date(u.last_active_at).toLocaleDateString('en-IN') : '—'}
+                        <td className="ad-center">
+                          {(() => {
+                            if (!u.last_active_at) {
+                              return (
+                                <span
+                                  style={{
+                                    color: '#9ca3af',
+                                    fontStyle: 'italic',
+                                    fontSize: 11,
+                                  }}
+                                  title="No recorded activity for this user yet."
+                                >
+                                  —
+                                </span>
+                              );
+                            }
+                            const rel = fmtRelative(u.last_active_at);
+                            const tone = LAST_ACTIVE_TONE[rel.tone] || LAST_ACTIVE_TONE.stale;
+                            return (
+                              <span
+                                title={`${tone.label} — ${fmtDateTime(u.last_active_at)}`}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 5,
+                                  padding: '3px 9px',
+                                  borderRadius: 999,
+                                  background: tone.bg,
+                                  color: tone.color,
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    width: 7,
+                                    height: 7,
+                                    borderRadius: '50%',
+                                    background: tone.dot,
+                                    boxShadow: rel.tone === 'fresh' ? `0 0 0 3px ${tone.dot}22` : 'none',
+                                  }}
+                                />
+                                {rel.label}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="ad-center">
                           {(() => {
