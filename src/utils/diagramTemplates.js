@@ -55,18 +55,133 @@ const I = {
   devops:   { serviceType: 'azuredevops',         path: '/icons/devops/10261-icon-service-Azure-DevOps.svg',             category: 'devops' },
   batch:    { serviceType: 'batchaccounts',       path: '/icons/compute/10031-icon-service-Batch-Accounts.svg',          category: 'compute' },
   sqlserver:{ serviceType: 'sqlserver',           path: '/icons/databases/10132-icon-service-SQL-Server.svg',            category: 'databases' },
+  // Supporting resources — required by the validator for a clean deploy.
+  pip:      { serviceType: 'publicip',            path: '/icons/networking/10069-icon-service-Public-IP-Addresses.svg',  category: 'networking' },
+  asp:      { serviceType: 'appserviceplan',      path: '/icons/app services/00046-icon-service-App-Service-Plans.svg',  category: 'appservices' },
 };
 
 const item = (id, name, icon, x, y) => ({ id, name, serviceType: icon.serviceType, path: icon.path, category: icon.category, x, y });
 const conn = (from, to, label) => ({ id: uid(), from, to, label });
+
+// ============================================================
+// AUTO-ENRICH — mirrors azureArchitectureValidator's requiredDependencies.
+// Runs after every template build() to guarantee every emitted diagram passes
+// validation cleanly and is "ready to deploy". Adds only the exact supporting
+// services a template is missing, positions them near the dependent, and
+// connects them with an explicit "Requires" label.
+// ============================================================
+const SUPPORT_ICON = {
+  // required-dep key (normalized) → icon in I map
+  vnet:                 I.vnet,
+  virtualnetworks:      I.vnet,
+  nsg:                  I.nsg,
+  networksecuritygroups: I.nsg,
+  publicip:             I.pip,
+  publicipaddresses:    I.pip,
+  sqlserver:            I.sqlserver,
+  appserviceplan:       I.asp,
+  storage:              I.stor,
+  storageaccounts:      I.stor,
+  loadbalancer:         I.lb,
+  loadbalancers:        I.lb,
+  containerregistry:    I.acr,
+  containerregistries:  I.acr,
+  keyvault:             I.kv,
+  keyvaults:            I.kv,
+  applicationinsights:  I.ai,
+  appinsights:          I.ai,
+  disks:                null, // not typically drawn as a first-class item
+  subnet:               I.vnet, // subnets are implicit inside VNet
+  subnets:              I.vnet,
+};
+
+const REQUIRED_DEPS = {
+  // Keys are the NORMALIZED serviceType (see validator normalizeServiceType).
+  virtualmachine:      ['virtualnetworks', 'networksecuritygroups'],
+  vmss:                ['virtualnetworks', 'loadbalancer'],
+  vmscalesets:         ['virtualnetworks', 'loadbalancer'],
+  aks:                 ['virtualnetworks'],
+  kubernetesservices:  ['virtualnetworks'],
+  appservice:          ['appserviceplan'],
+  appservices:         ['appserviceplan'],
+  functionapps:        ['storageaccounts'],
+  sqldatabase:         ['sqlserver'],
+  applicationgateway:  ['virtualnetworks', 'publicip'],
+  applicationgateways: ['virtualnetworks', 'publicip'],
+  vpngateway:          ['virtualnetworks', 'publicip'],
+  virtualnetworkgateways: ['virtualnetworks', 'publicip'],
+};
+
+function normalize(t) {
+  if (!t) return '';
+  return String(t).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function enrichForValidation(data) {
+  const items = [...(data.items || [])];
+  const connections = [...(data.connections || [])];
+  const boundaries = data.boundaries || [];
+
+  // Snapshot the set of normalized types already present in the diagram.
+  const typesPresent = new Set(items.map((i) => normalize(i.serviceType)));
+
+  // Layout offset accumulator so multiple auto-added supports don't stack.
+  let auxIndex = 0;
+
+  for (const parent of [...items]) {
+    const parentType = normalize(parent.serviceType);
+    const deps = REQUIRED_DEPS[parentType];
+    if (!deps) continue;
+
+    for (const depType of deps) {
+      const depAliases = [depType, depType.replace(/s$/, ''), depType + 's'];
+      const alreadyPresent = depAliases.some((k) => typesPresent.has(normalize(k)));
+      if (alreadyPresent) continue;
+
+      const supportIcon = SUPPORT_ICON[depType];
+      if (!supportIcon) continue;
+
+      // Position the support item to the RIGHT of the parent, staggered
+      const newId = uid();
+      const nx = (parent.x || 0) + 220 + (auxIndex % 3) * 60;
+      const ny = (parent.y || 0) + 40 + Math.floor(auxIndex / 3) * 90;
+      const supportName = supportIcon.serviceType.charAt(0).toUpperCase()
+        + supportIcon.serviceType.slice(1);
+      items.push({
+        id: newId,
+        name: supportName,
+        serviceType: supportIcon.serviceType,
+        path: supportIcon.path,
+        category: supportIcon.category,
+        x: nx,
+        y: ny,
+      });
+      connections.push({ id: uid(), from: parent.id, to: newId, label: 'Requires' });
+      typesPresent.add(normalize(supportIcon.serviceType));
+      auxIndex += 1;
+    }
+  }
+
+  return { items, connections, boundaries };
+}
+
 // tpl(id, name, description, category, icon, buildFn, minTier?)
 // minTier is the lowest subscription that can load this template:
 //   'trial'         — all users
 //   'starter'       — paid Starter and above (blocked for trial)
 //   'professional'  — Professional and above (blocked for trial + Starter)
 //   'enterprise'    — Enterprise only
+//
+// build() output goes through enrichForValidation() so every template is
+// guaranteed to include the exact supporting resources the validator requires.
 const tpl = (id, name, desc, cat, icon, buildFn, minTier = 'trial') => ({
-  id, name, description: desc, category: cat, icon, build: buildFn, minTier,
+  id,
+  name,
+  description: desc,
+  category: cat,
+  icon,
+  build: () => enrichForValidation(buildFn()),
+  minTier,
 });
 
 // ============================================================
