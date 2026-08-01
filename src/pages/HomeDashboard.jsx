@@ -6,8 +6,9 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../utils/supabase';
-import { listUserDiagrams } from '../utils/diagramStorage';
+import { listUserDiagrams, loadDiagramFromCloud } from '../utils/diagramStorage';
 import { blogArticles, categoryColors } from '../utils/blogArticles';
+import { recommendArticles, buildSignals } from '../utils/blogRecommender';
 import './HomeDashboard.css';
 
 // Compute consecutive-day login streak from audit LOGIN events.
@@ -57,13 +58,16 @@ const HomeDashboard = () => {
   const [loadingDiagrams, setLoadingDiagrams] = useState(true);
   const [loginDates, setLoginDates] = useState([]);
   const [profile, setProfile] = useState(null);
+  // Full diagram bodies (items/connections/boundaries) for the 5 most recent —
+  // used only to feed the personalised blog recommender.
+  const [signalDiagrams, setSignalDiagrams] = useState([]);
 
   // Redirect anonymous users
   useEffect(() => {
     if (!isLoading && !user) navigate('/login');
   }, [user, isLoading, navigate]);
 
-  // Load user's saved diagrams
+  // Load user's saved diagrams (metadata only — fast)
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
@@ -81,6 +85,32 @@ const HomeDashboard = () => {
       cancelled = true;
     };
   }, [user?.id]);
+
+  // Fetch full body of the 5 most-recent diagrams so we know which services
+  // + categories the user actually uses. Powers personalised blog picks.
+  useEffect(() => {
+    if (!user?.id || diagrams.length === 0) {
+      setSignalDiagrams([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const topFive = diagrams.slice(0, 5);
+      const results = await Promise.all(
+        topFive.map(async (meta) => {
+          try {
+            return await loadDiagramFromCloud(meta.id, user.id);
+          } catch {
+            return null;
+          }
+        })
+      );
+      if (!cancelled) setSignalDiagrams(results.filter(Boolean));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, diagrams]);
 
   // Load recent LOGIN audit events to compute streak
   useEffect(() => {
@@ -183,12 +213,12 @@ const HomeDashboard = () => {
     return list.slice(0, 4);
   }, [profile, diagrams]);
 
-  // Pick 3 newest blog articles
-  const blogHighlights = useMemo(() => {
-    return [...blogArticles]
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 3);
-  }, []);
+  // Personalised blog picks — scored against user's canvas usage + profile gaps
+  const blogRecommendations = useMemo(() => {
+    const signals = buildSignals(signalDiagrams, profile);
+    return recommendArticles(blogArticles, signals, 3);
+  }, [signalDiagrams, profile]);
+  const hasPersonalSignal = signalDiagrams.length > 0 || (profile?.diagrams_created || 0) > 0;
 
   if (isLoading || !user) {
     return (
@@ -322,14 +352,21 @@ const HomeDashboard = () => {
         )}
       </section>
 
-      {/* Blog highlights */}
+      {/* Personalised blog picks */}
       <section className="hd-section">
         <div className="hd-section-header">
-          <h2 className="hd-section-title">Fresh from the blog</h2>
+          <h2 className="hd-section-title">
+            {hasPersonalSignal ? 'Picked for you' : 'Fresh from the blog'}
+          </h2>
+          <span className="hd-section-sub">
+            {hasPersonalSignal
+              ? 'Based on the services on your canvas and what you have tried so far'
+              : 'Start reading — recommendations personalise as you use the app'}
+          </span>
           <Link to="/blog" className="hd-section-link">All articles →</Link>
         </div>
         <div className="hd-blog">
-          {blogHighlights.map((a) => {
+          {blogRecommendations.map(({ article: a, reasons }) => {
             const cat = categoryColors[a.category] || categoryColors['Architecture'];
             return (
               <Link to={`/blog/${a.slug}`} className="hd-blog-card" key={a.slug}>
@@ -338,7 +375,15 @@ const HomeDashboard = () => {
                 </div>
                 <div className="hd-blog-title">{a.title}</div>
                 <div className="hd-blog-excerpt">{a.excerpt}</div>
-                <div className="hd-blog-meta">{a.readTime} · {new Date(a.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</div>
+                {reasons && reasons.length > 0 && (
+                  <div className="hd-blog-reason">
+                    <span className="hd-blog-reason-mark">✨</span>
+                    {reasons.join(' · ')}
+                  </div>
+                )}
+                <div className="hd-blog-meta">
+                  {a.readTime} · {new Date(a.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                </div>
               </Link>
             );
           })}
