@@ -8009,60 +8009,10 @@ Follow this SOP for two weeks and diagrams stop being the artifact you dread —
 
 ## Version History
 
-Cloud Canvas Designer ships continuously. Every release is deployed to production the moment it merges to \`main\`. Here is the abridged changelog for the versions relevant to what this SOP describes.
-
-### v2.7.8 — August 2026 (current)
-- **Auto-currency by region.** Selecting Central India auto-picks INR, Japan East auto-picks JPY, West Europe → EUR, and so on. Regions without a supported local currency default to USD. Manual override still respected.
-- **Boundary nesting fix.** Drawing a 5th-level boundary (Region → Subscription → RG → VNet → Subnet) is now smooth at every depth. Pointer events on existing boundaries are neutralised while draw mode is active, so the mouse always reaches the layer.
-- **Auto-enriched templates.** Every template now automatically includes the supporting resources the validator requires — VNet, NSG, Public IP, SQL Server, App Service Plan, Storage Account. Every template loads with a clean WAF score and is deploy-ready.
-- **10 new industry templates** — Private RAG, LLM Ops with Guardrails, Multi-Tenant AI Copilot, PCI-DSS Payment Gateway, HIPAA Healthcare Portal, SEBI/RBI Financial Data Platform, Zero-Trust Landing Zone, Global Active-Active Multi-Region, Data Mesh Federated Domains, Retail Omni-Channel Backbone.
-- **Template tier gating** — Trial gets 2 loads; Starter/Professional/Enterprise unlock further templates and unlimited loads. Locked cards show inline "Upgrade to Professional" chips.
-- **Modernised Template Gallery** — light theme matching the rest of the app, corrected card layout so descriptions, meta, and lock chip render properly.
-
-### v2.7.5 — July 2026
-- **Home Dashboard** on \`/home\` replaces the empty canvas as the post-login landing page. Recent diagrams, streak counter, personalised suggestions, latest blog picks.
-- **Dark mode** for the dashboard with a persistent toggle (localStorage) and blueprint-grid theming.
-- **Personalised blog recommendations** driven by the services users actually use on their canvas plus profile-gap signals ("You haven't run WAF validation yet").
-- **Weekly digest email pipeline.** Cloudflare Pages Function + GitHub Actions cron + Resend/MailChannels + HMAC-signed unsubscribe. Users opt out with one click.
-- **Admin panel refinements** — login sequence badge on audit rows (1st/2nd/Nth), tiered login-count badge on the Users table, "Repeat Logins" KPI, live relative-time freshness for last-active-at.
-- **In-app Home button** on the canvas top bar and inside the user menu for one-click return to the dashboard.
-
-### v2.7.3 — July 2026
-- **Six new deep-dive blog articles** — Azure Resource ID anatomy, Blast Radius Analysis, Availability Zones vs Sets vs Regions, Reading a Terraform Plan, Azure Resource Graph queries, Reverse-Engineering an Azure Estate.
-- **This SOP article** first published as the official Product Guide.
-- **Category taxonomy** extended with AI Platforms, Regulated, Enterprise, and Product Guide.
-
-### v2.7.0 — July 2026
-- **Cloudflare Pages migration** — moved off Azure Static Web Apps for edge performance and free rate limiting.
-- **Rate limiting rules** on \`/login\` (5 requests / minute / IP → 15-minute block). Server-side rate limits in Pages Function middleware for every \`/api/*\` endpoint.
-- **WAF Custom Rules** — 5-rule Free-plan set covering probes for \`.env\` / \`.git\` / \`wp-admin\`, offensive tool user-agents, sanctions countries, legacy HTTP versions, unusual HTTP methods.
-- **Managed Rules (OWASP)** enabled — covers SQLi/XSS/path traversal/RFI/LFI at the edge.
-- **Razorpay live-account fix** — server-side order creation with proper key-id surfacing so client checkout always matches the server's merchant. No more silent "Payment Failed".
-
-### v2.6.5 — June 2026
-- **3-strike login lockout** at the DB level with admin-only unlock via the Admin Dashboard.
-- **Turnstile CAPTCHA** on Login and Signup pages.
-- **Full audit log** — every LOGIN, SIGNUP, LOGIN_FAILED, plan change, and subscription action written to \`audit_logs\` with device + IP.
-
-### v2.6.0 — June 2026
-- **Discovery Import** — upload an ARM template, CLI dump, Resource Graph export, PowerShell \`Get-AzResource\` output, Terraform, or Bicep. Auto-generates a diagram with services placed on correct subnets and boundaries drawn.
-- **TF Paste** — paste Terraform HCL directly, no file upload.
-- **Region Compare** — compare monthly cost across up to 3 regions side-by-side.
-- **Version History panel** — every save creates a snapshot; roll back to any version.
-
-### v2.5.0 — May 2026 (previous baseline)
-- **50 architecture templates** across Web, Networking, Containers, Analytics, Serverless.
-- **WAF Validation** against all 5 Microsoft pillars with per-service scoring and fix recommendations.
-- **Real-time Cost Estimator** via the official Azure Retail Prices API (INR + USD).
-- **Multi-format Export** — Terraform HCL, Bicep, ARM, PNG, PDF, JSON.
-- **Cloud saves** with My Diagrams panel, share links, presentation mode.
-- **60-article blog** covering WAF, hub-spoke, Terraform vs Bicep vs ARM, AKS, cost optimization, security, migration, and more.
-- **Admin Dashboard** with user management, trial extensions, plan overrides, and audit log viewer.
-
-### Roadmap — what's likely in the next release
-- **Snapshot-based Drift Watch** — re-upload your Azure export monthly to see what changed in your live environment.
-- **Team workspaces + inline comments** on diagrams.
-- **AI Copilot** — natural-language canvas ("Add a hub-spoke with two spokes and a firewall in the hub").
-- **User-facing email preferences page** to toggle the weekly digest without hitting the unsubscribe link.
-
-If a version listed here is missing from your build, do a hard-refresh (\`Ctrl + Shift + R\`) — Cloudflare Pages ships fingerprinted assets, but browsers occasionally cache the HTML that references them.`;
+- **v2.7.8** (current, Aug 2026) — auto-currency, boundary nesting fix, auto-enriched templates, 10 new industry templates, tier gating, Template Gallery redesign
+- **v2.7.5** (Jul 2026) — Home Dashboard, dark mode, personalised blog picks, weekly digest email pipeline, admin panel refinements, in-app Home button
+- **v2.7.3** (Jul 2026) — 6 new blog articles + this SOP + category taxonomy
+- **v2.7.0** (Jul 2026) — Cloudflare Pages migration, rate limiting, WAF Custom Rules, OWASP Managed Rules, Razorpay live-account fix
+- **v2.6.5** (Jun 2026) — 3-strike login lockout, Turnstile CAPTCHA, full audit log
+- **v2.6.0** (Jun 2026) — Discovery Import, TF Paste, Region Compare, Version History panel
+- **v2.5.0** (May 2026, previous baseline) — 50 templates, WAF validation, cost estimator, IaC exports, cloud saves, 60-article blog, admin dashboard`;
