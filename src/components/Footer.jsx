@@ -1,7 +1,7 @@
 import React from 'react';
 import './Footer.css';
 
-const appVersion = import.meta.env.VITE_APP_VERSION || '2.5.0';
+const appVersion = import.meta.env.VITE_APP_VERSION || '2.7.8';
 
 const Footer = () => {
   return (
