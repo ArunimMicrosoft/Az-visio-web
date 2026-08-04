@@ -150,7 +150,9 @@
   flex: 1 1 auto;
 }
 
-/* ---- Card ---- */
+/* ---- Card ----
+   min-height increased so the description ALWAYS has room even when the
+   lock chip is present. overflow:visible so nothing gets accidentally cut. */
 .template-card {
   position: relative;
   background: #ffffff;
@@ -161,9 +163,8 @@
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-height: 190px;
-  overflow: hidden;
+  gap: 10px;
+  min-height: 240px;
 }
 .template-card:hover,
 .template-card.hovered {
@@ -216,16 +217,19 @@
   line-height: 1.35;
   letter-spacing: -0.01em;
 }
+/* Simpler description rendering — no -webkit-box gymnastics.
+   Guaranteed visible: block display, real slate-600 contrast, fixed
+   min height so it never collapses to 0 inside a flex column. */
 .template-card-desc {
-  color: #64748b;
+  color: #334155;         /* slate-700 — high contrast */
   font-size: 12.5px;
   line-height: 1.5;
   margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
+  display: block;
+  min-height: 56px;       /* always shows ~3 lines of space */
+  max-height: 72px;
   overflow: hidden;
+  word-break: break-word;
 }
 .template-card-meta {
   display: flex;
@@ -257,10 +261,9 @@
 }
 .template-card-locked .template-card-title {
   color: #1e293b;         /* stay dark and readable */
-  opacity: 0.85;
 }
 .template-card-locked .template-card-desc {
-  color: #475569;         /* slate-600, proper contrast */
+  color: #334155;         /* slate-700, high contrast even on faded card */
 }
 .template-card-locked .template-card-meta { opacity: 0.75; }
 .template-card-locked:hover {
