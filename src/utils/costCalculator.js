@@ -64,6 +64,66 @@ export const currencies = {
 };
 
 /**
+ * Map an Azure region key to its local currency (only currencies we actually
+ * support). Regions that fall outside this map default to USD in the helper.
+ *
+ * Used by the Cost panel to auto-align the currency dropdown whenever the
+ * region changes — e.g. "Central India" → INR, "Japan East" → JPY, "Brazil
+ * South" → BRL, "West Europe" → EUR. Regions in USD-billed geos (US, most of
+ * Asia, most of Latin America, South Africa, Middle East where AED isn't
+ * quoted) resolve to USD automatically.
+ */
+export const regionCurrencyMap = {
+  // United States
+  eastus: 'USD', eastus2: 'USD', westus: 'USD', westus2: 'USD',
+  westus3: 'USD', centralus: 'USD', northcentralus: 'USD',
+  southcentralus: 'USD', westcentralus: 'USD',
+  // Europe
+  northeurope: 'EUR', westeurope: 'EUR', francecentral: 'EUR',
+  francesouth: 'EUR', germanywestcentral: 'EUR', germanynorth: 'EUR',
+  // United Kingdom
+  uksouth: 'GBP', ukwest: 'GBP',
+  // Nordics
+  swedencentral: 'SEK', norwayeast: 'NOK', norwaywest: 'NOK',
+  // Switzerland
+  switzerlandnorth: 'CHF', switzerlandwest: 'CHF',
+  // Japan
+  japaneast: 'JPY', japanwest: 'JPY',
+  // Korea
+  koreacentral: 'KRW', koreasouth: 'KRW',
+  // Australia
+  australiaeast: 'AUD', australiasoutheast: 'AUD',
+  australiacentral: 'AUD', australiacentral2: 'AUD',
+  // Canada
+  canadacentral: 'CAD', canadaeast: 'CAD',
+  // Brazil
+  brazilsouth: 'BRL', brazilsoutheast: 'BRL',
+  // South Africa
+  southafricanorth: 'ZAR', southafricawest: 'ZAR',
+  // UAE
+  uaenorth: 'AED', uaecentral: 'AED',
+  // India (all four billing variants)
+  centralindia: 'INR', southindia: 'INR', westindia: 'INR',
+  indiacentral: 'INR', jioindiawest: 'INR', jioindiacentral: 'INR',
+  // China (regions billed in CNY via 21Vianet)
+  chinaeast: 'CNY', chinanorth: 'CNY', chinaeast2: 'CNY',
+  chinanorth2: 'CNY', chinaeast3: 'CNY', chinanorth3: 'CNY',
+};
+
+/**
+ * Return the preferred currency for an Azure region. Falls back to USD
+ * whenever the region isn't in the map OR its currency isn't in our
+ * supported `currencies` table.
+ */
+export function regionToCurrency(regionKey) {
+  if (!regionKey) return 'USD';
+  const key = String(regionKey).toLowerCase();
+  const preferred = regionCurrencyMap[key];
+  if (preferred && currencies[preferred]) return preferred;
+  return 'USD';
+}
+
+/**
  * Azure Pricing Database (USD/month - East US region)
  * Updated: February 2026
  */

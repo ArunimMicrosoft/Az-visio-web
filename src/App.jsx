@@ -21,6 +21,7 @@ import { useVersionHistory } from './hooks/useVersionHistory';
 import { exportBicepFile } from './utils/bicepGenerator';
 import { writeAuditLog } from './utils/supabase';
 import { loadDiagramFromCloud } from './utils/diagramStorage';
+import { regionToCurrency } from './utils/costCalculator';
 import { trackActive, trackExport, trackTemplateUsed, trackValidation, trackReferral } from './utils/activityTracker';
 import { 
   exportJSON, 
@@ -593,6 +594,9 @@ function App() {
       if (counts.size > 0) {
         const [best] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
         setSelectedRegion(best);
+        // Also align currency with the auto-detected region — INR for India,
+        // JPY for Japan, EUR for EU, ... USD elsewhere.
+        setSelectedCurrency(regionToCurrency(best));
       }
     } catch { /* ignore */ }
 

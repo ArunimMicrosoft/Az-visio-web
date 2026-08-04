@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { calculateCost, formatCost, getCostCategory, getCostOptimizations, azureRegions, currencies } from '../utils/costCalculator';
+import { calculateCost, formatCost, getCostCategory, getCostOptimizations, azureRegions, currencies, regionToCurrency } from '../utils/costCalculator';
 import { getArchitecturePricingSummary } from '../utils/azureRetailPricesAPI';
 import './CostSummary.css';
 
@@ -100,6 +100,14 @@ const CostSummary = ({ items, region, currency, onRegionChange, onCurrencyChange
   const handleRegionChange = (region) => {
     setSelectedRegion(region);
     if (onRegionChange) onRegionChange(region);
+    // Auto-align currency with the newly chosen region.
+    // Rule: region's local currency if we support it (INR/JPY/EUR/GBP/...),
+    // otherwise USD. User can still override with the currency dropdown.
+    const preferredCurrency = regionToCurrency(region);
+    if (preferredCurrency && preferredCurrency !== selectedCurrency) {
+      setSelectedCurrency(preferredCurrency);
+      if (onCurrencyChange) onCurrencyChange(preferredCurrency);
+    }
   };
 
   const handleCurrencyChange = (currency) => {
