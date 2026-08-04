@@ -156,7 +156,11 @@ const TemplateGallery = ({ isOpen, onClose, onSelectTemplate, user, onUpgrade })
                 </div>
                 {locked && (
                   <span className="template-card-lock" title={gate.message}>
-                    🔒 {gate.requiredTier ? `Upgrade to ${gate.requiredTier}` : 'Locked'}
+                    🔒 {gate.reason === 'cap-reached'
+                          ? 'Trial limit reached'
+                          : gate.requiredTier
+                            ? `Requires ${gate.requiredTier} plan`
+                            : 'Locked'}
                   </span>
                 )}
               </div>

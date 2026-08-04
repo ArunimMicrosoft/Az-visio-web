@@ -243,36 +243,48 @@
   border: 1px solid #e2e8f0;
 }
 
-/* ---- Locked state ---- */
+/* ---- Locked state ----
+   Keep title dark and description at real slate-600 so the card stays
+   readable. Only the icon is subtly desaturated and the meta is muted.
+   The lock chip is a light footer note, not a page banner. */
 .template-card-locked {
-  border-color: rgba(148, 163, 184, 0.5);
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-color: rgba(148, 163, 184, 0.55);
+  background: linear-gradient(180deg, #ffffff 0%, #f6f8fb 100%);
 }
 .template-card-locked .template-card-icon {
-  filter: grayscale(0.35);
+  filter: grayscale(0.30);
+  opacity: 0.85;
 }
-.template-card-locked .template-card-title,
+.template-card-locked .template-card-title {
+  color: #1e293b;         /* stay dark and readable */
+  opacity: 0.85;
+}
 .template-card-locked .template-card-desc {
-  color: #64748b;
+  color: #475569;         /* slate-600, proper contrast */
 }
+.template-card-locked .template-card-meta { opacity: 0.75; }
 .template-card-locked:hover {
   border-color: #7c3aed;
-  box-shadow: 0 12px 28px -14px rgba(124, 58, 237, 0.28);
+  box-shadow: 0 12px 28px -14px rgba(124, 58, 237, 0.24);
 }
+.template-card-locked:hover .template-card-title { opacity: 1; }
+
 .template-card-lock {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   align-self: flex-start;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.10), rgba(124, 58, 237, 0.18));
+  background: rgba(124, 58, 237, 0.10);
   color: #6d28d9;
-  font-size: 10.5px;
+  font-size: 9.5px;
   font-weight: 800;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   text-transform: uppercase;
-  border: 1px solid rgba(124, 58, 237, 0.30);
+  border: 1px solid rgba(124, 58, 237, 0.22);
+  line-height: 1.4;
+  margin-top: 2px;
 }
 
 /* ---- Responsive ---- */
