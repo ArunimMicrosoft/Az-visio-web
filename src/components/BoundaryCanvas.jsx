@@ -255,8 +255,11 @@ const BoundaryCanvas = ({ boundaries, setBoundaries, items, boundaryDrawMode, dr
     };
   }, [draggingBoundary, resizingBoundary, dragOffset, resizeStart, setBoundaries]);
 
-  // Start dragging boundary (triggered from boundary header mousedown)
+  // Start dragging boundary (triggered from boundary header mousedown).
+  // Draw mode takes priority — if the user is actively drawing a new
+  // boundary, never hijack their mousedown to drag an existing one.
   const handleBoundaryMouseDown = (e, boundary) => {
+    if (boundaryDrawMode) return; // let draw handler on the layer receive it
     e.stopPropagation();
     e.preventDefault();
     if (e.target.classList.contains('boundary-header') || e.target.closest('.boundary-header')) {
@@ -273,8 +276,9 @@ const BoundaryCanvas = ({ boundaries, setBoundaries, items, boundaryDrawMode, dr
     }
   };
 
-  // Start resizing boundary
+  // Start resizing boundary — same rule, draw mode wins.
   const handleResizeStart = (e, boundary, handle) => {
+    if (boundaryDrawMode) return;
     e.stopPropagation();
     e.preventDefault();
     setResizingBoundary(boundary.id);

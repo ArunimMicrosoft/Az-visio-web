@@ -15,6 +15,29 @@
   pointer-events: auto !important;
 }
 
+/* ── Draw-mode pointer neutralisation ─────────────────────────────
+   While actively drawing a new boundary, existing boundaries and every
+   interactive child (header, label, resize handles, delete button)
+   must NOT intercept the mouse. Otherwise, when nesting past 3–4 levels
+   the shrinking drawable area gets covered by parent headers/labels and
+   users literally cannot start a drag for the next inner boundary.
+   All interactivity is restored the moment draw mode is turned off.
+──────────────────────────────────────────────────────────────────── */
+.boundary-layer.drawing-mode .boundary,
+.boundary-layer.drawing-mode .boundary-header,
+.boundary-layer.drawing-mode .boundary-label,
+.boundary-layer.drawing-mode .resize-handle,
+.boundary-layer.drawing-mode .boundary-delete,
+.boundary-layer.drawing-mode .boundary-item-count {
+  pointer-events: none !important;
+}
+
+/* Soft visual cue that existing boundaries are "locked" during the draw. */
+.boundary-layer.drawing-mode .boundary:not(.drawing) {
+  opacity: 0.85;
+  transition: opacity 150ms ease-out;
+}
+
 .boundary {
   position: absolute;
   border: 3px dashed rgba(0, 120, 212, 0.5);
