@@ -1,0 +1,49 @@
+{
+  "name": "Cloud Canvas Designer — Azure Architecture Designer",
+  "short_name": "Cloud Canvas",
+  "description": "Visual Azure architecture designer with WAF validation, live cost estimation, and one-click Terraform / Bicep / ARM export.",
+  "start_url": "/home",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#0078D4",
+  "lang": "en",
+  "categories": ["developer", "productivity", "business", "utilities"],
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/favicon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/app-overview.png",
+      "sizes": "1024x600",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Cloud Canvas Designer — full workspace"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Open Canvas",
+      "short_name": "Canvas",
+      "description": "Start designing an Azure architecture",
+      "url": "/app",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "Your personal dashboard",
+      "url": "/home",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Blog",
+      "short_name": "Learn",
+      "description": "Azure architecture guides and blog",
+      "url": "/blog",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    }
+  ]
+}

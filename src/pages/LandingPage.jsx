@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import usePageSEO from '../hooks/usePageSEO';
 import {
   HowItWorksIllustration,
   ServiceMosaic,
@@ -17,6 +18,65 @@ import './LandingPage.css';
 
 const LandingPage = () => {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
+
+  usePageSEO({
+    title: 'Azure Architecture Designer & WAF Validator | Cloud Canvas Designer',
+    description:
+      'Design Azure architecture diagrams visually with 700+ Microsoft Azure icons. Validate against the Well-Architected Framework, estimate live costs via the Azure Retail Prices API, and export to Terraform, Bicep, or ARM in one click. Free 7-day trial.',
+    keywords:
+      'Azure, Azure architecture, Azure architecture designer, Azure Well-Architected Framework, Azure WAF validator, Azure networking, hub-spoke Azure, Azure cost estimator, Azure Retail Prices API, Terraform Azure, azurerm provider, Bicep, ARM template, Azure IaC, infrastructure as code, cloud architecture, cloud design tool, Azure diagram tool, Visio alternative Azure, draw.io Azure, Lucidchart Azure, Azure landing zone, AKS architecture, Azure engineering, Azure Resource Graph, discovery Azure, Azure security architecture',
+    canonical: 'https://cloudcanvas.co/',
+    image: 'https://cloudcanvas.co/screenshots/app-overview.png',
+    type: 'website',
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: 'What is Cloud Canvas Designer?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Cloud Canvas Designer is a visual, drag-and-drop tool for designing Microsoft Azure architecture diagrams with 700+ official Azure service icons, built-in Well-Architected Framework validation, live cost estimation via the Azure Retail Prices API, and one-click Terraform, Bicep, and ARM export.',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'Does it validate against the Azure Well-Architected Framework?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Yes. Every diagram is scored against all five Microsoft WAF pillars — Reliability, Security, Cost Optimization, Operational Excellence, and Performance Efficiency — with per-service findings and fix recommendations.',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'Can I export the diagram to Terraform or Bicep?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Yes. One click exports the entire canvas to Terraform HCL (azurerm provider), Bicep, ARM JSON, PNG, PDF, or a portable JSON diagram file. Templates ship with all required dependencies so exports are deploy-ready.',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'How accurate is the cost estimate?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Costs are pulled live from the official Azure Retail Prices API. You can switch region and currency (INR, USD, EUR, GBP, JPY, AUD, and more). Reserved instances and Enterprise Agreement discounts are not modeled — actual costs may be lower.',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'Is there a free plan?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Yes. Free 7-day trial with no credit card — 3 diagrams, WAF validation, cost estimation, and PNG exports. Paid plans start at $6/month (Starter) and unlock unlimited diagrams, IaC exports, cloud saves, and premium templates.',
+            },
+          },
+        ],
+      },
+    ],
+  });
 
   return (
     <div className="landing-page">      {/* Hero Section */}

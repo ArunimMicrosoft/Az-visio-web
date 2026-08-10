@@ -5,9 +5,33 @@ import { blogArticles, categoryColors } from '../utils/blogArticles';
 import { BlogHeader, BlogFooter } from '../components/BlogLayout';
 import { fetchLikeCounts } from '../utils/blogLikes';
 import { fetchCommentCounts } from '../utils/blogComments';
+import usePageSEO from '../hooks/usePageSEO';
 import './Blog.css';
 
 const Blog = () => {
+  usePageSEO({
+    title: 'Azure Architecture Blog — Learn WAF, IaC, Cost, Networking | Cloud Canvas',
+    description:
+      'Deep-dive Azure architecture guides — Well-Architected Framework, hub-spoke networking, Terraform vs Bicep, cost optimization, security, migration, AKS, cost APIs, and more. 60+ practical articles.',
+    keywords:
+      'Azure architecture blog, Azure Well-Architected Framework, Azure networking, hub-spoke, Terraform, Bicep, ARM template, Azure cost optimization, Azure security, AKS, Azure migration, Azure landing zone, Azure Resource Graph, cloud architecture, Azure engineering, infrastructure as code',
+    canonical: 'https://cloudcanvas.co/blog',
+    image: 'https://cloudcanvas.co/screenshots/app-overview.png',
+    type: 'website',
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'Blog',
+      name: 'Cloud Canvas Designer — Azure Architecture Blog',
+      url: 'https://cloudcanvas.co/blog',
+      description: 'Deep-dive Azure architecture guides, cost, WAF, IaC, and networking articles.',
+      publisher: {
+        '@type': 'Organization',
+        name: "Arunim's IT Café",
+        logo: { '@type': 'ImageObject', url: 'https://cloudcanvas.co/favicon.svg' },
+      },
+    },
+  });
+
   const [category, setCategory] = useState('All');
   const categories = ['All', ...new Set(blogArticles.map((a) => a.category))];
   const filtered = category === 'All' ? blogArticles : blogArticles.filter((a) => a.category === category);

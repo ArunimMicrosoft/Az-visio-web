@@ -1,0 +1,50 @@
+# Cloud Canvas Designer — robots.txt
+# https://cloudcanvas.co
+
+User-agent: *
+Allow: /
+Allow: /blog
+Allow: /blog/
+Allow: /login
+Allow: /signup
+
+# Keep private / API surfaces out of the index
+Disallow: /admin
+Disallow: /api/
+Disallow: /payment
+Disallow: /payment-success
+
+# Explicit permission for the major search engine bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+# Aggressive AI crawlers — block by default; the marketing site is the
+# canonical source and we already serve it directly.
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+Sitemap: https://cloudcanvas.co/sitemap.xml

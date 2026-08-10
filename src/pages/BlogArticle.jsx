@@ -7,6 +7,7 @@ import { renderMarkdown } from '../utils/blogRenderer';
 import { diagramBySlug } from '../utils/blogDiagrams';
 import BlogComments from '../components/BlogComments';
 import LikeButton from '../components/LikeButton';
+import usePageSEO from '../hooks/usePageSEO';
 import './Blog.css';
 
 // Replace {{diagram:id}} tokens with fenced SVG blocks so the renderer emits <figure>
@@ -24,6 +25,61 @@ const BlogArticle = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [slug]);
+
+  // Per-article SEO — dynamic title, description, canonical, and Article JSON-LD
+  // for Google's Article rich result. Hook is called unconditionally (React
+  // rules-of-hooks); when the article is missing it passes null and no-ops.
+  usePageSEO(
+    article
+      ? {
+          title: `${article.title} | Cloud Canvas Designer Blog`,
+          description: article.excerpt,
+          keywords: `Azure, ${article.category}, ${article.title}, Cloud Canvas Designer, Azure architecture, Terraform, Bicep, WAF`,
+          canonical: `https://cloudcanvas.co/blog/${slug}`,
+          image: 'https://cloudcanvas.co/screenshots/app-overview.png',
+          type: 'article',
+          structuredData: [
+            {
+              '@context': 'https://schema.org',
+              '@type': 'Article',
+              headline: article.title,
+              description: article.excerpt,
+              image: 'https://cloudcanvas.co/screenshots/app-overview.png',
+              datePublished: article.date,
+              dateModified: article.date,
+              author: {
+                '@type': 'Organization',
+                name: article.author || "Arunim's IT Café",
+                url: 'https://cloudcanvas.co/',
+              },
+              publisher: {
+                '@type': 'Organization',
+                name: "Arunim's IT Café",
+                logo: {
+                  '@type': 'ImageObject',
+                  url: 'https://cloudcanvas.co/favicon.svg',
+                },
+              },
+              mainEntityOfPage: {
+                '@type': 'WebPage',
+                '@id': `https://cloudcanvas.co/blog/${slug}`,
+              },
+              articleSection: article.category,
+              keywords: `Azure, ${article.category}, ${article.title}`,
+            },
+            {
+              '@context': 'https://schema.org',
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://cloudcanvas.co/' },
+                { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://cloudcanvas.co/blog' },
+                { '@type': 'ListItem', position: 3, name: article.title, item: `https://cloudcanvas.co/blog/${slug}` },
+              ],
+            },
+          ],
+        }
+      : null
+  );
 
   if (!article || !content) {
     return <Navigate to="/blog" replace />;

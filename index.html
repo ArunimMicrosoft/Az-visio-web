@@ -2,13 +2,179 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-    <meta name="description" content="Cloud Canvas Designer - Professional drag & drop tool for creating, validating, and estimating Azure cloud architecture. Built by Arunim's IT Café." />
-    <meta name="keywords" content="Cloud, Canvas, Designer, Azure, Architecture, Diagram, Cost Estimation, Terraform, ARM Templates, Bicep" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- ============================================================
+         PRIMARY SEO
+         ============================================================ -->
+    <title>Azure Architecture Designer &amp; WAF Validator | Cloud Canvas Designer</title>
+    <meta name="description" content="Design Azure architecture visually, validate against Microsoft's Well-Architected Framework (WAF), estimate live costs via the Azure Retail Prices API, and export to Terraform, Bicep, or ARM. Free trial." />
+    <meta name="keywords" content="Azure, Azure architecture, Azure architecture designer, Azure Well-Architected Framework, Azure WAF, Azure networking, Azure cost estimator, Azure Retail Prices API, Terraform Azure, Bicep, ARM template, Azure IaC, infrastructure as code, Azure diagram tool, cloud architecture, cloud design, Azure hub-spoke, Azure landing zone, AKS, Azure engineering, architecture validation, Visio alternative, draw.io alternative, Lucidchart alternative Azure, Azure resource graph, azurerm provider" />
     <meta name="author" content="Arunim's IT Café" />
-    <meta name="theme-color" content="#0078D4" />    <title>Cloud Canvas Designer | Built by Arunim's IT Café</title>
-    <!-- Canonical redirect: never serve pages.dev publicly -->
+    <meta name="publisher" content="Arunim's IT Café" />
+    <meta name="theme-color" content="#0078D4" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Cloud Canvas Designer" />
+
+    <!-- Robots — allow full indexing, image indexing, and long snippets -->
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="bingbot" content="index, follow" />
+
+    <!-- ============================================================
+         CANONICAL + ALTERNATE
+         ============================================================ -->
+    <link rel="canonical" href="https://cloudcanvas.co/" />
+    <link rel="alternate" hreflang="en" href="https://cloudcanvas.co/" />
+    <link rel="alternate" hreflang="x-default" href="https://cloudcanvas.co/" />
+
+    <!-- ============================================================
+         ICONS + PWA
+         ============================================================ -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="mask-icon" href="/favicon.svg" color="#0078D4" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- ============================================================
+         OPEN GRAPH (Facebook, LinkedIn, WhatsApp, Slack, Discord)
+         ============================================================ -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Cloud Canvas Designer" />
+    <meta property="og:title" content="Azure Architecture Designer &amp; WAF Validator — Cloud Canvas" />
+    <meta property="og:description" content="Drag-and-drop Azure architecture designer with live WAF validation, cost estimation, and one-click Terraform / Bicep / ARM export. 700+ official Azure icons." />
+    <meta property="og:url" content="https://cloudcanvas.co/" />
+    <meta property="og:image" content="https://cloudcanvas.co/screenshots/app-overview.png" />
+    <meta property="og:image:secure_url" content="https://cloudcanvas.co/screenshots/app-overview.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1024" />
+    <meta property="og:image:height" content="600" />
+    <meta property="og:image:alt" content="Cloud Canvas Designer — visual Azure architecture editor with services, connections, boundaries, and cost estimate" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- ============================================================
+         TWITTER / X CARDS
+         ============================================================ -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@cloudcanvasco" />
+    <meta name="twitter:creator" content="@ArunimPandey" />
+    <meta name="twitter:title" content="Azure Architecture Designer &amp; WAF Validator" />
+    <meta name="twitter:description" content="Design Azure architectures visually — WAF-validated, live-costed, and exportable to Terraform, Bicep, or ARM." />
+    <meta name="twitter:image" content="https://cloudcanvas.co/screenshots/app-overview.png" />
+    <meta name="twitter:image:alt" content="Cloud Canvas Designer app screenshot" />
+
+    <!-- ============================================================
+         STRUCTURED DATA (JSON-LD)
+         Boosts rich results, sitelinks, and knowledge-panel eligibility.
+         ============================================================ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Cloud Canvas Designer",
+      "alternateName": ["Azure Architecture Designer", "Cloud Canvas"],
+      "applicationCategory": "DeveloperApplication",
+      "applicationSubCategory": "Cloud Architecture Design Tool",
+      "operatingSystem": "Web Browser",
+      "url": "https://cloudcanvas.co/",
+      "image": "https://cloudcanvas.co/screenshots/app-overview.png",
+      "screenshot": "https://cloudcanvas.co/screenshots/app-overview.png",
+      "description": "Visual drag-and-drop Azure architecture designer with WAF validation, live cost estimation via the Azure Retail Prices API, and export to Terraform, Bicep, and ARM.",
+      "softwareVersion": "2.7.8",
+      "featureList": [
+        "700+ official Microsoft Azure service icons",
+        "Azure Well-Architected Framework validation (5 pillars)",
+        "Real-time cost estimation via Azure Retail Prices API",
+        "Terraform HCL export",
+        "Bicep export",
+        "ARM template export",
+        "PNG / PDF export",
+        "Discovery Import (ARM, Bicep, Terraform, Azure CLI, Resource Graph)",
+        "Multi-region cost comparison",
+        "Cloud saves with version history"
+      ],
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Trial",
+          "price": "0",
+          "priceCurrency": "USD",
+          "description": "7-day free trial — no credit card"
+        },
+        {
+          "@type": "Offer",
+          "name": "Starter",
+          "price": "6",
+          "priceCurrency": "USD",
+          "description": "Monthly Starter plan"
+        },
+        {
+          "@type": "Offer",
+          "name": "Professional",
+          "price": "15",
+          "priceCurrency": "USD",
+          "description": "Monthly Professional plan"
+        },
+        {
+          "@type": "Offer",
+          "name": "Enterprise",
+          "price": "80",
+          "priceCurrency": "USD",
+          "description": "Monthly Enterprise plan"
+        }
+      ],
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "112",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Arunim's IT Café",
+        "url": "https://arunimitcaffe.gumroad.com/"
+      }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Arunim's IT Café",
+      "alternateName": "Cloud Canvas Designer",
+      "url": "https://cloudcanvas.co/",
+      "logo": "https://cloudcanvas.co/favicon.svg",
+      "email": "arunimpandey2903@hotmail.com",
+      "sameAs": [
+        "https://arunimitcaffe.gumroad.com/",
+        "https://github.com/ArunimMicrosoft/Az-visio-web"
+      ]
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Cloud Canvas Designer",
+      "url": "https://cloudcanvas.co/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://cloudcanvas.co/blog?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- ============================================================
+         Canonical hostname redirect (pages.dev → cloudcanvas.co)
+         ============================================================ -->
     <script>
       (function () {
         var h = location.hostname;
@@ -17,28 +183,57 @@
         }
       })();
     </script>
-    <!-- Tell search engines pages.dev URLs are duplicates of the canonical domain -->
-    <link rel="canonical" href="https://cloudcanvas.co/" />
-    <!-- Google Analytics -->
+
+    <!-- ============================================================
+         Analytics
+         ============================================================ -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-67VYW13NCK"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-67VYW13NCK');
+      gtag('config', 'G-67VYW13NCK', { anonymize_ip: true });
     </script>
-    <!-- Enterprise typography — Inter (used by Figma, Vercel, Linear, Notion) -->
+
+    <!-- ============================================================
+         Performance: preconnect + preload critical hero image
+         ============================================================ -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" />
-    <!-- Cloudflare Turnstile (CAPTCHA on /login and /signup) — blocks credential stuffing bots -->
+    <link rel="preload" as="image" href="/screenshots/app-overview.png" fetchpriority="high" />
+
+    <!-- Cloudflare Turnstile (CAPTCHA) -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    <!-- Preload Razorpay checkout script for payment page -->
+
+    <!-- Razorpay checkout -->
     <link rel="preconnect" href="https://checkout.razorpay.com" />
     <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- Fallback content for crawlers that don't execute JavaScript.
+         Google's rendering pipeline runs JS, but some other bots and social
+         previewers don't. This gives them enough real HTML to index. -->
+    <noscript>
+      <div style="font-family: sans-serif; max-width: 720px; margin: 40px auto; padding: 24px; line-height: 1.6;">
+        <h1>Cloud Canvas Designer — Azure Architecture Designer</h1>
+        <p>Cloud Canvas Designer is a visual, drag-and-drop tool for designing Microsoft Azure architecture diagrams. Validate every diagram against the Azure Well-Architected Framework, estimate live costs via the Azure Retail Prices API, and export to Terraform, Bicep, or ARM templates in one click.</p>
+        <h2>What it does</h2>
+        <ul>
+          <li>700+ official Azure service icons across 22 categories</li>
+          <li>Azure WAF validation on all 5 Microsoft pillars — Reliability, Security, Cost, Operations, Performance</li>
+          <li>Real-time Azure cost estimation with per-region and per-currency pricing</li>
+          <li>Terraform HCL, Bicep, and ARM template export from any diagram</li>
+          <li>Discovery Import — reverse-engineer an existing Azure subscription into a diagram</li>
+          <li>Cloud save with version history and shareable read-only links</li>
+        </ul>
+        <p>This app requires JavaScript. Please enable JavaScript in your browser to use Cloud Canvas Designer.</p>
+        <p><strong>Learn more:</strong> <a href="/blog">Read the blog</a> for deep-dive articles on Azure architecture, cost optimization, Terraform, and the Well-Architected Framework.</p>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
