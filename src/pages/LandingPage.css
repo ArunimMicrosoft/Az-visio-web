@@ -1889,9 +1889,25 @@ html {
   .hero-browser-frame:hover { transform: none; animation: none; }
   .hero-url { max-width: none; font-size: 10px; padding: 4px 10px; }
   .hero-orb-1, .hero-orb-2, .hero-orb-3 { display: none; }
-  /* Annotation chips get smaller and stack tighter on mobile */
-  .hero-anno { font-size: 10.5px; padding: 4px 9px; }
+  /* Annotation chips: smaller pills, tighter positions, keep only two on tiny screens */
+  .hero-anno {
+    font-size: 10.5px;
+    padding: 4px 9px;
+    /* prevent chips from being wider than the frame at any breakpoint */
+    max-width: calc(100% - 24px);
+  }
   .hero-anno-dot { width: 6px; height: 6px; }
+  /* Re-position for narrow screens so chips don't sit near frame edges */
+  .hero-anno-1 { top: 30%; left: 30%; }
+  .hero-anno-2 { top: 20%; left: 72%; }
+  .hero-anno-3 { top: 60%; left: 50%; }
+  .hero-anno-4 { top: 78%; left: 30%; }
+}
+@media (max-width: 480px) {
+  /* Very small screens — hide two least-critical chips to avoid overlap */
+  .hero-anno-3, .hero-anno-4 { display: none; }
+  .hero-anno { font-size: 9.5px; padding: 3px 8px; gap: 5px; }
+  .hero-url-pulse { width: 5px; height: 5px; }
 }
 
 

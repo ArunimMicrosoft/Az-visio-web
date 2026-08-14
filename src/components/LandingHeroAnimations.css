@@ -626,12 +626,70 @@
   margin: 0;
 }
 
-/* Small screens */
+/* ============================================================
+   Mobile / small-screen tuning for both animation demos.
+   Under 640px the two-column grids collapse to a single column;
+   type sizes shrink; the SVG stays fluid via viewBox.
+   ============================================================ */
+@media (max-width: 900px) {
+  .landing-live-demos { padding: 60px 16px; }
+  .landing-live-demos-title { font-size: 28px; }
+  .landing-live-demos-sub { font-size: 15px; }
+  .landing-live-demo-caption h3 { font-size: 18px; }
+}
+
 @media (max-width: 640px) {
+  /* Validate demo ----------------------------------------------- */
   .va-stage { grid-template-columns: 1fr; }
-  .va-canvas { border-right: none; border-bottom: 1px solid #e2e8f0; }
+  .va-canvas { border-right: none; border-bottom: 1px solid #e2e8f0; padding: 8px; }
+  .va-report { padding: 16px 18px; gap: 12px; }
+  .va-num { font-size: 32px; }
+  .va-score-num { height: 38px; width: 76px; }
+  .va-score-status { font-size: 11px; }
+  .va-pillar-row { font-size: 10.5px; }
+  .va-callout {
+    font-size: 10.5px;
+    padding: 6px 10px;
+    max-width: 82%;
+  }
+  .va-callout-1 { right: 8px; top: 84px; }
+  .va-callout-2 { left: 8px; bottom: 80px; }
+
+  /* Code convert demo ------------------------------------------ */
   .cc-stage { grid-template-columns: 1fr; }
   .cc-arrow { display: none; }
-  .cc-left, .cc-terminal { border-right: none; }
-  .landing-live-demos-title { font-size: 26px; }
+  .cc-left { padding: 14px 12px; gap: 8px; border-right: none; border-bottom: 1px solid #e2e8f0; }
+  .cc-tile { padding: 8px 10px; }
+  .cc-tile-icon { width: 30px; height: 30px; font-size: 16px; }
+  .cc-tile-name { font-size: 12px; }
+  .cc-tile-sub  { font-size: 10px; }
+  .cc-terminal { border-right: none; }
+  .cc-code {
+    padding: 10px 12px;
+    font-size: 10.5px;
+    min-height: 220px;
+    overflow-x: auto; /* let long lines scroll instead of overflowing */
+  }
+  .cc-line { white-space: pre; }
+  .cc-lineno { width: 18px; }
+  .cc-formats { padding: 10px 12px; font-size: 11px; gap: 6px; }
+  .cc-chip { padding: 3px 8px; font-size: 10.5px; }
+
+  /* Section header --------------------------------------------- */
+  .landing-live-demos { padding: 48px 12px; }
+  .landing-live-demos-title { font-size: 22px; }
+  .landing-live-demos-sub { font-size: 13.5px; }
+  .landing-live-demos-grid { gap: 28px; margin-top: 24px; }
+  .landing-live-demo-caption { padding: 0; }
+  .landing-live-demo-caption h3 { font-size: 16px; }
+  .landing-live-demo-caption p { font-size: 13px; }
+}
+
+/* Only 375px iPhone-SE class devices — go extra small on the terminal */
+@media (max-width: 380px) {
+  .cc-code { font-size: 9.5px; min-height: 190px; }
+  .va-num { font-size: 26px; }
+  .va-score-num { width: 62px; height: 32px; }
+  .cc-tile-name { font-size: 11px; }
+  .cc-tile-sub  { display: none; }
 }

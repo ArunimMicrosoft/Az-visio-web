@@ -363,8 +363,19 @@
   .showcase-chip { animation: none; opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
-/* ---------- Small screens: shrink chips ---------- */
+/* ---------- Small screens: shrink chips + reposition ---------- */
 @media (max-width: 700px) {
-  .showcase-chip { font-size: 10.5px; padding: 4px 9px; }
+  .showcase-chip {
+    font-size: 10.5px;
+    padding: 4px 9px;
+    max-width: calc(100% - 24px);
+  }
   .showcase-chip::before { width: 6px; height: 6px; margin-right: 5px; }
+}
+/* Very narrow screens (≤ 480px): keep only two chips to avoid overlap,
+   and pull them slightly inward from the frame edges */
+@media (max-width: 480px) {
+  .showcase-chip { font-size: 9.5px; padding: 3px 8px; gap: 5px; }
+  /* Hide the 3rd and 4th annotation on every row so the image is still readable */
+  .showcase-annotations .showcase-chip:nth-of-type(n+3) { display: none; }
 }
