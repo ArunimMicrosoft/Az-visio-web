@@ -14,6 +14,8 @@ import {
 } from '../components/LandingIllustrations';
 import '../components/LandingIllustrations.css';
 import AppShowcase from '../components/AppShowcase';
+import { ValidateAnimation, CodeConvertAnimation } from '../components/LandingHeroAnimations';
+import '../components/LandingHeroAnimations.css';
 import './LandingPage.css';
 
 const LandingPage = () => {
@@ -174,7 +176,10 @@ const LandingPage = () => {
                 <span className="hero-dot hero-dot-red" />
                 <span className="hero-dot hero-dot-yellow" />
                 <span className="hero-dot hero-dot-green" />
-                <span className="hero-url">cloudcanvas.co/app</span>
+                <span className="hero-url">
+                  <span className="hero-url-pulse" aria-hidden="true" />
+                  cloudcanvas.co/app
+                </span>
               </div>
               <img
                 src="/screenshots/app-overview.png"
@@ -185,6 +190,21 @@ const LandingPage = () => {
                 loading="eager"
                 fetchpriority="high"
               />
+              {/* Floating annotation chips — pulse in/out over the screenshot */}
+              <div className="hero-annotations" aria-hidden="true">
+                <span className="hero-anno hero-anno-1">
+                  <span className="hero-anno-dot" /> ☁️ 700+ Azure Icons
+                </span>
+                <span className="hero-anno hero-anno-2">
+                  <span className="hero-anno-dot" /> 🏛️ WAF Validated
+                </span>
+                <span className="hero-anno hero-anno-3">
+                  <span className="hero-anno-dot" /> 🖱️ Drag &amp; Drop
+                </span>
+                <span className="hero-anno hero-anno-4">
+                  <span className="hero-anno-dot" /> 💰 Live Cost API
+                </span>
+              </div>
             </div>
             {/* Floating decorative orbs around the screenshot */}
             <div className="hero-orb hero-orb-1" />
@@ -200,6 +220,49 @@ const LandingPage = () => {
           </div>
         </div>
       </header>
+
+      {/* ============================================================
+           LIVE DEMOS — two looping animations that sell the product
+           1) Watch WAF validation happen in real time
+           2) Watch a diagram become Terraform in one click
+         ============================================================ */}
+      <section className="landing-live-demos" id="live-demos">
+        <div className="landing-live-demos-inner">
+          <div className="landing-live-demos-header">
+            <span className="landing-live-demos-eyebrow">
+              <span aria-hidden="true">◆</span> See it working
+            </span>
+            <h2 className="landing-live-demos-title">
+              Watch it <span className="grad">validate</span> and <span className="grad">generate code</span> — live
+            </h2>
+            <p className="landing-live-demos-sub">
+              Two things every Azure architect does by hand every week. Cloud Canvas does both in under a second — no screenshots, no re-typing, no drift.
+            </p>
+          </div>
+
+          <div className="landing-live-demos-grid">
+            <div className="landing-live-demo-card">
+              <ValidateAnimation />
+              <div className="landing-live-demo-caption">
+                <h3>1. Validate against Microsoft&apos;s Well-Architected Framework</h3>
+                <p>
+                  Every service on your canvas is checked against the 5 WAF pillars automatically. Findings pop up with the exact fix. Score climbs to 95+ as you resolve them.
+                </p>
+              </div>
+            </div>
+
+            <div className="landing-live-demo-card">
+              <CodeConvertAnimation />
+              <div className="landing-live-demo-caption">
+                <h3>2. Export the diagram to deployable IaC</h3>
+                <p>
+                  Turn any diagram into production Terraform, Bicep, or ARM in one click. Includes resource groups, private endpoints, and all supporting dependencies — ready to <code>terraform apply</code>.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* How It Works — visual three-step flow */}
       <section className="how-it-works-section" style={{ padding: '60px 20px 20px', background: '#f8fafc', textAlign: 'center' }}>

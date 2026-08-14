@@ -1,7 +1,11 @@
-// AppShowcase — "See it in action" section showcasing real product screenshots
-// Three alternating panels (zigzag): description left, screenshot right; then flip.
+// AppShowcase — "See it in action" section showcasing real product screenshots.
+// Now animated:
+//   - Each row slides up on scroll-into-view (IntersectionObserver)
+//   - Screenshots have floating annotation chips that pulse in/out
+//   - Browser frame gently floats + tilts on hover
+//   - Bullet list items stagger-fade in when the row enters view
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './AppShowcase.css';
 
@@ -19,6 +23,13 @@ const showcases = [
       'Smart connection routing with auto-layout',
       'Zoom, pan, multi-select like a CAD tool',
     ],
+    // {x, y, label, tone}. x/y are % of the image (0-100). Tone: azure|amber|emerald|violet
+    annotations: [
+      { x: 18, y: 22, label: '📦 Nested Resource Groups', tone: 'azure',  delay: 0 },
+      { x: 68, y: 30, label: '🔷 VNet · Subnet',            tone: 'emerald', delay: 1.2 },
+      { x: 32, y: 78, label: '💰 $10.87 / mo',                tone: 'amber',  delay: 2.4 },
+      { x: 78, y: 68, label: '🖱️ Drag from 700+ icons',      tone: 'violet', delay: 3.6 },
+    ],
   },
   {
     image: '/screenshots/validation-summary.png',
@@ -34,6 +45,12 @@ const showcases = [
       '"Proceed to Export" only when score is green',
     ],
     flip: true,
+    annotations: [
+      { x: 22, y: 24, label: '📊 Score 80 / B',              tone: 'azure',   delay: 0 },
+      { x: 72, y: 20, label: '✅ Ready to Deploy',            tone: 'emerald', delay: 1.2 },
+      { x: 30, y: 74, label: '🚫 0 blocking errors',          tone: 'emerald', delay: 2.4 },
+      { x: 74, y: 66, label: '💡 2 actionable tips',          tone: 'amber',  delay: 3.6 },
+    ],
   },
   {
     image: '/screenshots/waf-score.png',
@@ -48,8 +65,106 @@ const showcases = [
       'Detects missing security (Key Vault, Firewall, Private Endpoints)',
       'Direct links to Microsoft WAF documentation',
     ],
+    annotations: [
+      { x: 20, y: 20, label: '🏛️ 5 WAF Pillars',           tone: 'violet', delay: 0 },
+      { x: 74, y: 26, label: '🎯 Fix: Add Load Balancer', tone: 'amber',  delay: 1.2 },
+      { x: 30, y: 72, label: '🔒 Missing Key Vault',      tone: 'rose',   delay: 2.4 },
+      { x: 72, y: 78, label: '📖 Microsoft WAF docs →',    tone: 'azure',  delay: 3.6 },
+    ],
   },
 ];
+
+// Hook — sets `inView = true` once when the element enters the viewport,
+// then stops observing (fade-in is one-shot).
+function useOnScreen(rootMargin = '0px 0px -100px 0px') {
+  const ref = useRef(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    if (!ref.current || inView) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setInView(true);
+            io.disconnect();
+            break;
+          }
+        }
+      },
+      { rootMargin, threshold: 0.15 }
+    );
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, [rootMargin, inView]);
+  return [ref, inView];
+}
+
+// One showcase row — encapsulated so we can attach the useOnScreen hook.
+const ShowcaseRow = ({ data, isLast }) => {
+  const [ref, inView] = useOnScreen();
+  return (
+    <div
+      ref={ref}
+      className={`showcase-row ${data.flip ? 'flip' : ''} ${inView ? 'is-in-view' : ''}`}
+    >
+      <div className="showcase-copy">
+        <span className="showcase-row-badge">{data.badge}</span>
+        <h3 className="showcase-row-title">{data.title}</h3>
+        <p className="showcase-row-sub">{data.sub}</p>
+        <ul className="showcase-bullets">
+          {data.bullets.map((b, j) => (
+            <li key={j} style={{ '--bullet-i': j + 1 }}>{b}</li>
+          ))}
+        </ul>
+        {isLast && (
+          <Link to="/signup" className="showcase-cta">
+            Try it free for 7 days →
+          </Link>
+        )}
+      </div>
+
+      <div className="showcase-image-wrap">
+        <div className="browser-frame">
+          <div className="browser-bar">
+            <span className="browser-dot dot-red" />
+            <span className="browser-dot dot-yellow" />
+            <span className="browser-dot dot-green" />
+            <span className="browser-url">cloudcanvas.co/app</span>
+          </div>
+
+          {/* Screenshot */}
+          <img
+            src={data.image}
+            alt={data.alt}
+            className="showcase-image"
+            loading="lazy"
+            width="1024"
+            height="600"
+          />
+
+          {/* Floating annotation chips — pulse in/out cycling */}
+          {inView && (
+            <div className="showcase-annotations" aria-hidden="true">
+              {(data.annotations || []).map((a, k) => (
+                <span
+                  key={k}
+                  className={`showcase-chip showcase-chip-${a.tone}`}
+                  style={{
+                    left: `${a.x}%`,
+                    top: `${a.y}%`,
+                    animationDelay: `${a.delay}s`,
+                  }}
+                >
+                  {a.label}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AppShowcase = () => (
   <section className="app-showcase">
@@ -60,47 +175,12 @@ const AppShowcase = () => (
           What Cloud Canvas Designer Actually <span className="showcase-title-grad">Looks Like</span>
         </h2>
         <p className="showcase-sub">
-          Not stock photos. Not marketing renders. Screenshots from the live product.
+          Not stock photos. Not marketing renders. Screenshots from the live product — with live annotations.
         </p>
       </div>
 
       {showcases.map((s, i) => (
-        <div key={i} className={`showcase-row ${s.flip ? 'flip' : ''}`}>
-          <div className="showcase-copy">
-            <span className="showcase-row-badge">{s.badge}</span>
-            <h3 className="showcase-row-title">{s.title}</h3>
-            <p className="showcase-row-sub">{s.sub}</p>
-            <ul className="showcase-bullets">
-              {s.bullets.map((b, j) => (
-                <li key={j}>{b}</li>
-              ))}
-            </ul>
-            {i === showcases.length - 1 && (
-              <Link to="/signup" className="showcase-cta">
-                Try it free for 7 days →
-              </Link>
-            )}
-          </div>
-
-          <div className="showcase-image-wrap">
-            <div className="browser-frame">
-              <div className="browser-bar">
-                <span className="browser-dot dot-red" />
-                <span className="browser-dot dot-yellow" />
-                <span className="browser-dot dot-green" />
-                <span className="browser-url">cloudcanvas.co/app</span>
-              </div>
-              <img
-                src={s.image}
-                alt={s.alt}
-                className="showcase-image"
-                loading="lazy"
-                width="1024"
-                height="600"
-              />
-            </div>
-          </div>
-        </div>
+        <ShowcaseRow key={i} data={s} isLast={i === showcases.length - 1} />
       ))}
     </div>
   </section>

@@ -1782,16 +1782,116 @@ html {
   50% { transform: translate(-15px, 25px); }
 }
 
+/* ============================================================
+   HERO SCREENSHOT ANIMATIONS
+   ============================================================ */
+
+/* Ambient float — very slow up/down cycle. Preserves the existing tilt. */
+.hero-browser-frame {
+  animation: heroFrameFloat 8s ease-in-out infinite;
+}
+@keyframes heroFrameFloat {
+  0%, 100% { transform: perspective(1200px) rotateX(2deg) translateY(0); }
+  50%      { transform: perspective(1200px) rotateX(2deg) translateY(-8px); }
+}
+/* Hover overrides the ambient float and does the tilt-flat lift */
+.hero-browser-frame:hover {
+  animation: none;
+  transform: perspective(1200px) rotateX(0deg) translateY(-6px);
+}
+
+/* Live "loaded" indicator in the browser URL bar */
+.hero-url {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.hero-url-pulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+  animation: heroUrlPulse 1.6s ease-in-out infinite;
+}
+@keyframes heroUrlPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25); }
+  50%      { opacity: 0.7; box-shadow: 0 0 0 7px rgba(16, 185, 129, 0.08); }
+}
+
+/* Floating annotation chips over the screenshot — cycle in/out every ~6s */
+.hero-annotations {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.hero-anno {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.97);
+  color: #0f172a;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.15px;
+  white-space: nowrap;
+  box-shadow:
+    0 12px 28px -8px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(15, 23, 42, 0.08);
+  transform: translate(-50%, -50%) scale(0.85);
+  opacity: 0;
+  backdrop-filter: blur(6px);
+}
+.hero-anno-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dot, #0078D4);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dot, #0078D4), transparent 78%);
+  flex-shrink: 0;
+}
+/* Each chip's position + tint + timing */
+.hero-anno-1 { top: 40%; left: 18%; --dot: #06b6d4;
+  animation: heroAnnoCycle 6s ease-in-out infinite; animation-delay: 0.4s; }
+.hero-anno-2 { top: 12%; left: 82%; --dot: #10b981;
+  animation: heroAnnoCycle 6s ease-in-out infinite; animation-delay: 1.6s; }
+.hero-anno-3 { top: 55%; left: 50%; --dot: #8b5cf6;
+  animation: heroAnnoCycle 6s ease-in-out infinite; animation-delay: 2.8s; }
+.hero-anno-4 { top: 35%; left: 86%; --dot: #f59e0b;
+  animation: heroAnnoCycle 6s ease-in-out infinite; animation-delay: 4.0s; }
+
+@keyframes heroAnnoCycle {
+  0%      { opacity: 0; transform: translate(-50%, -50%) scale(0.6) translateY(8px); }
+  8%      { opacity: 1; transform: translate(-50%, -50%) scale(1.06) translateY(0); }
+  15%, 32%{ opacity: 1; transform: translate(-50%, -50%) scale(1)    translateY(0); }
+  42%     { opacity: 0; transform: translate(-50%, -50%) scale(0.9)  translateY(-8px); }
+  100%    { opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-orb-1, .hero-orb-2, .hero-orb-3 { animation: none; }
-  .hero-browser-frame { transform: none; }
+  .hero-browser-frame,
+  .hero-browser-frame:hover { transform: none; animation: none; }
+  .hero-url-pulse { animation: none; }
+  .hero-anno { animation: none; opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 @media (max-width: 768px) {
   .hero-screenshot-wrap { margin: 24px auto 16px; padding: 0 12px; }
-  .hero-browser-frame { transform: none; }
+  .hero-browser-frame,
+  .hero-browser-frame:hover { transform: none; animation: none; }
   .hero-url { max-width: none; font-size: 10px; padding: 4px 10px; }
   .hero-orb-1, .hero-orb-2, .hero-orb-3 { display: none; }
+  /* Annotation chips get smaller and stack tighter on mobile */
+  .hero-anno { font-size: 10.5px; padding: 4px 9px; }
+  .hero-anno-dot { width: 6px; height: 6px; }
 }
 
 

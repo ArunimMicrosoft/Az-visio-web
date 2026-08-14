@@ -253,3 +253,118 @@
 @media (prefers-reduced-motion: reduce) {
   .browser-frame:hover { transform: none; }
 }
+
+
+/* ============================================================
+   ANIMATIONS — scroll fade-in, chip pulses, browser float
+   ============================================================ */
+
+/* Rows start invisible and slide up when they enter the viewport.
+   IntersectionObserver in JSX toggles .is-in-view on the row. */
+.showcase-row {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+              transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.showcase-row.is-in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Bullets stagger in after the row appears */
+.showcase-bullets li {
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 500ms ease, transform 500ms ease;
+  transition-delay: calc(220ms + (var(--bullet-i, 1) - 1) * 75ms);
+}
+.showcase-row.is-in-view .showcase-bullets li {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Browser frame — a very slow ambient float when in view */
+.showcase-row.is-in-view .browser-frame {
+  animation: showcaseFloat 8s ease-in-out infinite;
+}
+@keyframes showcaseFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+/* Hover cancels the float and does the interactive lift/scale instead */
+.showcase-row.is-in-view .browser-frame:hover {
+  animation: none;
+  transform: translateY(-8px) scale(1.012);
+}
+
+/* ---------- Floating annotation chips over the screenshot ---------- */
+.showcase-annotations {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+/* Position the chip container inside the frame — the img itself is
+   the reference for x/y percentages. */
+.browser-frame { position: relative; }
+
+.showcase-chip {
+  position: absolute;
+  transform: translate(-50%, -50%) scale(0.85);
+  opacity: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 10px 24px -8px rgba(15, 23, 42, 0.35),
+    0 0 0 1px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(4px);
+  animation: chipCycle 5s ease-in-out infinite;
+  /* animation-delay is set inline per chip so they stagger */
+}
+@keyframes chipCycle {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.7)   translateY(6px); }
+  8%   { opacity: 1; transform: translate(-50%, -50%) scale(1.05)  translateY(0); }
+  15%, 55% { opacity: 1; transform: translate(-50%, -50%) scale(1)  translateY(0); }
+  70%  { opacity: 0; transform: translate(-50%, -50%) scale(0.9)   translateY(-6px); }
+  100% { opacity: 0; }
+}
+
+/* Chip color variants — leading dot + subtle tinted background */
+.showcase-chip::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 7px;
+  vertical-align: middle;
+  background: var(--chip-dot, #0078D4);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--chip-dot, #0078D4), transparent 78%);
+}
+.showcase-chip-azure   { --chip-dot: #0078D4; }
+.showcase-chip-emerald { --chip-dot: #10b981; }
+.showcase-chip-amber   { --chip-dot: #f59e0b; }
+.showcase-chip-violet  { --chip-dot: #8b5cf6; }
+.showcase-chip-rose    { --chip-dot: #ef4444; }
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .showcase-row { opacity: 1 !important; transform: none !important; transition: none; }
+  .showcase-bullets li { opacity: 1 !important; transform: none !important; transition: none; }
+  .browser-frame,
+  .showcase-row.is-in-view .browser-frame { animation: none !important; }
+  .showcase-chip { animation: none; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* ---------- Small screens: shrink chips ---------- */
+@media (max-width: 700px) {
+  .showcase-chip { font-size: 10.5px; padding: 4px 9px; }
+  .showcase-chip::before { width: 6px; height: 6px; margin-right: 5px; }
+}
