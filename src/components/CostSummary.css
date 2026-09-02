@@ -140,14 +140,31 @@
 
 .region-selector,
 .currency-selector {
-  padding: 3px 6px;
+  padding: 4px 8px;
   border: 1px solid #dee2e6;
-  font-size: 11px;
+  font-size: 12px;
   border-radius: 4px;
   background: #ffffff;
-  font-size: 12px;
+  /* Explicit text color — without this, mobile browsers with force-dark
+     (Chrome Android, Samsung Internet, iOS Reader) invert to white text
+     on a white background and the dropdown reads as empty. */
+  color: #212529;
+  /* Opt out of the browser's auto dark-mode heuristics for this control. */
+  color-scheme: light;
   cursor: pointer;
   transition: all 0.2s;
+  /* Ensure the native chevron doesn't disappear on iOS */
+  -webkit-appearance: menulist;
+          appearance: menulist;
+  min-width: 0;
+  max-width: 100%;
+}
+/* Option items also need explicit colors — browsers style these
+   separately from the select control. */
+.region-selector option,
+.currency-selector option {
+  background: #ffffff;
+  color: #212529;
 }
 
 .region-selector:hover,
