@@ -165,6 +165,343 @@ function enrichForValidation(data) {
   return { items, connections, boundaries };
 }
 
+// ============================================================
+// AUTO-BOUNDARIES — wraps every template load in Azure-correct containers:
+// one Resource Group around everything, a VNet when any NIC-based service is
+// present, and one subnet per workload class (incl. the Azure-mandated
+// AzureFirewallSubnet / AzureBastionSubnet / GatewaySubnet). Reflows item
+// positions so each service sits inside its correct boundary with a bit of
+// padding. Idempotent: if the template already carries boundaries, pass
+// through unchanged. Shape matches BoundaryCanvas { id, type, name, icon,
+// color, style, x, y, width, height, label } so no renderer changes needed.
+// ============================================================
+
+// Normalized serviceType → subnet bucket.
+// Keys beyond REQUIRED_DEPS: everything the Boundary tool treats as a NIC-
+// bearing resource, plus the Azure-mandated subnet names.
+const SUBNET_FOR = {
+  virtualmachine:        'workload',
+  vmscalesets:           'workload',
+  vmss:                  'workload',
+  containerinstances:    'workload',
+  batchaccounts:         'workload',
+  servicefabric:         'workload',
+  aks:                   'aks',
+  kubernetesservices:    'aks',
+  applicationgateway:    'appgw',
+  applicationgateways:   'appgw',
+  firewall:              'firewall',
+  firewalls:             'firewall',
+  bastion:               'bastion',
+  bastions:              'bastion',
+  virtualnetworkgateways:'gateway',
+  vpngateway:            'gateway',
+  expressroutecircuits:  'gateway',
+  loadbalancer:          'workload',
+  loadbalancers:         'workload',
+};
+
+const SUBNET_META = {
+  workload:    { label: 'snet-workload',        cidr: '10.0.1.0/24',  order: 5 },
+  aks:         { label: 'snet-aks',             cidr: '10.0.2.0/23',  order: 6 },
+  appgw:       { label: 'snet-appgw',           cidr: '10.0.10.0/24', order: 4 },
+  firewall:    { label: 'AzureFirewallSubnet',  cidr: '10.0.20.0/26', order: 2 },
+  bastion:     { label: 'AzureBastionSubnet',   cidr: '10.0.21.0/26', order: 3 },
+  gateway:     { label: 'GatewaySubnet',        cidr: '10.0.22.0/27', order: 1 },
+  privatelink: { label: 'snet-privatelink',     cidr: '10.0.30.0/24', order: 7 },
+  data:        { label: 'snet-data',            cidr: '10.0.40.0/24', order: 8 },
+};
+
+// Hub-spoke templates: rendered as one shared RG with one hub VNet +
+// per-bucket spoke VNets. Picked over "one RG per spoke" because every
+// current hub-spoke template points at a single logical application and the
+// shared-RG shape preserves peering + shared services (Firewall, Bastion,
+// Gateway) in one visible container.
+const HUB_SPOKE_IDS = new Set([
+  'net-hub-spoke', 'net-vwan', 'ent-zero-trust-lz', 'ent-active-active-global',
+]);
+
+// Subnet buckets that belong in the hub VNet (hub appliances). Everything
+// else — workload / aks / appgw / privatelink / data — becomes a spoke.
+const HUB_SUBNET_KEYS = new Set(['gateway', 'firewall', 'bastion']);
+
+// Items rendered inside a VNet envelope but outside any specific subnet.
+// These are the "VNet chrome" icons enrichForValidation auto-adds to signal
+// a VNet / NSG / Subnet dependency, and a handful of templates ship them
+// explicitly (net-private-endpoint, net-vpn-s2s, net-vwan). Keeping them
+// inside the VNet avoids duplicating the boundary semantics in a PaaS row.
+const VNET_CHROME_TYPES = new Set([
+  'virtualnetworks', 'networksecuritygroups', 'subnets',
+]);
+
+// Resource-manager globals — DNS zones, Azure AD, Policy, Blueprints. Placed
+// above the Resource Group so they're visibly outside its scope, per the
+// brief's "global/subscription-scope resources outside the RG" rule. No
+// template currently uses dnszones; this is encoded ahead of the first.
+const GLOBAL_TYPES = new Set(['dnszones']);
+
+// Slug for labels: drop the single category prefix (web-, net-, ctr-, …).
+function templateSlug(template) {
+  const raw = (template && template.id) || 'template';
+  return raw.replace(/^[a-z]+-/, '').replace(/[^a-z0-9-]/g, '-');
+}
+
+function enrichWithBoundaries(data, template) {
+  // Idempotency — templates may ship their own boundaries later; honour them.
+  if (data.boundaries && data.boundaries.length > 0) return data;
+
+  const items = (data.items || []).map((i) => ({ ...i }));
+  if (items.length === 0) return data;
+
+  // Partition items into placement buckets.
+  //   globals      → row above the RG (brief: "outside the RG at the top")
+  //   vnetChrome   → inside the VNet envelope, outside any subnet
+  //   subnetBuckets→ inside a specific subnet (by SUBNET_FOR key)
+  //   rgOnly       → PaaS row inside the RG, outside the VNet
+  const globals = [];
+  const vnetChrome = [];
+  const subnetBuckets = {};
+  const rgOnly = [];
+  for (const it of items) {
+    const t = normalize(it.serviceType);
+    if (GLOBAL_TYPES.has(t)) { globals.push(it); continue; }
+    if (VNET_CHROME_TYPES.has(t)) { vnetChrome.push(it); continue; }
+    const key = SUBNET_FOR[t];
+    if (key) { (subnetBuckets[key] = subnetBuckets[key] || []).push(it); continue; }
+    rgOnly.push(it);
+  }
+  // VNet is needed whenever any item is NIC-bound or explicitly a vnet-chrome
+  // type. The latter branch is why net-private-endpoint (App Service + VNet
+  // service icon, no NIC-bound compute) still gets a VNet boundary.
+  const needsVnet = Object.keys(subnetBuckets).length > 0 || vnetChrome.length > 0;
+
+  // Layout constants — tuned to match Canvas item footprint (min-width 180,
+  // ~120px tall with label) plus boundary header space.
+  const ITEM_W = 170;
+  const ITEM_H = 120;
+  const COL_GAP = 50;
+  const ROW_GAP = 40;
+  const RG_PAD = 40;      // within the brief's 24–40px band
+  const VNET_PAD = 40;
+  const SNET_PAD = 28;
+  const HEADER_H = 48;    // room below a boundary's header strip
+  const PAAS_COLS = 5;
+  const SNET_COLS = 4;
+
+  // Globals row (above the RG). Only emitted when GLOBAL_TYPES items exist.
+  const GLOBAL_X = 80;
+  const GLOBAL_Y = 40;
+  globals.forEach((it, idx) => {
+    it.x = GLOBAL_X + idx * (ITEM_W + COL_GAP);
+    it.y = GLOBAL_Y;
+  });
+  const globalsBottom = globals.length > 0 ? GLOBAL_Y + ITEM_H : 0;
+
+  // RG anchor — slides below the globals row if present.
+  const RG_X = 80;
+  const RG_Y = globals.length > 0 ? globalsBottom + 40 : 80;
+
+  // PaaS row(s): RG-level services, 5 per row, under the RG header.
+  const paasBaseX = RG_X + RG_PAD;
+  const paasBaseY = RG_Y + RG_PAD + HEADER_H;
+  rgOnly.forEach((it, idx) => {
+    const col = idx % PAAS_COLS;
+    const row = Math.floor(idx / PAAS_COLS);
+    it.x = paasBaseX + col * (ITEM_W + COL_GAP);
+    it.y = paasBaseY + row * (ITEM_H + ROW_GAP);
+  });
+  const paasRows = Math.ceil(rgOnly.length / PAAS_COLS);
+  const paasBlockH = paasRows === 0 ? 0 : paasRows * ITEM_H + (paasRows - 1) * ROW_GAP;
+  const paasBottom = paasRows === 0 ? paasBaseY : paasBaseY + paasBlockH;
+
+  // Helper — lay out one VNet (chrome row + ordered subnets) at (originX,
+  // originY) and return its boundary plus child subnet boundaries.
+  const layoutVnet = ({ bucketsForVnet, chromeForVnet, originX, originY, label, cidr }) => {
+    const subBoundaries = [];
+    const chromeBaseX = originX + VNET_PAD;
+    const chromeBaseY = originY + VNET_PAD + HEADER_H;
+    chromeForVnet.forEach((it, idx) => {
+      it.x = chromeBaseX + idx * (ITEM_W + COL_GAP);
+      it.y = chromeBaseY;
+    });
+    const chromeBlockH = chromeForVnet.length > 0 ? ITEM_H + 24 : 0;
+
+    const snetX = originX + VNET_PAD;
+    let snetCursorY = chromeBaseY + chromeBlockH;
+    let vnetContentMaxX = snetX;
+
+    const bucketKeys = Object.keys(bucketsForVnet).sort(
+      (a, b) => SUBNET_META[a].order - SUBNET_META[b].order
+    );
+    for (const key of bucketKeys) {
+      const bucket = bucketsForVnet[key];
+      const meta = SUBNET_META[key];
+      const itemBaseX = snetX + SNET_PAD;
+      const itemBaseY = snetCursorY + SNET_PAD + HEADER_H;
+      bucket.forEach((it, idx) => {
+        const col = idx % SNET_COLS;
+        const row = Math.floor(idx / SNET_COLS);
+        it.x = itemBaseX + col * (ITEM_W + COL_GAP);
+        it.y = itemBaseY + row * (ITEM_H + ROW_GAP);
+      });
+      const bRows = Math.ceil(bucket.length / SNET_COLS);
+      const bCols = Math.min(bucket.length, SNET_COLS);
+      const snetW = SNET_PAD * 2 + bCols * ITEM_W + (bCols - 1) * COL_GAP;
+      const snetH = SNET_PAD * 2 + HEADER_H + bRows * ITEM_H + (bRows - 1) * ROW_GAP;
+      subBoundaries.push({
+        id: uid(),
+        type: 'subnet',
+        name: 'Subnet',
+        icon: '🔸',
+        color: '#00BCF2',
+        style: 'dashed',
+        x: snetX,
+        y: snetCursorY,
+        width: snetW,
+        height: snetH,
+        label: `${meta.label} · ${meta.cidr}`,
+      });
+      snetCursorY += snetH + 28;
+      vnetContentMaxX = Math.max(vnetContentMaxX, snetX + snetW);
+    }
+    // Chrome row right-edge (if any) must also fit inside the VNet envelope.
+    if (chromeForVnet.length > 0) {
+      const chromeRight = chromeBaseX + chromeForVnet.length * ITEM_W
+        + (chromeForVnet.length - 1) * COL_GAP;
+      vnetContentMaxX = Math.max(vnetContentMaxX, chromeRight);
+    }
+    const contentBottom = Math.max(snetCursorY - 28, chromeBaseY + chromeBlockH);
+    const vnetW = (vnetContentMaxX - originX) + VNET_PAD;
+    const vnetH = (contentBottom - originY) + VNET_PAD;
+    const vnetBoundary = {
+      id: uid(),
+      type: 'virtual-network',
+      name: 'Virtual Network',
+      icon: '🔷',
+      color: '#008272',
+      style: 'solid',
+      x: originX,
+      y: originY,
+      width: vnetW,
+      height: vnetH,
+      label: `${label} · ${cidr}`,
+    };
+    return { vnetBoundary, subBoundaries };
+  };
+
+  // Decide the VNet shape — one VNet by default; hub + per-bucket spokes for
+  // HUB_SPOKE_IDS templates. Both shapes live inside the single RG envelope.
+  const slug = templateSlug(template);
+  const hubSlug = slug.replace(/^hub-?/, '') || slug;
+  const isHubSpoke = template && HUB_SPOKE_IDS.has(template.id);
+  const vnetGroups = [];
+  if (needsVnet) {
+    if (isHubSpoke) {
+      const hubBuckets = {};
+      const spokeBucketKeys = [];
+      for (const key of Object.keys(subnetBuckets)) {
+        if (HUB_SUBNET_KEYS.has(key)) hubBuckets[key] = subnetBuckets[key];
+        else spokeBucketKeys.push(key);
+      }
+      const hubHasContent = Object.keys(hubBuckets).length > 0 || vnetChrome.length > 0;
+      if (hubHasContent) {
+        vnetGroups.push({
+          bucketsForVnet: hubBuckets,
+          chromeForVnet: vnetChrome,
+          label: `vnet-hub-${hubSlug}`,
+          cidr: '10.0.0.0/16',
+        });
+      }
+      spokeBucketKeys
+        .sort((a, b) => SUBNET_META[a].order - SUBNET_META[b].order)
+        .forEach((key, idx) => {
+          const n = idx + 1;
+          vnetGroups.push({
+            bucketsForVnet: { [key]: subnetBuckets[key] },
+            // If the hub didn't exist to absorb it, the first spoke takes
+            // the chrome icon so the service never goes homeless.
+            chromeForVnet: !hubHasContent && idx === 0 ? vnetChrome : [],
+            label: `vnet-spoke-${n}-${hubSlug}`,
+            cidr: `10.${n}.0.0/16`,
+          });
+        });
+    } else {
+      vnetGroups.push({
+        bucketsForVnet: subnetBuckets,
+        chromeForVnet: vnetChrome,
+        label: `vnet-${slug}`,
+        cidr: '10.0.0.0/16',
+      });
+    }
+  }
+
+  // Stack VNets vertically inside the RG, below the PaaS row.
+  const vnetX = RG_X + RG_PAD;
+  let vnetCursorY = paasBottom + (paasRows === 0 ? 0 : 32);
+  const vnetBoundaries = [];
+  const subnetBoundariesAll = [];
+  for (const group of vnetGroups) {
+    const { vnetBoundary, subBoundaries } = layoutVnet({
+      ...group,
+      originX: vnetX,
+      originY: vnetCursorY,
+    });
+    vnetBoundaries.push(vnetBoundary);
+    subnetBoundariesAll.push(...subBoundaries);
+    vnetCursorY = vnetBoundary.y + vnetBoundary.height + 32;
+  }
+
+  // RG envelope — extent of everything inside the RG (PaaS + VNets).
+  // Globals sit outside the RG by design, so they do not contribute.
+  let rgMinX = Infinity;
+  let rgMinY = Infinity;
+  let rgMaxX = -Infinity;
+  let rgMaxY = -Infinity;
+  const consider = (x, y, w, h) => {
+    if (typeof x !== 'number' || typeof y !== 'number') return;
+    rgMinX = Math.min(rgMinX, x);
+    rgMinY = Math.min(rgMinY, y);
+    rgMaxX = Math.max(rgMaxX, x + w);
+    rgMaxY = Math.max(rgMaxY, y + h);
+  };
+  for (const it of rgOnly) consider(it.x, it.y, ITEM_W, ITEM_H);
+  for (const b of vnetBoundaries) consider(b.x, b.y, b.width, b.height);
+  for (const b of subnetBoundariesAll) consider(b.x, b.y, b.width, b.height);
+  // vnetChrome items are inside their VNet; already covered by the VNet extent.
+
+  let rgBoundary = null;
+  if (rgMinX !== Infinity) {
+    const rgX = Math.max(0, Math.min(RG_X, rgMinX - RG_PAD));
+    const rgY = Math.max(RG_Y, rgMinY - RG_PAD - HEADER_H);
+    const rgW = (rgMaxX - rgX) + RG_PAD;
+    const rgH = (rgMaxY - rgY) + RG_PAD;
+    rgBoundary = {
+      id: uid(),
+      type: 'resource-group',
+      name: 'Resource Group',
+      icon: '📦',
+      color: '#0078D4',
+      style: 'solid',
+      x: rgX,
+      y: rgY,
+      width: rgW,
+      height: rgH,
+      label: `rg-${slug}`,
+    };
+  }
+
+  // Draw-order (= DOM order = natural z-stack in BoundaryCanvas):
+  // outer first so inner render on top. Canvas items sit on a higher z-layer
+  // than the boundary layer, so services always display above their container.
+  const boundaries = [
+    ...(rgBoundary ? [rgBoundary] : []),
+    ...vnetBoundaries,
+    ...subnetBoundariesAll,
+  ];
+
+  return { items, connections: data.connections || [], boundaries };
+}
+
 // tpl(id, name, description, category, icon, buildFn, minTier?)
 // minTier is the lowest subscription that can load this template:
 //   'trial'         — all users
@@ -174,15 +511,21 @@ function enrichForValidation(data) {
 //
 // build() output goes through enrichForValidation() so every template is
 // guaranteed to include the exact supporting resources the validator requires.
-const tpl = (id, name, desc, cat, icon, buildFn, minTier = 'trial') => ({
-  id,
-  name,
-  description: desc,
-  category: cat,
-  icon,
-  build: () => enrichForValidation(buildFn()),
-  minTier,
-});
+const tpl = (id, name, desc, cat, icon, buildFn, minTier = 'trial') => {
+  const meta = { id, name, category: cat };
+  return {
+    id,
+    name,
+    description: desc,
+    category: cat,
+    icon,
+    // Pipeline: author's buildFn → enrichForValidation (adds missing deps) →
+    // enrichWithBoundaries (wraps the result in RG / VNet / Subnet boundaries
+    // and reflows positions so each service sits inside the correct one).
+    build: () => enrichWithBoundaries(enrichForValidation(buildFn()), meta),
+    minTier,
+  };
+};
 
 // ============================================================
 // WEB (10)
@@ -700,6 +1043,8 @@ export const diagramTemplates = [
 ];
 
 export const templateCategories = [...new Set(diagramTemplates.map(t => t.category))];
+
+export { enrichWithBoundaries };
 
 export function getTemplateById(id) {
   return diagramTemplates.find(t => t.id === id);

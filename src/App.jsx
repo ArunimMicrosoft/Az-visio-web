@@ -290,11 +290,18 @@ function App() {
     const offset = maxX > 0 ? maxX + 200 : 0;
 
     const offsetItems = newItems.map(i => ({ ...i, x: (i.x || 0) + offset }));
+    // Boundaries must shift by the same offset or the RG / VNet / Subnet
+    // rectangles emitted by enrichWithBoundaries would sit at origin while
+    // the services land far to the right. Templates that still return empty
+    // boundaries go through this unchanged.
+    const offsetBoundaries = (newBoundaries || []).map(
+      b => ({ ...b, x: (b.x || 0) + offset })
+    );
     isLoadingDiagram.current = true;
     handleSetItems(prev => [...prev, ...offsetItems]);
     setConnections(prev => [...prev, ...(newConnections || [])]);
-    if (newBoundaries && newBoundaries.length > 0) {
-      setBoundaries(prev => [...prev, ...newBoundaries]);
+    if (offsetBoundaries.length > 0) {
+      setBoundaries(prev => [...prev, ...offsetBoundaries]);
     }
     isLoadingDiagram.current = false;
   };
