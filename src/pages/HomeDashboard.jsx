@@ -319,6 +319,9 @@ const HomeDashboard = () => {
             <Link to="/blog" className="hd-hero-cta-ghost">
               📖 Learn
             </Link>
+            <Link to="/blog/submit" className="hd-hero-cta-ghost" title="Draft a blog post — admins review before publishing">
+              📝 Write a Blog Post
+            </Link>
           </div>
         </div>
 
@@ -468,12 +471,7 @@ const HomeDashboard = () => {
               ? 'Based on the services on your canvas and what you have tried so far'
               : 'Start reading — recommendations personalise as you use the app'}
           </span>
-          <div className="hd-section-actions">
-            <Link to="/blog/submit" className="hd-section-cta" title="Draft a blog post — admins review before publishing">
-              📝 Write a Blog Post
-            </Link>
-            <Link to="/blog" className="hd-section-link">All articles →</Link>
-          </div>
+          <Link to="/blog" className="hd-section-link">All articles →</Link>
         </div>
         <div className="hd-blog">
           {blogRecommendations.map(({ article: a, reasons }) => {
