@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Turnstile from '../components/Turnstile';
 import { verifyCaptcha } from '../utils/captcha';
@@ -13,7 +13,16 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
+
+  // Optional ?returnTo=/some/path — restricted to same-site relative paths so
+  // the login page can't be weaponized as an open redirect.
+  const rawReturnTo = searchParams.get('returnTo');
+  const returnTo =
+    rawReturnTo && rawReturnTo.startsWith('/') && !rawReturnTo.startsWith('//')
+      ? rawReturnTo
+      : null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,8 +66,11 @@ const LoginPage = () => {
     setIsLoading(false);
     
     if (result.success) {
-      // Check if user is admin
-      if (result.user.role === 'admin') {
+      // If the user landed here via ?returnTo=... (e.g. clicking "Submit an
+      // article" on /blog while logged out), honour that first.
+      if (returnTo) {
+        navigate(returnTo);
+      } else if (result.user.role === 'admin') {
         navigate('/admin');
       } else {
         // Land on the home dashboard, not the blank canvas — gives returning
@@ -76,7 +88,7 @@ const LoginPage = () => {
     setIsLoading(false);
     
     if (result.success) {
-      navigate('/home');
+      navigate(returnTo || '/home');
     } else {
       setError(result.error || 'Demo login failed');
     }
@@ -175,7 +187,12 @@ const LoginPage = () => {
               </p>
               <p>
                 Don't have an account?{' '}
-                <Link to="/signup" className="auth-link">Sign up for free</Link>
+                <Link
+                  to={returnTo ? `/signup?returnTo=${encodeURIComponent(returnTo)}` : '/signup'}
+                  className="auth-link"
+                >
+                  Sign up for free
+                </Link>
               </p>
             </div>
           </div>

@@ -6,6 +6,7 @@ import { BlogHeader, BlogFooter } from '../components/BlogLayout';
 import { fetchLikeCounts } from '../utils/blogLikes';
 import { fetchCommentCounts } from '../utils/blogComments';
 import { fetchPublishedPosts } from '../utils/blogPosts';
+import { useAuth } from '../contexts/AuthContext';
 import usePageSEO from '../hooks/usePageSEO';
 import './Blog.css';
 
@@ -44,6 +45,9 @@ const Blog = () => {
       },
     },
   });
+
+  const { isAuthenticated } = useAuth();
+  const submitHref = isAuthenticated ? '/blog/submit' : '/login?returnTo=/blog/submit';
 
   const [category, setCategory] = useState('All');
   const [dbPosts, setDbPosts] = useState([]);
@@ -105,6 +109,19 @@ const Blog = () => {
       </section>
 
       <div className="cc-blog-main">
+        {/* Submit-your-story CTA strip — visible to everyone; logged-out users
+             get bounced through /login with ?returnTo so they land back here. */}
+        <Link to={submitHref} className="cc-blog-submit-strip">
+          <div className="cc-blog-submit-strip-icon">📝</div>
+          <div className="cc-blog-submit-strip-body">
+            <div className="cc-blog-submit-strip-title">Share your Azure story — submit an article</div>
+            <div className="cc-blog-submit-strip-sub">
+              Draft a post and our admins will review it before publishing. No markdown gymnastics required.
+            </div>
+          </div>
+          <div className="cc-blog-submit-strip-cta">Start writing →</div>
+        </Link>
+
         {/* Category chips */}
         <div className="cc-blog-cats">
           {categories.map((cat) => {

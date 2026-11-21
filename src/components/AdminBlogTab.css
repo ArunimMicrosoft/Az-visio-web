@@ -25,8 +25,10 @@
 .ad-blog-stat strong { color: #0f172a; font-weight: 700; margin-right: 4px; }
 .ad-blog-stat-pub   { color: #065f46; background: #ecfdf5; }
 .ad-blog-stat-pub strong { color: #065f46; }
-.ad-blog-stat-draft { color: #92400e; background: #fef3c7; }
-.ad-blog-stat-draft strong { color: #92400e; }
+.ad-blog-stat-pending { color: #92400e; background: #fef3c7; }
+.ad-blog-stat-pending strong { color: #92400e; }
+.ad-blog-stat-draft { color: #374151; background: #f3f4f6; }
+.ad-blog-stat-draft strong { color: #111827; }
 
 .ad-blog-toolbar-right { display: flex; gap: 10px; flex-wrap: wrap; }
 .ad-blog-toolbar-right .ad-filter {
@@ -50,9 +52,18 @@
   font-weight: 700;
   letter-spacing: 0.2px;
 }
-.ad-blog-status { font-size: 12px; font-weight: 700; }
-.ad-blog-published { color: #10b981; }
-.ad-blog-draft     { color: #f59e0b; }
+.ad-blog-status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  display: inline-block;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+.ad-blog-published { color: #065f46; background: #ecfdf5; }
+.ad-blog-pending   { color: #92400e; background: #fef3c7; border: 1px solid #fcd34d; }
+.ad-blog-draft     { color: #374151; background: #f3f4f6; }
 
 /* ── Editor modal (wide variant of .ad-modal) ─────────────────── */
 .ad-blog-modal {

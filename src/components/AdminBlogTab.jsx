@@ -8,10 +8,13 @@ import {
   adminCreatePost,
   adminUpdatePost,
   adminDeletePost,
+  adminPublishPost,
+  adminReturnToDraft,
   formatPostError,
   isValidSlug,
 } from '../utils/blogPosts';
 import { renderMarkdown } from '../utils/blogRenderer';
+import EmojiPicker from './EmojiPicker';
 import './AdminBlogTab.css';
 
 const EMPTY_DRAFT = {
@@ -28,6 +31,7 @@ const EMPTY_DRAFT = {
   keywords: '',
   published: false,
   published_at: null,
+  submitted_for_review: false,
 };
 
 const CATEGORY_OPTIONS = [
@@ -57,13 +61,20 @@ const slugify = (s) =>
     .replace(/-+/g, '-')
     .slice(0, 120);
 
+// Which row-state bucket a post belongs to — mirrors the four filter options.
+const bucketOf = (p) => {
+  if (p.published) return 'published';
+  if (p.submitted_for_review) return 'pending';
+  return 'draft';
+};
+
 export default function AdminBlogTab({ user, onFlash }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState(null); // null = no editor open
   const [saving, setSaving] = useState(false);
   const [localError, setLocalError] = useState(null);
-  const [filter, setFilter] = useState('all'); // all | published | draft
+  const [filter, setFilter] = useState('all'); // all | draft | pending | published
 
   const flash = useCallback(
     (type, text) => {
@@ -89,16 +100,16 @@ export default function AdminBlogTab({ user, onFlash }) {
   }, [load]);
 
   const filtered = useMemo(() => {
-    if (filter === 'published') return posts.filter((p) => p.published);
-    if (filter === 'draft') return posts.filter((p) => !p.published);
-    return posts;
+    if (filter === 'all') return posts;
+    return posts.filter((p) => bucketOf(p) === filter);
   }, [posts, filter]);
 
   const stats = useMemo(
     () => ({
       total: posts.length,
       published: posts.filter((p) => p.published).length,
-      drafts: posts.filter((p) => !p.published).length,
+      pending: posts.filter((p) => !p.published && p.submitted_for_review).length,
+      drafts: posts.filter((p) => !p.published && !p.submitted_for_review).length,
     }),
     [posts]
   );
@@ -124,6 +135,7 @@ export default function AdminBlogTab({ user, onFlash }) {
       keywords: post.keywords || '',
       published: !!post.published,
       published_at: post.published_at || null,
+      submitted_for_review: !!post.submitted_for_review,
     });
   };
 
@@ -155,6 +167,7 @@ export default function AdminBlogTab({ user, onFlash }) {
     setSaving(true);
     setLocalError(null);
     try {
+      const nowPublishing = !!d.published;
       const fields = {
         slug: d.slug,
         title: d.title.trim(),
@@ -166,7 +179,9 @@ export default function AdminBlogTab({ user, onFlash }) {
         read_time: d.read_time || null,
         meta_description: d.meta_description || null,
         keywords: d.keywords || null,
-        published: !!d.published,
+        published: nowPublishing,
+        // Publishing always clears any pending-review flag; unpublishing leaves it alone.
+        submitted_for_review: nowPublishing ? false : !!d.submitted_for_review,
       };
       let saved;
       if (d.id) {
@@ -192,6 +207,7 @@ export default function AdminBlogTab({ user, onFlash }) {
         keywords: saved.keywords || '',
         published: !!saved.published,
         published_at: saved.published_at || null,
+        submitted_for_review: !!saved.submitted_for_review,
       });
     } catch (err) {
       setLocalError(formatPostError(err));
@@ -211,8 +227,28 @@ export default function AdminBlogTab({ user, onFlash }) {
       : `Unpublish "${post.title}"?\n\nIt will disappear from /blog but stay as a draft.`;
     if (!window.confirm(msg)) return;
     try {
-      await adminUpdatePost(post.id, { published: wantPublish });
+      if (wantPublish) {
+        await adminPublishPost(post.id);
+      } else {
+        await adminUpdatePost(post.id, { published: false });
+      }
       flash('success', wantPublish ? `✅ Published "${post.title}"` : `✅ Unpublished "${post.title}"`);
+      await load();
+    } catch (err) {
+      flash('error', formatPostError(err));
+    }
+  };
+
+  const handleReturnToDraft = async (post) => {
+    if (
+      !window.confirm(
+        `Return "${post.title}" to the author as a draft?\n\nThe post leaves the review queue and the author can keep editing. It will not be published.`
+      )
+    )
+      return;
+    try {
+      await adminReturnToDraft(post.id);
+      flash('success', `↩️ Returned "${post.title}" to draft`);
       await load();
     } catch (err) {
       flash('error', formatPostError(err));
@@ -252,6 +288,9 @@ export default function AdminBlogTab({ user, onFlash }) {
           <span className="ad-blog-stat ad-blog-stat-pub">
             <strong>{stats.published}</strong> published
           </span>
+          <span className="ad-blog-stat ad-blog-stat-pending">
+            <strong>{stats.pending}</strong> pending review
+          </span>
           <span className="ad-blog-stat ad-blog-stat-draft">
             <strong>{stats.drafts}</strong> drafts
           </span>
@@ -264,8 +303,9 @@ export default function AdminBlogTab({ user, onFlash }) {
             title="Filter by status"
           >
             <option value="all">All posts</option>
-            <option value="published">Published only</option>
-            <option value="draft">Drafts only</option>
+            <option value="draft">Admin Drafts</option>
+            <option value="pending">Pending Review</option>
+            <option value="published">Published</option>
           </select>
           <button className="ad-btn ad-btn-outline" onClick={load} disabled={loading}>
             {loading ? '⏳' : '🔄'} Refresh
@@ -300,71 +340,94 @@ export default function AdminBlogTab({ user, onFlash }) {
               <tr>
                 <th style={{ width: 60 }}>Icon</th>
                 <th>Title / Slug</th>
+                <th style={{ width: 160 }}>Author</th>
                 <th style={{ width: 140 }}>Category</th>
-                <th style={{ width: 110 }}>Status</th>
+                <th style={{ width: 130 }}>Status</th>
                 <th style={{ width: 170 }}>Updated</th>
-                <th style={{ width: 90 }}>Views</th>
-                <th style={{ width: 280 }}>Actions</th>
+                <th style={{ width: 80 }}>Views</th>
+                <th style={{ width: 300 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((post) => (
-                <tr key={post.id} className="ad-row">
-                  <td style={{ fontSize: 22, textAlign: 'center' }}>{post.icon || '📝'}</td>
-                  <td className="ad-cell-email" style={{ maxWidth: 'none' }}>
-                    <div style={{ fontWeight: 700 }}>{post.title}</div>
-                    <div style={{ fontSize: 11, color: '#6b7280', fontFamily: 'Consolas, monospace' }}>
-                      /blog/{post.slug}
-                    </div>
-                  </td>
-                  <td>
-                    <span className="ad-blog-cat-pill">{post.category || '—'}</span>
-                  </td>
-                  <td>
-                    <span
-                      className={`ad-blog-status ${post.published ? 'ad-blog-published' : 'ad-blog-draft'}`}
-                    >
-                      {post.published ? '● Published' : '○ Draft'}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: 12, color: '#6b7280' }}>{fmt(post.updated_at)}</td>
-                  <td className="ad-center">{post.view_count || 0}</td>
-                  <td>
-                    <div className="ad-actions">
-                      <button
-                        className="ad-act ad-act-plan"
-                        onClick={() => openEdit(post)}
-                        title="Edit this post"
-                      >
-                        ✏️ Edit
-                      </button>
-                      <button
-                        className={`ad-act ${post.published ? 'ad-act-revoke' : 'ad-act-extend'}`}
-                        onClick={() => handleQuickPublishToggle(post)}
-                        title={post.published ? 'Hide from /blog' : 'Make visible on /blog'}
-                      >
-                        {post.published ? '🚫 Unpublish' : '🚀 Publish'}
-                      </button>
-                      <a
-                        className="ad-act ad-act-reset"
-                        href={`/blog/${post.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        title={post.published ? 'Open live article' : 'Preview (only you can see drafts)'}
-                      >
-                        🔗 Open
-                      </a>
-                      <button
-                        className="ad-act ad-act-ban"
-                        onClick={() => handleDelete(post)}
-                        title="Delete permanently"
-                      >
-                        🗑️ Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {filtered.map((post) => {
+                const bucket = bucketOf(post);
+                return (
+                  <tr key={post.id} className="ad-row">
+                    <td style={{ fontSize: 22, textAlign: 'center' }}>{post.icon || '📝'}</td>
+                    <td className="ad-cell-email" style={{ maxWidth: 'none' }}>
+                      <div style={{ fontWeight: 700 }}>{post.title}</div>
+                      <div style={{ fontSize: 11, color: '#6b7280', fontFamily: 'Consolas, monospace' }}>
+                        /blog/{post.slug}
+                      </div>
+                    </td>
+                    <td style={{ fontSize: 12, color: '#374151' }}>
+                      <div style={{ fontWeight: 600 }}>{post.author || '—'}</div>
+                      {post.author_email && (
+                        <div style={{ fontSize: 11, color: '#6b7280' }}>{post.author_email}</div>
+                      )}
+                    </td>
+                    <td>
+                      <span className="ad-blog-cat-pill">{post.category || '—'}</span>
+                    </td>
+                    <td>
+                      {bucket === 'published' && (
+                        <span className="ad-blog-status ad-blog-published">● Published</span>
+                      )}
+                      {bucket === 'pending' && (
+                        <span className="ad-blog-status ad-blog-pending">⏳ Pending Review</span>
+                      )}
+                      {bucket === 'draft' && (
+                        <span className="ad-blog-status ad-blog-draft">○ Draft</span>
+                      )}
+                    </td>
+                    <td style={{ fontSize: 12, color: '#6b7280' }}>{fmt(post.updated_at)}</td>
+                    <td className="ad-center">{post.view_count || 0}</td>
+                    <td>
+                      <div className="ad-actions">
+                        <button
+                          className="ad-act ad-act-plan"
+                          onClick={() => openEdit(post)}
+                          title="Edit this post"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          className={`ad-act ${post.published ? 'ad-act-revoke' : 'ad-act-extend'}`}
+                          onClick={() => handleQuickPublishToggle(post)}
+                          title={post.published ? 'Hide from /blog' : 'Make visible on /blog'}
+                        >
+                          {post.published ? '🚫 Unpublish' : '🚀 Publish'}
+                        </button>
+                        {bucket === 'pending' && (
+                          <button
+                            className="ad-act ad-act-reset"
+                            onClick={() => handleReturnToDraft(post)}
+                            title="Clear the review flag without publishing"
+                          >
+                            ↩️ Return to Draft
+                          </button>
+                        )}
+                        <a
+                          className="ad-act ad-act-reset"
+                          href={`/blog/${post.slug}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          title={post.published ? 'Open live article' : 'Preview (only you can see drafts)'}
+                        >
+                          🔗 Open
+                        </a>
+                        <button
+                          className="ad-act ad-act-ban"
+                          onClick={() => handleDelete(post)}
+                          title="Delete permanently"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -382,7 +445,13 @@ export default function AdminBlogTab({ user, onFlash }) {
             <h3>{draft.id ? '✏️ Edit Blog Post' : '＋ New Blog Post'}</h3>
             {draft.id && (
               <p className="ad-modal-email">
-                /blog/{draft.slug} · {draft.published ? 'Published' : 'Draft'} · updated{' '}
+                /blog/{draft.slug} ·{' '}
+                {draft.published
+                  ? 'Published'
+                  : draft.submitted_for_review
+                  ? 'Pending Review'
+                  : 'Draft'}
+                {' · updated '}
                 {fmt(draft.published_at || null) || 'not yet published'}
               </p>
             )}
@@ -434,13 +503,11 @@ export default function AdminBlogTab({ user, onFlash }) {
                 </label>
 
                 <label className="ad-blog-field">
-                  <span>Icon (emoji or short string)</span>
-                  <input
+                  <span>Icon</span>
+                  <EmojiPicker
                     className="ad-modal-input"
                     value={draft.icon}
-                    onChange={(e) => patchDraft({ icon: e.target.value })}
-                    placeholder="📝"
-                    maxLength={6}
+                    onChange={(v) => patchDraft({ icon: v })}
                   />
                 </label>
 

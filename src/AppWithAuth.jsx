@@ -12,6 +12,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import SharedDiagram from './pages/SharedDiagram';
 import Blog from './pages/Blog';
 import BlogArticle from './pages/BlogArticle';
+import SubmitBlogPost from './pages/SubmitBlogPost';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import App from './App';
@@ -33,6 +34,9 @@ const AppWithAuth = () => {
 
           {/* Blog / Learn center (public) */}
           <Route path="/blog" element={<Blog />} />
+          {/* User submission editor — auth is enforced inside the page so it
+              can redirect to /login with a returnTo pointer. */}
+          <Route path="/blog/submit" element={<SubmitBlogPost />} />
           <Route path="/blog/:slug" element={<BlogArticle />} />
 
           {/* Legal pages (public) */}
