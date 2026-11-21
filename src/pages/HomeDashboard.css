@@ -457,6 +457,34 @@
 }
 .hd-section-link:hover { text-decoration: underline; }
 
+/* Section header actions — groups the "Write a Blog Post" CTA next to the
+   "All articles →" link so section-header layout stays compact. */
+.hd-section-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.hd-section-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--hd-accent) 0%, var(--hd-accent-lite) 100%);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 6px 14px -6px rgba(0, 120, 212, 0.45);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+  white-space: nowrap;
+}
+.hd-section-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px -8px rgba(0, 120, 212, 0.60);
+}
+
 /* ============================================================
    Suggested actions
    ============================================================ */

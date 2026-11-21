@@ -468,7 +468,12 @@ const HomeDashboard = () => {
               ? 'Based on the services on your canvas and what you have tried so far'
               : 'Start reading — recommendations personalise as you use the app'}
           </span>
-          <Link to="/blog" className="hd-section-link">All articles →</Link>
+          <div className="hd-section-actions">
+            <Link to="/blog/submit" className="hd-section-cta" title="Draft a blog post — admins review before publishing">
+              📝 Write a Blog Post
+            </Link>
+            <Link to="/blog" className="hd-section-link">All articles →</Link>
+          </div>
         </div>
         <div className="hd-blog">
           {blogRecommendations.map(({ article: a, reasons }) => {

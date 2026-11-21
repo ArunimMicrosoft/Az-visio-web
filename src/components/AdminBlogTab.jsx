@@ -75,6 +75,7 @@ export default function AdminBlogTab({ user, onFlash }) {
   const [saving, setSaving] = useState(false);
   const [localError, setLocalError] = useState(null);
   const [filter, setFilter] = useState('all'); // all | draft | pending | published
+  const [previewPost, setPreviewPost] = useState(null); // inline preview modal (any status)
 
   const flash = useCallback(
     (type, text) => {
@@ -278,6 +279,24 @@ export default function AdminBlogTab({ user, onFlash }) {
     [draft]
   );
 
+  // Standalone preview modal HTML — rendered from the already-loaded list row
+  // (adminListPosts returns `select('*')` so `content` is already present).
+  const previewModalHtml = useMemo(
+    () => (previewPost ? renderMarkdown(previewPost.content || '') : ''),
+    [previewPost]
+  );
+
+  // Esc closes the standalone preview modal. Scoped to when it is open so we
+  // don't attach a listener while idle.
+  useEffect(() => {
+    if (!previewPost) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setPreviewPost(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [previewPost]);
+
   return (
     <div className="ad-blog-tab">
       <div className="ad-blog-toolbar">
@@ -384,6 +403,13 @@ export default function AdminBlogTab({ user, onFlash }) {
                     <td className="ad-center">{post.view_count || 0}</td>
                     <td>
                       <div className="ad-actions">
+                        <button
+                          className="ad-act ad-act-reset"
+                          onClick={() => setPreviewPost(post)}
+                          title="Preview rendered post (works for drafts and pending too)"
+                        >
+                          👁 Preview
+                        </button>
                         <button
                           className="ad-act ad-act-plan"
                           onClick={() => openEdit(post)}
@@ -618,6 +644,70 @@ export default function AdminBlogTab({ user, onFlash }) {
               )}
               <button className="ad-btn ad-btn-primary" onClick={handleSaveDraft} disabled={saving}>
                 {saving ? '⏳ Saving…' : '💾 Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {previewPost && (
+        <div className="ad-overlay" onClick={() => setPreviewPost(null)}>
+          <div
+            className="ad-modal ad-blog-modal ad-blog-preview-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button className="ad-modal-x" onClick={() => setPreviewPost(null)} title="Close (Esc)">
+              ✕
+            </button>
+            <h3>
+              <span style={{ marginRight: 8 }}>{previewPost.icon || '📝'}</span>
+              {previewPost.title}
+            </h3>
+            <div className="ad-blog-preview-meta">
+              {(() => {
+                const b = bucketOf(previewPost);
+                if (b === 'published') return <span className="ad-blog-status ad-blog-published">● Published</span>;
+                if (b === 'pending')   return <span className="ad-blog-status ad-blog-pending">⏳ Pending Review</span>;
+                return <span className="ad-blog-status ad-blog-draft">○ Draft</span>;
+              })()}
+              <span className="ad-blog-cat-pill">{previewPost.category || '—'}</span>
+              <span className="ad-blog-preview-meta-item">
+                <code>/blog/{previewPost.slug}</code>
+              </span>
+              <span className="ad-blog-preview-meta-item">
+                ✍️ {previewPost.author || '—'}
+                {previewPost.author_email ? ` · ${previewPost.author_email}` : ''}
+              </span>
+              {previewPost.read_time && (
+                <span className="ad-blog-preview-meta-item">⏱ {previewPost.read_time}</span>
+              )}
+              <span className="ad-blog-preview-meta-item">Created {fmt(previewPost.created_at)}</span>
+              <span className="ad-blog-preview-meta-item">Updated {fmt(previewPost.updated_at)}</span>
+              {previewPost.published_at && (
+                <span className="ad-blog-preview-meta-item">Published {fmt(previewPost.published_at)}</span>
+              )}
+            </div>
+            {previewPost.excerpt && (
+              <p className="ad-blog-preview-excerpt">{previewPost.excerpt}</p>
+            )}
+            <div
+              className="cc-article-body ad-blog-preview ad-blog-preview-body"
+              dangerouslySetInnerHTML={{ __html: previewModalHtml }}
+            />
+            <div className="ad-modal-footer ad-blog-footer">
+              <div style={{ flex: 1 }} />
+              <button className="ad-btn ad-btn-outline" onClick={() => setPreviewPost(null)}>
+                Close
+              </button>
+              <button
+                className="ad-btn ad-btn-primary"
+                onClick={() => {
+                  const p = previewPost;
+                  setPreviewPost(null);
+                  openEdit(p);
+                }}
+              >
+                ✏️ Edit
               </button>
             </div>
           </div>
