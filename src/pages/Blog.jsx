@@ -5,8 +5,21 @@ import { blogArticles, categoryColors } from '../utils/blogArticles';
 import { BlogHeader, BlogFooter } from '../components/BlogLayout';
 import { fetchLikeCounts } from '../utils/blogLikes';
 import { fetchCommentCounts } from '../utils/blogComments';
+import { fetchPublishedPosts } from '../utils/blogPosts';
 import usePageSEO from '../hooks/usePageSEO';
 import './Blog.css';
+
+// Merge DB posts with the static array, DB-first on slug collision, sorted
+// newest first. Keeps the shape identical to blogArticles so existing filter
+// and card components keep working unchanged.
+const mergeArticles = (dbPosts, staticPosts) => {
+  const bySlug = new Map();
+  for (const a of staticPosts) bySlug.set(a.slug, a);
+  for (const a of dbPosts) bySlug.set(a.slug, a); // DB wins
+  const merged = Array.from(bySlug.values());
+  merged.sort((x, y) => new Date(y.date || 0) - new Date(x.date || 0));
+  return merged;
+};
 
 const Blog = () => {
   usePageSEO({
@@ -33,18 +46,35 @@ const Blog = () => {
   });
 
   const [category, setCategory] = useState('All');
-  const categories = ['All', ...new Set(blogArticles.map((a) => a.category))];
-  const filtered = category === 'All' ? blogArticles : blogArticles.filter((a) => a.category === category);
+  const [dbPosts, setDbPosts] = useState([]);
+
+  // Load DB-backed posts on mount. Failure is non-fatal — merged list just
+  // falls back to the static array.
+  useEffect(() => {
+    let alive = true;
+    fetchPublishedPosts()
+      .then((rows) => { if (alive) setDbPosts(rows); })
+      .catch(() => { /* already logged */ });
+    return () => { alive = false; };
+  }, []);
+
+  const allArticles = React.useMemo(
+    () => mergeArticles(dbPosts, blogArticles),
+    [dbPosts]
+  );
+  const categories = ['All', ...new Set(allArticles.map((a) => a.category))];
+  const filtered = category === 'All' ? allArticles : allArticles.filter((a) => a.category === category);
   const [featured, ...rest] = filtered;
 
   // Fetch engagement counts once for all articles
   const [likes, setLikes] = useState({});
   const [comments, setComments] = useState({});
   useEffect(() => {
-    const slugs = blogArticles.map((a) => a.slug);
+    const slugs = allArticles.map((a) => a.slug);
+    if (slugs.length === 0) return;
     fetchLikeCounts(slugs).then(setLikes);
     fetchCommentCounts(slugs).then(setComments);
-  }, []);
+  }, [allArticles]);
 
   const fmtDate = (d) =>
     new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
@@ -67,7 +97,7 @@ const Blog = () => {
             Written by practitioners — for practitioners.
           </p>
           <div className="cc-blog-hero-stats">
-            <div><strong>{blogArticles.length}</strong><span>Articles</span></div>
+            <div><strong>{allArticles.length}</strong><span>Articles</span></div>
             <div><strong>{categories.length - 1}</strong><span>Topics</span></div>
             <div><strong>Weekly</strong><span>New Content</span></div>
           </div>

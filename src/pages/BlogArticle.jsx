@@ -1,10 +1,11 @@
 // Individual blog article view — branded, colorful, with related articles
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { blogArticles, articleContent, categoryColors } from '../utils/blogArticles';
 import { BlogHeader, BlogFooter } from '../components/BlogLayout';
 import { renderMarkdown } from '../utils/blogRenderer';
 import { diagramBySlug } from '../utils/blogDiagrams';
+import { fetchPublishedPostBySlug, bumpViewCount } from '../utils/blogPosts';
 import BlogComments from '../components/BlogComments';
 import LikeButton from '../components/LikeButton';
 import usePageSEO from '../hooks/usePageSEO';
@@ -19,8 +20,39 @@ const injectDiagrams = (md) =>
 
 const BlogArticle = () => {
   const { slug } = useParams();
-  const article = blogArticles.find((a) => a.slug === slug);
-  const content = articleContent[slug];
+
+  // DB-first lookup. State is bundled so the effect only writes once
+  // (asynchronously) — this avoids react-hooks/set-state-in-effect.
+  // Treat stale state (dbState.slug !== slug) as "not yet checked".
+  const [dbState, setDbState] = useState({ slug: null, post: null, checked: false });
+
+  useEffect(() => {
+    let alive = true;
+    fetchPublishedPostBySlug(slug)
+      .then((row) => {
+        if (!alive) return;
+        setDbState({ slug, post: row || null, checked: true });
+        if (row) {
+          // Fire-and-forget view count bump (safe on anon; RPC is SECURITY DEFINER).
+          bumpViewCount(slug);
+        }
+      })
+      .catch(() => {
+        if (alive) setDbState({ slug, post: null, checked: true });
+      });
+    return () => { alive = false; };
+  }, [slug]);
+
+  const checkedForCurrentSlug = dbState.slug === slug && dbState.checked;
+  const dbPost = checkedForCurrentSlug ? dbState.post : null;
+  const dbChecked = checkedForCurrentSlug;
+
+  const staticArticle = blogArticles.find((a) => a.slug === slug);
+  const staticContent = articleContent[slug];
+
+  // Prefer DB post when present; otherwise fall back to the static article.
+  const article = dbPost || staticArticle || null;
+  const content = dbPost ? dbPost.content : staticContent;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -80,6 +112,18 @@ const BlogArticle = () => {
         }
       : null
   );
+
+  // Wait for the DB check before giving up — otherwise a brand-new DB post
+  // would briefly redirect to /blog while Supabase is still responding.
+  if (!dbChecked && !staticArticle) {
+    return (
+      <div className="cc-blog-page">
+        <BlogHeader />
+        <div style={{ padding: '80px 20px', textAlign: 'center', color: '#6b7280' }}>Loading article…</div>
+        <BlogFooter />
+      </div>
+    );
+  }
 
   if (!article || !content) {
     return <Navigate to="/blog" replace />;

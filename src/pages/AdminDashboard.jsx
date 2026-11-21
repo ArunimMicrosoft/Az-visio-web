@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase, writeAuditLog } from '../utils/supabase';
 import { saveAdminNote } from '../utils/activityTracker';
 import { ADMIN_EMAILS } from '../utils/adminConfig';
+import AdminBlogTab from '../components/AdminBlogTab';
 import './AdminDashboard.css';
 
 const PLAN_COLORS = {
@@ -601,6 +602,12 @@ const AdminDashboard = () => {
         <button className={`ad-tab${activeTab === 'audit' ? ' ad-tab-active' : ''}`} onClick={() => setActiveTab('audit')}>
           📋 Audit Logs
           {auditLogs.length > 0 && <span className="ad-tab-badge">{auditLogs.length}</span>}
+        </button>
+        <button
+          className={`ad-tab${activeTab === 'blogPosts' ? ' ad-tab-active' : ''}`}
+          onClick={() => setActiveTab('blogPosts')}
+        >
+          📝 Blog Posts
         </button>
       </div>
 
@@ -1274,6 +1281,10 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
             )}
           </div>
         </>
+      )}
+
+      {activeTab === 'blogPosts' && (
+        <AdminBlogTab user={user} onFlash={showFlash} />
       )}
 
       {modal && (

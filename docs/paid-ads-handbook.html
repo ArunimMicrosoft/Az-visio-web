@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Paid Ads Handbook for Technical Founders — Cloud Canvas Designer</title>
+<style>
+  /* ================================================================
+     Print-first typography. Renders as a clean handbook in browser
+     AND prints to a great PDF via Chrome → Ctrl+P → Save as PDF.
+     ================================================================ */
+  :root {
+    --ink: #0f172a;
+    --ink-soft: #334155;
+    --ink-muted: #64748b;
+    --line: #e2e8f0;
+    --bg: #ffffff;
+    --azure: #0078D4;
+    --cyan: #50E6FF;
+    --danger: #dc2626;
+    --success: #059669;
+    --amber: #b45309;
+    --code-bg: #f1f5f9;
+    --callout-bg: #eff6ff;
+    --callout-border: #0078D4;
+    --danger-bg: #fef2f2;
+    --danger-border: #dc2626;
+    --success-bg: #ecfdf5;
+    --success-border: #059669;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #f8fafc;
+    color: var(--ink);
+    font-family: 'Georgia', 'Charter', 'Cambria', serif;
+    font-size: 12pt;
+    line-height: 1.55;
+  }
+
+  .page {
+    max-width: 780px;
+    margin: 24px auto;
+    background: var(--bg);
+    padding: 60px 72px;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+    border-radius: 4px;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+    color: var(--ink);
+    line-height: 1.25;
+    margin-top: 2em;
+    margin-bottom: 0.5em;
+    letter-spacing: -0.01em;
+  }
+  h1 {
+    font-size: 32pt;
+    font-weight: 800;
+    color: var(--ink);
+    margin-top: 0;
+    letter-spacing: -0.02em;
+  }
+  h2 {
+    font-size: 20pt;
+    font-weight: 700;
+    color: var(--azure);
+    padding-bottom: 0.3em;
+    border-bottom: 2px solid var(--line);
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 14pt;
+    font-weight: 700;
+    color: var(--ink);
+    page-break-after: avoid;
+  }
+  h4 {
+    font-size: 12pt;
+    font-weight: 700;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  p { margin: 0.6em 0; }
+
+  strong { color: var(--ink); font-weight: 600; }
+  em { font-style: italic; }
+
+  a { color: var(--azure); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  code {
+    font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+    font-size: 0.88em;
+    background: var(--code-bg);
+    color: var(--ink);
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+  }
+
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 14px 18px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+    font-size: 10pt;
+    line-height: 1.5;
+    overflow-x: auto;
+    margin: 1em 0;
+    page-break-inside: avoid;
+  }
+  pre code {
+    background: none;
+    border: none;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  blockquote {
+    border-left: 3px solid var(--azure);
+    padding: 8px 20px;
+    margin: 1em 0;
+    color: var(--ink-soft);
+    background: var(--callout-bg);
+    font-style: italic;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 2.5em 0;
+  }
+
+  ul, ol {
+    margin: 0.8em 0;
+    padding-left: 1.5em;
+  }
+  li { margin: 0.3em 0; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    font-size: 10.5pt;
+    page-break-inside: avoid;
+  }
+  th {
+    background: #f1f5f9;
+    color: var(--ink);
+    font-weight: 700;
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 2px solid var(--azure);
+    font-family: 'Inter', sans-serif;
+  }
+  td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #fafbfc; }
+
+  /* Cover page */
+  .cover {
+    min-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    page-break-after: always;
+    padding: 60px 20px;
+  }
+  .cover-mark {
+    width: 64px;
+    height: 64px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--azure), var(--cyan));
+    color: #fff;
+    font-size: 28pt;
+    font-weight: 800;
+    margin-bottom: 24px;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 10px 24px -8px rgba(0, 120, 212, 0.5);
+  }
+  .cover h1 {
+    font-size: 34pt;
+    margin: 0 0 10px;
+    color: var(--ink);
+  }
+  .cover-sub {
+    font-size: 14pt;
+    color: var(--ink-muted);
+    font-style: italic;
+    max-width: 500px;
+    margin: 0 auto 40px;
+    line-height: 1.5;
+  }
+  .cover-meta {
+    margin-top: 60px;
+    color: var(--ink-muted);
+    font-size: 10.5pt;
+    letter-spacing: 0.02em;
+  }
+  .cover-meta strong { color: var(--ink); }
+
+  /* Table of contents */
+  .toc {
+    background: #f8fafc;
+    border-left: 4px solid var(--azure);
+    padding: 20px 26px;
+    margin: 2em 0;
+    page-break-inside: avoid;
+  }
+  .toc h2 {
+    margin-top: 0;
+    border: none;
+    padding: 0;
+    font-size: 14pt;
+    color: var(--ink);
+  }
+  .toc ol {
+    margin: 8px 0 0;
+    padding-left: 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11pt;
+  }
+  .toc a { color: var(--ink-soft); }
+  .toc a:hover { color: var(--azure); }
+
+  /* Callout boxes */
+  .callout {
+    border-left: 4px solid var(--callout-border);
+    background: var(--callout-bg);
+    padding: 14px 18px;
+    margin: 1em 0;
+    border-radius: 0 6px 6px 0;
+    page-break-inside: avoid;
+  }
+  .callout-danger {
+    border-left-color: var(--danger-border);
+    background: var(--danger-bg);
+  }
+  .callout-success {
+    border-left-color: var(--success-border);
+    background: var(--success-bg);
+  }
+  .callout strong:first-child { color: var(--callout-border); }
+  .callout-danger strong:first-child { color: var(--danger); }
+  .callout-success strong:first-child { color: var(--success); }
+
+  /* Highlight-boxed key numbers */
+  .kbd {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9em;
+    color: var(--ink);
+  }
+
+  /* Print styles */
+  @media print {
+    body { background: #fff; font-size: 11pt; }
+    .page {
+      box-shadow: none;
+      max-width: none;
+      margin: 0;
+      padding: 24pt 36pt;
+      border-radius: 0;
+    }
+    h1, h2, h3 { page-break-after: avoid; }
+    table, pre, blockquote, .callout { page-break-inside: avoid; }
+    a { color: var(--ink); text-decoration: none; }
+    .no-print { display: none; }
+    @page { margin: 20mm 18mm; }
+    .cover { min-height: 88vh; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ============================================================
+     COVER PAGE
+     ============================================================ -->
+<section class="cover">
+  <div class="cover-mark">CC</div>
+  <h1>Paid Ads Handbook<br />for Technical Founders</h1>
+  <p class="cover-sub">
+    A no-fluff playbook for growing a B2B technical SaaS with paid acquisition. Written for engineers who don't want marketing speak.
+  </p>
+  <div class="cover-meta">
+    <div><strong>Cloud Canvas Designer</strong> — Growth Playbook</div>
+    <div>Version 1.0 · August 2026</div>
+    <div><em>Arunim's IT Café</em></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     TABLE OF CONTENTS
+     ============================================================ -->
+<div class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li>The Mental Model</li>
+    <li>Which Channels Work for B2B Technical Products</li>
+    <li>The 90-Day Launch Plan</li>
+    <li>Technical Setup Checklist</li>
+    <li>Ad Copy Templates</li>
+    <li>Landing Page Rules</li>
+    <li>Metrics and Decision Thresholds</li>
+    <li>Common Landmines</li>
+    <li>Budget Guide</li>
+    <li>Emergency Triage — When Metrics Tank</li>
+  </ol>
+  <p style="margin-top: 12px; font-size: 10.5pt; color: var(--ink-muted); font-family: 'Inter', sans-serif;">
+    Appendix A — Keyword Bank · Appendix B — LinkedIn Targeting · Appendix C — Weekly Review Template · Appendix D — Tool Stack
+  </p>
+</div>
+
+<!-- ============================================================
+     1. MENTAL MODEL
+     ============================================================ -->
+<h2>1. The Mental Model</h2>
+
+<p>Ads are a <strong>paid-signal amplifier</strong>. They don't create demand — they capture it, or bring your product to people who match your buyer profile.</p>
+
+<p>They only work when four things are true:</p>
+<ol>
+  <li>Someone is <em>already</em> searching for what you sell (search ads) OR matches your buyer profile (social ads).</li>
+  <li>Your ad message matches their intent.</li>
+  <li>Your landing page converts the click into a signup.</li>
+  <li>Your product converts the signup into a paid customer.</li>
+</ol>
+
+<div class="callout callout-danger">
+  <strong>The trap</strong> — if any of those four is broken, ads amplify the leak, not the growth. <strong>Order of operations: fix conversion → then run ads.</strong>
+</div>
+
+<h3>The 4-step funnel</h3>
+<pre><code>Visitor  →  Signup  →  Trial user  →  Paid customer</code></pre>
+
+<p>Every ad campaign should be evaluated against this whole funnel, not just clicks. Optimising for clicks alone is the #1 way technical founders burn ad money.</p>
+
+<h3>Rule of thumb math</h3>
+<p>For a $6/month product:</p>
+<ul>
+  <li>If your <strong>CAC</strong> (Customer Acquisition Cost) is &lt; 3× monthly revenue, you're doing well.</li>
+  <li>Target CAC: <span class="kbd">&lt; $18</span> for $6/mo, <span class="kbd">&lt; $45</span> for $15/mo, <span class="kbd">&lt; $240</span> for $80/mo.</li>
+  <li>Break-even months = CAC / monthly revenue. Aim for &lt; 6 months.</li>
+</ul>
+<p>If those numbers don't add up, either your product isn't ready for paid acquisition or you need to push higher-tier plans.</p>
+
+<!-- ============================================================
+     2. CHANNELS
+     ============================================================ -->
+<h2>2. Which Channels Work for B2B Technical Products</h2>
+
+<table>
+  <thead>
+    <tr><th>Channel</th><th>Cost/click</th><th>Audience quality</th><th>When to use</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Google Search Ads</strong></td><td>$3–$8</td><td>Very high — they searched for it</td><td>Start here. Capture existing demand.</td></tr>
+    <tr><td><strong>LinkedIn Sponsored</strong></td><td>$8–$15</td><td>Highest — filter by job title</td><td>Second. Reach buyers who aren't searching yet.</td></tr>
+    <tr><td>Reddit Ads</td><td>$1–$3</td><td>Medium — awareness only</td><td>Only if budget allows. Native-tone copy required.</td></tr>
+    <tr><td>Twitter/X Ads</td><td>$2–$5</td><td>Low for B2B tools</td><td>Skip unless you have organic Twitter reach.</td></tr>
+    <tr><td>Meta (FB/IG)</td><td>$1–$3</td><td>Very low for B2B technical</td><td>Skip.</td></tr>
+    <tr><td>YouTube Ads</td><td>$0.05–$0.30/view</td><td>Good if you have a demo video</td><td>Skip until you have a 30-second demo.</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>The 80/20 rule for technical B2B</strong> — 80% of your budget should be Google Search + LinkedIn. Everything else is optional.
+</div>
+
+<!-- ============================================================
+     3. 90-DAY PLAN
+     ============================================================ -->
+<h2>3. The 90-Day Launch Plan</h2>
+
+<h3>Weeks 1–2 — Instrument everything (no spend)</h3>
+<p>Before spending a rupee, know your baseline.</p>
+<ol>
+  <li>Add Google Analytics 4 (if not already done).</li>
+  <li>Add three events to your app:
+    <ul>
+      <li><code>sign_up</code> — fires on successful account creation.</li>
+      <li><code>purchase</code> — fires on successful payment with value.</li>
+      <li><code>cta_click</code> — fires on landing-page primary CTA click.</li>
+    </ul>
+  </li>
+  <li>Set up <strong>Google Ads account</strong> at ads.google.com. Verify your domain.</li>
+  <li>Create conversion actions: <strong>Signup</strong> (primary), <strong>Purchase</strong> (secondary, with value).</li>
+  <li>Link Google Ads to GA4 and import GA conversions.</li>
+  <li>Install <strong>LinkedIn Insight Tag</strong> in <code>&lt;head&gt;</code>. Enables retargeting.</li>
+  <li>Use the UTM builder for every ad link: <em>ga-dev-tools.google/campaign-url-builder/</em></li>
+</ol>
+
+<h3>Weeks 3–4 — Google Search Ads only ($150–$250 budget)</h3>
+<p>Search ads capture existing demand. This is the highest-ROI place to start.</p>
+<p>Use only <strong>Exact <code>[keyword]</code></strong> and <strong>Phrase <code>"keyword"</code></strong> match. Skip Broad match — it wastes money. Full keyword bank is in <strong>Appendix A</strong>.</p>
+<p>Regions: US, UK, India, Canada, Australia, Germany, Netherlands, Singapore.</p>
+<p>Landing page: same landing page for now, appended with UTM. You'll build campaign-specific pages in Week 5.</p>
+<p>Expected: 40–80 clicks. Even 4–8 signups will tell you if the funnel works.</p>
+
+<h3>Weeks 5–6 — Build campaign-specific landing pages</h3>
+<p>Cold ad traffic converts <strong>2–3× better</strong> on a campaign-specific landing page than a general one.</p>
+<p>Build one page per major theme:</p>
+<ul>
+  <li><code>/l/azure-architecture-designer</code> — Azure keywords</li>
+  <li><code>/l/terraform-azure</code> — Terraform keywords</li>
+  <li><code>/l/azure-waf-validator</code> — LinkedIn Azure Architect audience</li>
+</ul>
+<p>Each page must have: one clear headline (matching ad word-for-word), one product screenshot with 2–3 annotations, three bullets max, one CTA button, and <strong>no nav, no footer clutter</strong>.</p>
+
+<div class="callout">
+  <strong>Rule</strong> — ad copy and landing page headline must be nearly identical. Google Ads rewards this "message match" with lower CPC.
+</div>
+
+<h3>Weeks 7–8 — Add LinkedIn Sponsored Content ($200/month)</h3>
+<p>LinkedIn is where Azure Architects and DevOps Engineers hang out professionally. Highest quality traffic; highest cost.</p>
+<p>See <strong>Appendix B</strong> for full targeting. Single-image sponsored post format. Avoid emojis in ads on LinkedIn.</p>
+<p>Run for at least 2 weeks before judging. LinkedIn's algorithm needs 14 days of data to optimise.</p>
+
+<h3>Weeks 9–12 — Scale or kill</h3>
+<p>By week 8, you have real data. Use the thresholds in Section 7:</p>
+<ul>
+  <li>Whichever channel wins → double the budget.</li>
+  <li>Whichever loses → kill within 7 days.</li>
+</ul>
+<p>Don't try to save a losing campaign with "one more tweak". Kill fast, redirect budget.</p>
+
+<!-- ============================================================
+     4. TECHNICAL SETUP CHECKLIST
+     ============================================================ -->
+<h2>4. Technical Setup Checklist</h2>
+
+<p>Do all of this <strong>before</strong> spending a rupee on ads.</p>
+
+<h4>Analytics + tracking</h4>
+<ul style="list-style: none; padding-left: 0;">
+  <li>☐ Google Analytics 4 property created and installed</li>
+  <li>☐ <code>sign_up</code> event wired in signup success handler</li>
+  <li>☐ <code>purchase</code> event wired in payment success handler with <code>value</code> and <code>currency</code></li>
+  <li>☐ <code>cta_click</code> event on primary landing-page CTAs</li>
+  <li>☐ Google Ads account created</li>
+  <li>☐ Domain verified in Google Ads</li>
+  <li>☐ GA4 linked to Google Ads</li>
+  <li>☐ GA4 conversions imported to Google Ads</li>
+  <li>☐ LinkedIn Insight Tag installed in <code>&lt;head&gt;</code> of <code>index.html</code></li>
+  <li>☐ LinkedIn Campaign Manager account created</li>
+  <li>☐ Daily spend caps set on every ad account</li>
+</ul>
+
+<h4>Landing pages</h4>
+<ul style="list-style: none; padding-left: 0;">
+  <li>☐ At least one campaign-specific landing page (<code>/l/[campaign]</code>)</li>
+  <li>☐ Landing page loads in &lt; 2 seconds (PageSpeed Insights)</li>
+  <li>☐ Landing page passes Core Web Vitals</li>
+  <li>☐ Signup form works on the landing page directly (no extra click)</li>
+  <li>☐ Mobile responsive verified on real device</li>
+</ul>
+
+<h4>UTM discipline</h4>
+<p>Every ad link must carry UTM parameters. Use this exact format:</p>
+
+<pre><code>https://cloudcanvas.co/l/azure-architecture-designer
+  ?utm_source=google
+  &amp;utm_medium=cpc
+  &amp;utm_campaign=azure-tools-exact
+  &amp;utm_content=headline-v1
+  &amp;utm_term=azure+architecture+designer</code></pre>
+
+<ul>
+  <li><code>utm_source</code> — <code>google</code> | <code>linkedin</code> | <code>reddit</code> | <code>twitter</code></li>
+  <li><code>utm_medium</code> — <code>cpc</code> | <code>sponsored</code> | <code>display</code></li>
+  <li><code>utm_campaign</code> — your campaign identifier</li>
+  <li><code>utm_content</code> — ad variant (v1, v2, image-a)</li>
+  <li><code>utm_term</code> — the keyword (search only)</li>
+</ul>
+<p>Consistency here is the difference between "we know what works" and "guess and pray".</p>
+
+<!-- ============================================================
+     5. AD COPY TEMPLATES
+     ============================================================ -->
+<h2>5. Ad Copy Templates</h2>
+
+<h3>Google Search Ad — Direct category keyword</h3>
+<pre><code>Headline 1: Azure Architecture Designer
+Headline 2: WAF-Validated · Live Cost · IaC Export
+Headline 3: Free 7-Day Trial · No Card
+Description 1: Design Azure architectures visually. 700+ Microsoft
+  icons. Real-time validation against all 5 Well-Architected pillars.
+Description 2: One-click export to Terraform, Bicep, or ARM. Live
+  cost via Azure Retail Prices API. Try free, no credit card.
+Sitelinks: [Templates] [Pricing] [Blog] [How It Works]</code></pre>
+
+<h3>Google Search Ad — Terraform keyword</h3>
+<pre><code>Headline 1: Diagram → Terraform in One Click
+Headline 2: azurerm Provider, All Dependencies
+Headline 3: Also Parses Existing .tf Files
+Description 1: Design visually, export to production Terraform HCL.
+  Auto-includes VNet, NSG, Public IP, and every required dependency.
+Description 2: Or paste your existing Terraform and see it as a
+  diagram in seconds. Free trial, no card required.</code></pre>
+
+<h3>LinkedIn Sponsored — Azure Architects</h3>
+<pre><code>Your Azure architecture diagram shouldn't be a screenshot buried
+in a Confluence page.
+
+Cloud Canvas Designer:
+· Validates every design against Microsoft's Well-Architected Framework
+· Estimates live cost via the Azure Retail Prices API
+· Exports to production Terraform, Bicep, or ARM in one click
+· Reverse-engineers existing Azure subscriptions into a diagram
+
+Trusted by engineering teams who ship architecture as code.
+Free 7-day trial — no credit card.</code></pre>
+
+<h3>LinkedIn Sponsored — DevOps Engineers</h3>
+<pre><code>Every DevOps engineer I know has an Azure diagram problem.
+
+Half the team uses Visio. The other half uses Draw.io. Nobody's
+diagram matches the Terraform. And the WAF review is a spreadsheet.
+
+Cloud Canvas turns the diagram into a living artifact —
+validated, costed, and exportable as production Terraform.
+
+Free trial → [link]</code></pre>
+
+<h3>Reddit Ad — Native tone (r/AZURE)</h3>
+<pre><code>Built a visual designer for Azure architectures — validates
+against WAF and exports Terraform. Feedback welcome.
+
+Been using Visio for Azure diagrams for years and always
+wanted something that:
+- Knew what Azure services actually exist
+- Validated the design against WAF pillars
+- Spat out working Terraform / Bicep / ARM
+
+So I built it. Free trial, no card. Would love to hear what
+breaks or what's missing. [link]</code></pre>
+
+<h3>Retargeting Ad — Visitors who didn't sign up</h3>
+<pre><code>You visited Cloud Canvas Designer but didn't try it out.
+
+We heard the two most common blockers:
+1. "I don't have time to learn a new tool" — templates load in 5 seconds
+2. "My architecture is too complex" — Discovery imports 500+ resources at once
+
+Free 7-day trial, no credit card. See it for yourself.
+[link]</code></pre>
+
+<!-- ============================================================
+     6. LANDING PAGE RULES
+     ============================================================ -->
+<h2>6. Landing Page Rules</h2>
+
+<p>Rules learned the hard way. Every one is enforced on Cloud Canvas Designer.</p>
+
+<ol>
+  <li><strong>Message match.</strong> Ad headline and landing page H1 must be nearly identical. Google Ads reduces your CPC when it sees alignment.</li>
+  <li><strong>One goal per page.</strong> Campaign landing page has ONE conversion action — sign up. No "learn more", no "book demo".</li>
+  <li><strong>Strip the nav.</strong> Remove header nav on campaign landing pages. Every extra link is an escape route.</li>
+  <li><strong>Above-the-fold rule.</strong> Headline + one-line value + primary CTA visible without scrolling. On mobile too.</li>
+  <li><strong>Real screenshot &gt; illustration.</strong> People trust product screenshots more than illustrations.</li>
+  <li><strong>Social proof, if you have it.</strong> One testimonial with a name and job title beats none. Company logos work too.</li>
+  <li><strong>Address the objection.</strong> For a free trial, address "no credit card" prominently. For paid, "cancel anytime".</li>
+  <li><strong>Sub-2-second load time.</strong> Cold ad traffic has near-zero patience. Preload the hero image.</li>
+  <li><strong>Mobile-first.</strong> 60%+ of B2B ad traffic is mobile. If it looks bad on your phone, redesign it.</li>
+  <li><strong>Track sign-up on the landing page itself.</strong> Don't send users to a separate signup page.</li>
+</ol>
+
+<!-- ============================================================
+     7. METRICS
+     ============================================================ -->
+<h2>7. Metrics and Decision Thresholds</h2>
+
+<p>The only five metrics that matter, and when to kill or scale.</p>
+
+<table>
+  <thead>
+    <tr><th>Metric</th><th>Definition</th><th>Kill if</th><th>Scale if</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>CPC</strong></td><td>Cost per click</td><td>&gt; $12</td><td>&lt; $4</td></tr>
+    <tr><td><strong>CTR</strong></td><td>Click-through rate</td><td>&lt; 1%</td><td>&gt; 3%</td></tr>
+    <tr><td><strong>Signup conv.</strong></td><td>Clicks that become signups</td><td>&lt; 3%</td><td>&gt; 8%</td></tr>
+    <tr><td><strong>CAC</strong></td><td>Cost per signup</td><td>&gt; $50</td><td>&lt; $15</td></tr>
+    <tr><td><strong>Trial → paid</strong></td><td>Signups that upgrade</td><td>&lt; 3%</td><td>&gt; 10%</td></tr>
+  </tbody>
+</table>
+
+<h3>The one metric that overrides everything</h3>
+<p><strong>CAC : LTV ratio.</strong> LTV = average revenue per paid customer over their lifetime.</p>
+<ul>
+  <li><span style="color: var(--success); font-weight: 700;">Healthy</span>: LTV / CAC ≥ 3</li>
+  <li><span style="color: var(--amber); font-weight: 700;">Marginal</span>: LTV / CAC between 1 and 3</li>
+  <li><span style="color: var(--danger); font-weight: 700;">Losing money</span>: LTV / CAC &lt; 1</li>
+</ul>
+<p>Estimate LTV as: <em>monthly revenue × average retention months</em>. For a $6/mo product with 12-month average retention, LTV = $72. CAC must be &lt; $24.</p>
+
+<h3>Reporting cadence</h3>
+<ul>
+  <li><strong>Daily</strong> for the first 2 weeks (catch runaway spend early)</li>
+  <li><strong>Weekly</strong> after that (Monday morning check-in)</li>
+  <li><strong>Monthly</strong> budget review — kill losers, double winners</li>
+</ul>
+
+<!-- ============================================================
+     8. LANDMINES
+     ============================================================ -->
+<h2>8. Common Landmines</h2>
+
+<p>Real mistakes technical founders make. Every one costs money.</p>
+
+<div class="callout callout-danger">
+  <strong>Landmine 1</strong> — Broad match keywords. Google matches your ad to garbage queries and drains the budget. Use ONLY <em>Exact</em> and <em>Phrase</em> match until you have significant data.
+</div>
+
+<div class="callout callout-danger">
+  <strong>Landmine 2</strong> — No conversion tracking. Google Ads optimises for whatever you tell it. Without signup tracking, it optimises for clicks, not signups.
+</div>
+
+<div class="callout callout-danger">
+  <strong>Landmine 3</strong> — Sending ads to the homepage. Every extra second is a chance to bounce. Ad → focused landing page → signup. That's it.
+</div>
+
+<div class="callout callout-danger">
+  <strong>Landmine 4</strong> — Automated bidding too early. Google's smart bidding needs 50+ conversions. Until then, use Manual CPC with hard caps.
+</div>
+
+<div class="callout callout-danger">
+  <strong>Landmine 5</strong> — No daily budget cap. Set daily maximums at 3× your intended spend as a safety net. A targeting mistake can nuke your bank account in hours.
+</div>
+
+<div class="callout callout-danger">
+  <strong>Landmine 6</strong> — Testing 5 variables at once. Test ONE variable per campaign. Otherwise you learn nothing.
+</div>
+
+<div class="callout callout-danger">
+  <strong>Landmine 7</strong> — Judging results after 3 days. Ad platforms take 2 weeks to learn. Real results start on day 14–21.
+</div>
+
+<div class="callout callout-danger">
+  <strong>Landmine 8</strong> — Optimising for the wrong step. Fixing CPC when signup conversion is the problem is like tuning your database when the bottleneck is the network. Fix the actual bottleneck.
+</div>
+
+<div class="callout callout-danger">
+  <strong>Landmine 9</strong> — Cheap traffic that never converts. $1 CPC on junk queries beats $8 CPC on high-intent — until you realise those users never sign up. Higher intent wins.
+</div>
+
+<div class="callout callout-danger">
+  <strong>Landmine 10</strong> — Forgetting retention. Getting users is only half the equation. If they leave after month 1, no ad campaign can save the business.
+</div>
+
+<!-- ============================================================
+     9. BUDGET
+     ============================================================ -->
+<h2>9. Budget Guide</h2>
+
+<p>Realistic monthly budgets for a solo technical founder.</p>
+
+<h3>Month 1 — $300 total (learning phase)</h3>
+<ul>
+  <li>$200 Google Search Ads</li>
+  <li>$100 LinkedIn (small test)</li>
+  <li><strong>Goal</strong>: 30–50 signups. Measure conversion. Don't optimise yet.</li>
+</ul>
+
+<h3>Month 2 — $500 total (if Month 1 showed signups)</h3>
+<ul>
+  <li>$300 Google Search (double best-performing keywords)</li>
+  <li>$200 LinkedIn</li>
+  <li><strong>Goal</strong>: 60–100 signups. 3–5 paid conversions.</li>
+</ul>
+
+<h3>Month 3 — $800 total (only if CAC &lt; $30)</h3>
+<ul>
+  <li>$500 Google Search</li>
+  <li>$200 LinkedIn</li>
+  <li>$100 Reddit test</li>
+  <li><strong>Goal</strong>: 120–180 signups. 8–15 paid conversions.</li>
+</ul>
+
+<div class="callout callout-danger">
+  <strong>Stop-loss rule</strong> — if after $500 total spend you have zero paid conversions, STOP. Either the landing page is broken or the product isn't ready for paid acquisition. Don't throw good money at a broken funnel.
+</div>
+
+<div class="callout callout-success">
+  <strong>Scaling rule</strong> — if CAC is under half your target (e.g. target $20, actual $8), you're leaving growth on the table. Increase budget 50% and monitor for a week. Growth compounds only when you scale winners aggressively.
+</div>
+
+<!-- ============================================================
+     10. EMERGENCY TRIAGE
+     ============================================================ -->
+<h2>10. Emergency Triage — When Metrics Tank</h2>
+
+<h3>Symptom: CPC is climbing</h3>
+<ul>
+  <li>Check keyword match types — did Google add Broad Match variants?</li>
+  <li>Check Quality Score (Google Ads → Keywords tab). Below 7 = ad and landing page don't match well enough.</li>
+  <li>Add negative keywords to filter irrelevant matches.</li>
+</ul>
+
+<h3>Symptom: Clicks up but signups flat</h3>
+<ul>
+  <li>Landing page issue. Check bounce rate in GA.</li>
+  <li>Check page speed on PageSpeed Insights.</li>
+  <li>Test signup form on mobile, incognito, real device.</li>
+  <li>Check bot traffic (Google Ads → Reports → Auction Insights).</li>
+</ul>
+
+<h3>Symptom: Signups happening but nobody upgrades</h3>
+<ul>
+  <li>Trial-to-paid problem — not an ad problem.</li>
+  <li>Interview 5 recent signups: what stopped them from upgrading?</li>
+  <li>Check email deliverability of the drip emails.</li>
+  <li>Consider shortening the trial (7 vs 14 days converts differently).</li>
+</ul>
+
+<h3>Symptom: One campaign eats all the budget</h3>
+<ul>
+  <li>Check "Search Terms" report in Google Ads.</li>
+  <li>Add negative keywords for irrelevant queries.</li>
+  <li>Split the campaign into tighter ad groups.</li>
+</ul>
+
+<h3>Symptom: CAC fine but revenue flat</h3>
+<ul>
+  <li>Users are on free trial but not upgrading. Focus on trial conversion.</li>
+  <li>Review pricing tiers — is the paid tier obviously better than the trial?</li>
+  <li>Add friction to the free tier (watermark on exports, cap on cloud saves).</li>
+</ul>
+
+<hr />
+
+<!-- ============================================================
+     APPENDIX A: KEYWORDS
+     ============================================================ -->
+<h2>Appendix A · Keyword Bank</h2>
+
+<p>Ready-to-paste keyword lists for Google Ads.</p>
+
+<h4>Group 1: Azure architecture / designer</h4>
+<pre><code>[azure architecture designer]
+[azure architecture tool]
+"draw azure architecture"
+"azure diagram tool"
+"azure architecture visio alternative"
+"azure architecture diagram generator"
+"free azure architecture tool"</code></pre>
+
+<h4>Group 2: WAF / validation</h4>
+<pre><code>[azure well architected framework tool]
+"azure waf validation"
+"azure architecture review tool"
+"azure well architected review"
+"azure reliability check"
+"azure security review tool"</code></pre>
+
+<h4>Group 3: Terraform Azure</h4>
+<pre><code>"terraform azure diagram"
+"azure terraform generator"
+"azurerm terraform designer"
+"terraform azure architecture"
+"visualize terraform azure"
+"terraform to diagram azure"</code></pre>
+
+<h4>Group 4: Bicep / ARM</h4>
+<pre><code>"bicep to diagram"
+"arm template designer"
+"azure bicep generator"
+"bicep visual editor"</code></pre>
+
+<h4>Group 5: Cost estimation</h4>
+<pre><code>"azure cost estimator"
+"azure architecture cost"
+"azure retail prices api tool"
+"azure pricing calculator visual"</code></pre>
+
+<h4>Group 6: Discovery / audit</h4>
+<pre><code>"azure resource discovery tool"
+"azure architecture audit"
+"azure subscription inventory tool"
+"reverse engineer azure architecture"</code></pre>
+
+<h4>Negative keywords (add to every campaign)</h4>
+<pre><code>-free download
+-crack
+-torrent
+-tutorial
+-training
+-course
+-certification
+-jobs
+-salary
+-microsoft support
+-microsoft partner</code></pre>
+
+<!-- ============================================================
+     APPENDIX B: LINKEDIN TARGETING
+     ============================================================ -->
+<h2>Appendix B · LinkedIn Targeting Bank</h2>
+
+<h4>Job titles (any of)</h4>
+<pre><code>Cloud Architect
+Solution Architect
+Azure Architect
+Enterprise Architect
+DevOps Engineer
+Platform Engineer
+Infrastructure Engineer
+Site Reliability Engineer
+Cloud Engineer
+Systems Architect
+Technical Architect
+Head of Cloud
+VP of Engineering
+Director of Infrastructure
+CTO</code></pre>
+
+<h4>Skills (any of)</h4>
+<pre><code>Microsoft Azure
+Terraform
+Bicep
+Azure DevOps
+Azure Kubernetes Service
+Azure Well-Architected Framework
+Cloud Architecture
+Infrastructure as Code (IaC)
+Azure Resource Manager
+Azure Solutions Architecture</code></pre>
+
+<h4>Company filters</h4>
+<pre><code>Company size:  50 – 10,000
+Industries:    Information Technology and Services,
+               Computer Software, Financial Services,
+               Telecommunications, Banking, Insurance,
+               Retail, Manufacturing, Healthcare</code></pre>
+
+<h4>Seniority</h4>
+<pre><code>Senior, Manager, Director, VP, C-suite
+Exclude: Entry, Training</code></pre>
+
+<h4>Geography (start with)</h4>
+<pre><code>United States, United Kingdom, Canada, Australia, Germany,
+Netherlands, India, Ireland, Singapore, UAE</code></pre>
+
+<p>Target audience size: 200k–800k. If &lt; 30k, broaden. If &gt; 2M, tighten.</p>
+
+<!-- ============================================================
+     APPENDIX C: WEEKLY REVIEW
+     ============================================================ -->
+<h2>Appendix C · Weekly Review Template</h2>
+
+<p>Every Monday morning, 15 minutes. Copy this into a spreadsheet.</p>
+
+<table>
+  <thead>
+    <tr><th>Metric</th><th>Last week</th><th>This week</th><th>Change</th><th>Target</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Ad spend</td><td>$</td><td>$</td><td></td><td></td><td></td></tr>
+    <tr><td>Impressions</td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>Clicks</td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>CTR</td><td>%</td><td>%</td><td></td><td>&gt; 3%</td><td></td></tr>
+    <tr><td>CPC</td><td>$</td><td>$</td><td></td><td>&lt; $4</td><td></td></tr>
+    <tr><td>Signups</td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>Signup conv. rate</td><td>%</td><td>%</td><td></td><td>&gt; 8%</td><td></td></tr>
+    <tr><td>CAC</td><td>$</td><td>$</td><td></td><td>&lt; $18</td><td></td></tr>
+    <tr><td>Trial → paid</td><td></td><td></td><td></td><td>&gt; 10%</td><td></td></tr>
+    <tr><td>Paid revenue</td><td>$</td><td>$</td><td></td><td></td><td></td></tr>
+    <tr><td>LTV : CAC</td><td></td><td></td><td></td><td>&gt; 3×</td><td></td></tr>
+  </tbody>
+</table>
+
+<h4>Decisions this week</h4>
+<ul>
+  <li>Campaigns to kill: __________</li>
+  <li>Campaigns to scale: __________</li>
+  <li>Landing pages to A/B test: __________</li>
+  <li>Blockers / product issues: __________</li>
+</ul>
+
+<!-- ============================================================
+     APPENDIX D: TOOL STACK
+     ============================================================ -->
+<h2>Appendix D · Tool Stack</h2>
+
+<p>Free and cheap tools a solo founder actually needs.</p>
+
+<table>
+  <thead>
+    <tr><th>Purpose</th><th>Tool</th><th>Cost</th><th>Notes</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Analytics</td><td>Google Analytics 4</td><td>Free</td><td>Already integrated.</td></tr>
+    <tr><td>Ad management</td><td>Google Ads</td><td>Pay-per-click</td><td>No monthly fee.</td></tr>
+    <tr><td>Social ads</td><td>LinkedIn Campaign Manager</td><td>Pay-per-click</td><td>No monthly fee.</td></tr>
+    <tr><td>UTM builder</td><td>ga-dev-tools.google</td><td>Free</td><td>Bookmark it.</td></tr>
+    <tr><td>Page speed</td><td>PageSpeed Insights</td><td>Free</td><td>Matches what Google Ads sees.</td></tr>
+    <tr><td>Rich results test</td><td>search.google.com/test/rich-results</td><td>Free</td><td>Structured data validation.</td></tr>
+    <tr><td>Keyword research</td><td>Google Keyword Planner</td><td>Free</td><td>Requires active Ads account.</td></tr>
+    <tr><td>Landing page builder</td><td>Your own React</td><td>Free</td><td>Build in-app for consistency.</td></tr>
+    <tr><td>A/B testing</td><td>GA4 experiments</td><td>Free</td><td>Native to GA4.</td></tr>
+    <tr><td>Email marketing</td><td>Resend</td><td>100/day free</td><td>Already integrated.</td></tr>
+    <tr><td>Screenshot annotation</td><td>Cleanshot X / Snagit</td><td>$30–$50 one-time</td><td>For ad creative.</td></tr>
+    <tr><td>Ad copy AI</td><td>Claude / ChatGPT</td><td>$20/mo</td><td>For copy variation testing.</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================================================
+     CLOSING
+     ============================================================ -->
+<h2>Closing Thought</h2>
+
+<p>Paid ads are the fastest way to buy answers to questions you're guessing at:</p>
+<ul>
+  <li>Do people actually search for what I sell? — Google Ads answers this in 2 weeks.</li>
+  <li>Does my landing page convert? — CTR + signup rate answers this in 2 weeks.</li>
+  <li>Is my pricing right? — Trial-to-paid % answers this in a month.</li>
+</ul>
+
+<p>Every dollar spent on ads should return <strong>learning + revenue</strong>, in that order. If a campaign teaches you nothing and returns nothing, kill it. If it teaches you something (even negatively) and returns some, keep it running while you fix the funnel.</p>
+
+<div class="callout callout-success">
+  <strong>The winning mindset</strong> — the founders who succeed with paid ads treat them like a series of controlled experiments, not a magic growth button. Instrument first, spend small, kill fast, scale winners aggressively.
+</div>
+
+<p style="margin-top: 40px; text-align: center; color: var(--ink-muted); font-size: 10.5pt; font-style: italic;">
+  Cloud Canvas Designer &middot; Paid Ads Handbook &middot; Version 1.0<br />
+  <span style="opacity: 0.7;">Arunim's IT Café · August 2026</span>
+</p>
+
+</div>
+</body>
+</html>
