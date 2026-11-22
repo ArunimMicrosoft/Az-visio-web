@@ -10,8 +10,17 @@
 // functions/_shared/htmlSanitize.js before being embedded in the shell. The
 // client applies the same allowlist in the preview pane so admins see what
 // recipients will see.
+//
+// Deliverability: `buildBroadcastEmail` also returns `headers` (List-
+// Unsubscribe with the one-click RFC 8058 variant + X-Entity-Ref-ID) and a
+// `replyTo` string. Callers must pass both through to `sendEmail` so Resend
+// stamps them into the SMTP envelope — those headers are what keeps a new
+// sender's mail out of Gmail/Outlook spam folders.
 
-import { sanitizeEmailHtml, htmlToPlainText } from './htmlSanitize.js';
+import { sanitizeEmailHtml } from './htmlSanitize.js';
+
+const DEFAULT_REPLY_TO = 'support@cloudcanvas.co';
+const DEFAULT_UNSUB_MAILTO = 'mailto:unsubscribe@cloudcanvas.co?subject=unsubscribe';
 
 const escapeHtml = (s) =>
   String(s || '')
@@ -45,10 +54,93 @@ export function renderBroadcastMarkdown(body) {
 }
 
 /**
- * Wrap sanitized body HTML in the broadcast email shell. Shares visual
- * language with the weekly digest template.
+ * Collapse sanitized HTML into a Markdown-flavoured plaintext fallback for
+ * the Resend `text` field. Anchor hrefs survive as `[label](url)` so
+ * recipients reading the plaintext part still see the links. Kept inline —
+ * zero dependencies.
  */
-export function buildBroadcastEmail({ subject, bodyHtml, unsubscribeUrl, appUrl = 'https://cloudcanvas.co' }) {
+export function htmlToMarkdownPlainText(html) {
+  if (!html || typeof html !== 'string') return '';
+  let s = html;
+
+  // Anchors -> [label](href). Done first so later tag-stripping doesn't lose
+  // the URL. Non-greedy inner match to tolerate adjacent anchors.
+  s = s.replace(
+    /<a\b[^>]*href\s*=\s*(?:"([^"]*)"|'([^']*)')[^>]*>([\s\S]*?)<\/a>/gi,
+    (_m, hrefDq, hrefSq, inner) => {
+      const href = (hrefDq ?? hrefSq ?? '').trim();
+      const label = inner.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      if (!href) return label;
+      if (!label || label === href) return href;
+      return `[${label}](${href})`;
+    }
+  );
+
+  // Line breaks + block closers -> newlines; list items -> bullet.
+  s = s.replace(/<br\s*\/?>/gi, '\n');
+  s = s.replace(/<li\b[^>]*>/gi, '  - ');
+  s = s.replace(/<\/(p|div|li|h[1-6]|blockquote|tr)>/gi, '\n');
+  s = s.replace(/<hr\s*\/?>/gi, '\n---\n');
+
+  // Headings — prefix with # so the text version still reads structured.
+  s = s.replace(/<h1\b[^>]*>/gi, '\n# ');
+  s = s.replace(/<h2\b[^>]*>/gi, '\n## ');
+  s = s.replace(/<h3\b[^>]*>/gi, '\n### ');
+  s = s.replace(/<h4\b[^>]*>/gi, '\n#### ');
+
+  // Strip whatever's left.
+  s = s.replace(/<[^>]+>/g, '');
+
+  // Decode the entity set the sanitizer actually emits.
+  s = s
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+  // Collapse whitespace.
+  s = s
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
+
+  return s;
+}
+
+/**
+ * Wrap sanitized body HTML in the broadcast email shell + build the
+ * matching plaintext alternative and deliverability headers.
+ *
+ * Returns:
+ *   {
+ *     html: string,     // the full HTML part
+ *     text: string,     // the plaintext alternative (multipart/alternative)
+ *     headers: {        // pass through to sendEmail({ headers })
+ *       'List-Unsubscribe': string,
+ *       'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+ *       'X-Entity-Ref-ID'?: string,
+ *     },
+ *     replyTo: string,  // pass through to sendEmail({ replyTo })
+ *   }
+ *
+ * The `List-Unsubscribe` header uses the RFC 8058 one-click variant (HTTPS
+ * endpoint first, mailto: as a fallback) and is paired with
+ * `List-Unsubscribe-Post: List-Unsubscribe=One-Click`. Mailbox providers
+ * surface the "unsubscribe" chip at the top of a message when both are
+ * present, which also massively improves inbox placement for new senders.
+ */
+export function buildBroadcastEmail({
+  subject,
+  bodyHtml,
+  unsubscribeUrl,
+  appUrl = 'https://cloudcanvas.co',
+  broadcastId = null,
+  replyTo = DEFAULT_REPLY_TO,
+  unsubscribeMailto = DEFAULT_UNSUB_MAILTO,
+}) {
   const senderHost = (() => {
     try { return new URL(appUrl).host; } catch { return 'cloudcanvas.co'; }
   })();
@@ -84,9 +176,27 @@ export function buildBroadcastEmail({ subject, bodyHtml, unsubscribeUrl, appUrl 
       <a href="${unsubscribeUrl}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a>
     </div>
   </div>
-</body>
-</html>`;
+</body></html>`;
 
-  const text = `${subject}\n\n${htmlToPlainText(bodyHtml)}\n\nOpen: ${appUrl}/home\nUnsubscribe: ${unsubscribeUrl}\n`;
-  return { html, text };
+  const bodyText = htmlToMarkdownPlainText(bodyHtml);
+  const text =
+    `${subject}\n\n` +
+    `${bodyText}\n\n` +
+    `Open: ${appUrl}/home\n` +
+    `Unsubscribe: ${unsubscribeUrl}\n`;
+
+  const headers = {
+    // RFC 8058 one-click compliant: mailbox providers call the HTTPS URL
+    // with no additional interaction. The mailto: fallback is kept for
+    // older clients that honour RFC 2369 but not RFC 8058.
+    'List-Unsubscribe': `<${unsubscribeUrl}>, <${unsubscribeMailto}>`,
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+  };
+  if (broadcastId) {
+    // Threading hint; recipients won't see this but mailbox providers
+    // group related messages under the same entity ref.
+    headers['X-Entity-Ref-ID'] = String(broadcastId);
+  }
+
+  return { html, text, headers, replyTo };
 }

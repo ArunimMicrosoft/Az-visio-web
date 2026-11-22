@@ -168,13 +168,14 @@ function renderScheduledEmail({ schedule, context, appUrl }) {
   const subject = renderTemplate(schedule.subject_template, context) || schedule.subject_template;
   const substitutedBody = renderTemplate(schedule.body_template, context);
   const bodyHtml = renderBroadcastMarkdown(substitutedBody);
-  const { html, text } = buildBroadcastEmail({
+  const { html, text, headers, replyTo } = buildBroadcastEmail({
     subject,
     bodyHtml,
     unsubscribeUrl: context.unsubscribe_url,
     appUrl,
+    broadcastId: schedule.id || null,
   });
-  return { subject, html, text };
+  return { subject, html, text, headers, replyTo };
 }
 
 async function dispatchSchedule({ env, schedule, singleEmail, dryRun }) {
@@ -218,7 +219,7 @@ async function dispatchSchedule({ env, schedule, singleEmail, dryRun }) {
         appUrl: APP_URL,
       });
 
-      const { subject, html, text } = renderScheduledEmail({
+      const { subject, html, text, headers, replyTo } = renderScheduledEmail({
         schedule,
         context,
         appUrl: APP_URL,
@@ -236,6 +237,8 @@ async function dispatchSchedule({ env, schedule, singleEmail, dryRun }) {
         html,
         text,
         env,
+        headers,
+        replyTo,
       });
       await logEmailSend(env, {
         to: profile.email,

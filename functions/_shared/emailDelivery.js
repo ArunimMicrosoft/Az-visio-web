@@ -13,6 +13,10 @@
 /**
  * Send one email through Resend.
  *
+ * Optional `headers` lets callers attach deliverability-sensitive headers
+ * (e.g. `List-Unsubscribe`, `X-Entity-Ref-ID`) that Resend forwards to the
+ * final SMTP envelope. Optional `replyTo` becomes the message's Reply-To.
+ *
  * @returns {Promise<{
  *   ok: boolean,
  *   provider: 'resend',
@@ -21,7 +25,7 @@
  *   error?: string,
  * }>}
  */
-export async function sendEmail({ to, from, subject, html, text, env }) {
+export async function sendEmail({ to, from, subject, html, text, env, headers, replyTo }) {
   if (!to || !subject || !html) {
     throw new Error('sendEmail: to, subject, html are required');
   }
@@ -34,6 +38,29 @@ export async function sendEmail({ to, from, subject, html, text, env }) {
     return { ok: false, provider: 'resend', status: 0, error: 'resend_api_key_missing' };
   }
 
+  const payload = {
+    from: `${senderName} <${sender}>`,
+    to: Array.isArray(to) ? to : [to],
+    subject,
+    html,
+    text: text || undefined,
+  };
+  if (headers && typeof headers === 'object') {
+    // Drop empty / nullish values — Resend rejects the request otherwise.
+    const cleanHeaders = {};
+    for (const [k, v] of Object.entries(headers)) {
+      if (v !== null && v !== undefined && String(v).length > 0) {
+        cleanHeaders[k] = String(v);
+      }
+    }
+    if (Object.keys(cleanHeaders).length > 0) {
+      payload.headers = cleanHeaders;
+    }
+  }
+  if (replyTo) {
+    payload.reply_to = Array.isArray(replyTo) ? replyTo : [replyTo];
+  }
+
   try {
     const resp = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -41,13 +68,7 @@ export async function sendEmail({ to, from, subject, html, text, env }) {
         Authorization: `Bearer ${env.RESEND_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        from: `${senderName} <${sender}>`,
-        to: Array.isArray(to) ? to : [to],
-        subject,
-        html,
-        text: text || undefined,
-      }),
+      body: JSON.stringify(payload),
     });
     const body = await resp.json().catch(() => ({}));
     if (resp.ok) {

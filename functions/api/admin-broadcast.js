@@ -1,24 +1,37 @@
 // POST /api/admin-broadcast
 //
-// Dispatches an admin-authored broadcast email to a filtered audience.
-// Returns 202 Accepted immediately; actual sends happen inside
-// `ctx.waitUntil` so the UI never has to wait on hundreds of HTTP round
-// trips.
+// Dispatches an admin-authored broadcast email.
 //
-// Request body:
-//   { broadcast_id: uuid, audience: 'all'|'paid'|'trial'|'inactive_30d'|'admin_test',
-//     subject: string, body: string }
+// Request body (current shape):
+//   {
+//     broadcast_id:        uuid,
+//     subject:             string,
+//     body:                string,                 // sanitized HTML from RichTextEditor
+//     recipient_user_ids?: uuid[],                 // user-picked list (audience = 'custom')
+//     test_mode?:          boolean,                // true -> send to the current admin only
+//     audience?:           string,                 // legacy. Only honoured when
+//                                                  //   recipient_user_ids is absent AND
+//                                                  //   test_mode is falsy.
+//   }
 //
 // Behaviour:
 //   1. Verify caller is admin (Supabase JWT + email allowlist).
-//   2. Load the recipient list from Supabase (service-role key).
+//   2. Determine recipients:
+//        - testMode  -> ONLY the authenticated admin's own JWT email (fixes
+//                       the old "admin_test" bug that fanned out to every
+//                       address in ADMIN_EMAILS).
+//        - recipient_user_ids -> fetch rows from profiles where id in (…)
+//                                AND opted-in.
+//        - audience (legacy)  -> original filter path, kept for backward
+//                                compatibility with any pending direct
+//                                callers.
 //   3. Mark the broadcast row as `sending` with the recipient count.
-//   4. Return 202 { broadcast_id, recipient_count, audience }.
+//   4. Return 202 { broadcast_id, recipient_count }.
 //   5. In the background: send in batches of 50 with a 500ms gap,
 //      logging each attempt into email_sends.
 //   6. Finalize the broadcast row with status `sent | partial | failed`.
 
-import { requireAdmin, adminAllowlist } from '../_shared/adminAuth.js';
+import { requireAdmin } from '../_shared/adminAuth.js';
 import {
   sendEmail,
   logEmailSend,
@@ -32,7 +45,8 @@ import {
 const APP_URL = 'https://cloudcanvas.co';
 const BATCH_SIZE = 50;
 const BATCH_GAP_MS = 500;
-const VALID_AUDIENCES = new Set(['all', 'paid', 'trial', 'inactive_30d', 'admin_test']);
+const LEGACY_AUDIENCES = new Set(['all', 'paid', 'trial', 'inactive_30d', 'admin_test']);
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function jsonResponse(status, body) {
   return new Response(JSON.stringify(body), {
@@ -66,13 +80,11 @@ async function supabaseJson(env, path, opts = {}) {
 }
 
 /**
- * Build a Supabase PostgREST filter string for a given audience. Mirrored
- * byte-for-byte on the client in src/utils/emailBroadcast.js — keep them
- * in sync.
+ * Legacy audience filter — kept for callers that still POST
+ * `{ audience: 'all'|'paid'|... }` without a `recipient_user_ids` list. The
+ * new admin UI never hits this path.
  */
-function audienceFilter(audience) {
-  // Opt-in gate — identical for every audience except admin_test (where it
-  // doesn't matter, admins always receive their own test).
+function legacyAudienceFilter(audience) {
   const optIn = `or=(email_preferences.is.null,email_preferences->>weekly_digest.not.eq.false)`;
   const active = `is_active=eq.true`;
 
@@ -92,16 +104,56 @@ function audienceFilter(audience) {
   }
 }
 
-async function loadRecipients(env, audience) {
-  if (audience === 'admin_test') {
-    return adminAllowlist(env).map((email) => ({ email, name: null }));
+/**
+ * Load the recipient rows for this broadcast.
+ *
+ *   testMode === true        -> ONLY the authenticated admin's own email.
+ *   recipient_user_ids       -> fetch profiles by id, respecting opt-in.
+ *   audience (legacy)        -> fetch profiles by static filter.
+ *
+ * Returns an array of `{ email, name }`. Rows missing an email are dropped.
+ */
+async function loadRecipients(env, { testMode, adminEmail, recipientUserIds, audience }) {
+  if (testMode) {
+    // Bug fix: used to iterate the full ADMIN_EMAILS allowlist and send
+    // one "test" email to every admin. Now sends to only the caller.
+    if (!adminEmail) return [];
+    return [{ email: adminEmail, name: null }];
   }
-  const filter = audienceFilter(audience);
-  const rows = await supabaseJson(
-    env,
-    `/rest/v1/profiles?select=email,name&${filter}&limit=5000`
-  );
-  return (rows || []).filter((r) => r.email);
+
+  if (Array.isArray(recipientUserIds) && recipientUserIds.length > 0) {
+    const ids = recipientUserIds.filter((v) => typeof v === 'string' && UUID_RE.test(v));
+    if (ids.length === 0) return [];
+    // PostgREST `in` filter: `id=in.(uuid1,uuid2,...)`. No quoting needed
+    // because every value already matches UUID_RE.
+    const idList = ids.join(',');
+    const filter =
+      `id=in.(${idList})` +
+      `&is_active=eq.true` +
+      `&or=(email_preferences.is.null,email_preferences->>weekly_digest.not.eq.false)`;
+    const rows = await supabaseJson(
+      env,
+      `/rest/v1/profiles?select=id,email,name&${filter}&limit=5000`
+    );
+    return (rows || []).filter((r) => r.email);
+  }
+
+  if (audience && LEGACY_AUDIENCES.has(audience) && audience !== 'admin_test') {
+    const rows = await supabaseJson(
+      env,
+      `/rest/v1/profiles?select=email,name&${legacyAudienceFilter(audience)}&limit=5000`
+    );
+    return (rows || []).filter((r) => r.email);
+  }
+
+  // Legacy "admin_test" value falls through to test-mode semantics, so a
+  // stale client sending `audience=admin_test` still sends to just the
+  // caller instead of the whole allowlist.
+  if (audience === 'admin_test' && adminEmail) {
+    return [{ email: adminEmail, name: null }];
+  }
+
+  return [];
 }
 
 async function updateBroadcast(env, id, patch) {
@@ -149,11 +201,12 @@ async function dispatch({ env, broadcastId, recipients, subject, body }) {
         const unsubscribeUrl = secret
           ? `${APP_URL}/api/email-unsubscribe?token=${encodeURIComponent(unsubToken)}`
           : `${APP_URL}/home`;
-        const { html, text } = buildBroadcastEmail({
+        const { html, text, headers, replyTo } = buildBroadcastEmail({
           subject,
           bodyHtml,
           unsubscribeUrl,
           appUrl: APP_URL,
+          broadcastId,
         });
         const result = await sendEmail({
           to: r.email,
@@ -161,6 +214,8 @@ async function dispatch({ env, broadcastId, recipients, subject, body }) {
           html,
           text,
           env,
+          headers,
+          replyTo,
         });
         await logEmailSend(env, {
           to: r.email,
@@ -209,31 +264,50 @@ export const onRequestPost = async (ctx) => {
   }
 
   const broadcast_id = typeof body?.broadcast_id === 'string' ? body.broadcast_id.trim() : '';
-  const audience = typeof body?.audience === 'string' ? body.audience.trim() : '';
   const subject = typeof body?.subject === 'string' ? body.subject.trim() : '';
-  // Body is now HTML authored in the RichTextEditor. The empty-doc marker
-  // TipTap emits is "<p></p>" — treat anything with no visible text as empty
-  // so admins can't accidentally dispatch a blank broadcast.
   const bodyHtmlIn = typeof body?.body === 'string' ? body.body : '';
+  const testMode = body?.test_mode === true || body?.testMode === true;
+  const audience = typeof body?.audience === 'string' ? body.audience.trim() : '';
+  const recipientUserIdsRaw = Array.isArray(body?.recipient_user_ids)
+    ? body.recipient_user_ids
+    : Array.isArray(body?.recipientUserIds)
+    ? body.recipientUserIds
+    : null;
+
+  // Body is HTML authored in the RichTextEditor. TipTap's empty-doc marker
+  // is `<p></p>`; treat anything without visible text as empty so admins
+  // can't accidentally dispatch a blank broadcast.
   const visibleBodyLen = bodyHtmlIn
     .replace(/<[^>]*>/g, '')
     .replace(/&nbsp;/g, ' ')
     .trim().length;
 
   if (!broadcast_id) return jsonResponse(400, { error: 'missing_broadcast_id' });
-  if (!VALID_AUDIENCES.has(audience)) {
-    return jsonResponse(400, { error: 'invalid_audience' });
-  }
   if (!subject) return jsonResponse(400, { error: 'missing_subject' });
   if (subject.length > 300) return jsonResponse(400, { error: 'subject_too_long' });
   if (!visibleBodyLen) return jsonResponse(400, { error: 'missing_body' });
-  // Keep the on-the-wire cap generous (images referenced by URL expand the
-  // HTML quickly, but real-world bodies stay well under this).
   if (bodyHtmlIn.length > 200_000) return jsonResponse(400, { error: 'body_too_long' });
+
+  // A valid request must produce a non-empty recipient set from exactly one
+  // of: testMode, recipientUserIds, or legacy audience.
+  if (!testMode && !recipientUserIdsRaw && !audience) {
+    return jsonResponse(400, { error: 'missing_recipients' });
+  }
+  if (!testMode && Array.isArray(recipientUserIdsRaw) && recipientUserIdsRaw.length === 0) {
+    return jsonResponse(400, { error: 'empty_recipient_user_ids' });
+  }
+  if (!testMode && !recipientUserIdsRaw && audience && !LEGACY_AUDIENCES.has(audience)) {
+    return jsonResponse(400, { error: 'invalid_audience' });
+  }
 
   let recipients;
   try {
-    recipients = await loadRecipients(env, audience);
+    recipients = await loadRecipients(env, {
+      testMode,
+      adminEmail: gate.email,
+      recipientUserIds: recipientUserIdsRaw,
+      audience,
+    });
   } catch (err) {
     await updateBroadcast(env, broadcast_id, {
       status: 'failed',
@@ -257,7 +331,6 @@ export const onRequestPost = async (ctx) => {
       ok: true,
       broadcast_id,
       recipient_count: 0,
-      audience,
       note: 'no_recipients_matched',
     });
   }
@@ -288,6 +361,6 @@ export const onRequestPost = async (ctx) => {
     ok: true,
     broadcast_id,
     recipient_count: recipients.length,
-    audience,
+    test_mode: !!testMode,
   });
 };

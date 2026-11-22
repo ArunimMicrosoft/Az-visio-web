@@ -103,6 +103,36 @@ https://cloudcanvas.co/api/email-unsubscribe?token=<HMAC-signed>
 ```
 One click sets `profiles.email_preferences.weekly_digest = false` for that user. Tokens are signed with `UNSUBSCRIBE_SECRET` and are valid for 60 days from generation.
 
+The same URL is also stamped into every outgoing message's `List-Unsubscribe` header along with a `mailto:` fallback, paired with `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 8058). Gmail and Outlook render the "Unsubscribe" chip at the top of the message when both are present — which also massively improves inbox placement for a new sender.
+
+## Deliverability — keeping broadcasts out of spam
+
+New sending domains always land in spam for the first ~50–200 recipients, no matter how clean the tech is. Reputation builds as recipients mark the mail "not spam" and as sending volume holds steady. The checklist below removes everything we can control; the rest is warm-up.
+
+What the pipeline already does on every send (both the weekly digest and admin broadcasts):
+
+1. **`List-Unsubscribe` + `List-Unsubscribe-Post` headers** — one-click compliant per RFC 8058, with a `mailto:` fallback for older clients.
+2. **Visible unsubscribe link in the HTML footer** — required by CAN-SPAM, and also used by Gmail to decide where to drop the message.
+3. **Plaintext alternative body** — Resend sends `multipart/alternative` when both `html` and `text` are set. Spam filters penalise HTML-only mail.
+4. **`Reply-To: support@cloudcanvas.co`** — shows a reachable human address, not the no-reply sender identity.
+5. **`Message-ID`** — Resend stamps this automatically. Don't override it.
+6. **`X-Entity-Ref-ID: <broadcast_id>`** — threading hint so mailbox providers group related sends.
+
+What **the owner** must verify (one-time, in DNS):
+
+1. Open the Resend dashboard → Domains → `cloudcanvas.co`. All three records must show green:
+   - **SPF** — TXT record authorising Resend as a sender.
+   - **DKIM** — two CNAME records Resend uses to sign every outgoing message.
+   - **DMARC** — TXT record publishing the policy (start with `p=none` for visibility; move to `p=quarantine` once SPF+DKIM are stable).
+2. If any of the three is red/missing, every send still returns 200 from Resend but the recipient's provider silently drops it to spam.
+
+Warm-up guidance:
+
+- The first 50–200 broadcast recipients will see the mail in Junk/Spam. That's normal for any brand-new sending domain.
+- Ask the first wave of recipients to click "Not spam" / "Report not phishing". Reputation builds inbox-by-inbox.
+- Keep sending volume reasonably steady for the first two weeks. A huge spike on day one (e.g. 10k emails) looks exactly like a compromised account to Gmail and almost always triggers a soft block.
+- Avoid misleading subject lines, all-caps, and link shorteners — all three are strong spam signals.
+
 ## Troubleshooting — no emails arriving
 
 1. **Check `email_sends`.** In Supabase: `SELECT sent_at, to_email, kind, status, provider_response_code, error FROM email_sends ORDER BY sent_at DESC LIMIT 20;`. If rows exist with `status='failed'`, the `error` column tells you why (typically unverified domain, missing API key, invalid recipient).

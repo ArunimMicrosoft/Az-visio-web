@@ -1,24 +1,27 @@
 // Admin dashboard tab: compose + send broadcast emails, inspect past runs.
-// Lives under src/components/ to match AdminBlogTab convention.
 //
 // NOTE on storage format (2026-11):
-//   `email_broadcasts.body` previously held markdown. Since the rich-text
-//   editor landed it now holds raw HTML. The DB column is text in either
-//   case, so no migration is needed; `renderBroadcastMarkdown` on the
-//   server has been updated to pass HTML through unchanged after
-//   sanitization. See src/components/RichTextEditor.jsx for the editor,
-//   src/utils/htmlSanitize.js for the preview sanitizer, and
+//   `email_broadcasts.body` holds sanitized HTML (TipTap output). See
+//   src/components/RichTextEditor.jsx for the editor and
 //   functions/_shared/htmlSanitize.js for the server sanitizer.
+//
+// NOTE on audience (2026-11, part 2):
+//   The old audience dropdown (`all` / `paid` / `trial` / `inactive_30d` /
+//   `admin_test`) is replaced by a per-user checkbox list. The admin ticks
+//   exact recipients; selection is sent as `recipient_user_ids`. The old
+//   "Admin test (just me)" entry is now a separate button
+//   ("Send test to me only") that fires `test_mode: true` and sends to
+//   the authenticated admin's own JWT email — not the ADMIN_EMAILS list.
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../utils/supabase';
 import { sanitizeEmailHtml } from '../utils/htmlSanitize';
 import {
   AUDIENCE_LABELS,
-  countAudience,
+  fetchEligibleUsers,
   listPastBroadcasts,
   createBroadcast,
   dispatchBroadcast,
-  sendTestEmail,
 } from '../utils/emailBroadcast';
 import RichTextEditor from './RichTextEditor';
 import './AdminEmailBroadcast.css';
@@ -31,6 +34,15 @@ const STATUS_STYLES = {
   failed:  { bg: '#fee2e2', color: '#991b1b', label: 'Failed' },
 };
 
+const TIER_BADGE = {
+  trial:        { bg: '#fef3c7', color: '#92400e', label: 'Trial' },
+  starter:      { bg: '#dbeafe', color: '#1d4ed8', label: 'Starter' },
+  professional: { bg: '#e0e7ff', color: '#3730a3', label: 'Pro' },
+  enterprise:   { bg: '#ede9fe', color: '#5b21b6', label: 'Enterprise' },
+};
+
+const PAID_TIERS = new Set(['starter', 'professional', 'enterprise', 'paid']);
+
 const fmt = (iso) =>
   iso
     ? new Date(iso).toLocaleString('en-IN', {
@@ -42,9 +54,27 @@ const fmt = (iso) =>
       })
     : '—';
 
-// Default body is now HTML (what the TipTap editor emits for the markdown-
-// equivalent of the old default). Keeping a sample gives new admins a feel
-// for the format without having to fight the empty state.
+function daysSince(iso) {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return null;
+  const diff = Date.now() - t;
+  return Math.max(0, Math.floor(diff / 86_400_000));
+}
+
+function lastActiveLabel(iso) {
+  const d = daysSince(iso);
+  if (d === null) return 'Never signed in';
+  if (d === 0) return 'Active today';
+  if (d === 1) return 'Active 1 day ago';
+  return `Active ${d} days ago`;
+}
+
+function tierBadge(tier) {
+  const key = (tier || '').toLowerCase();
+  return TIER_BADGE[key] || { bg: '#f1f5f9', color: '#334155', label: tier || 'Unknown' };
+}
+
 const DEFAULT_BODY =
   '<h2>Hi {{name}},</h2>' +
   '<p>Short, friendly note from the Cloud Canvas team.</p>' +
@@ -54,25 +84,22 @@ const DEFAULT_BODY =
   '</ul>' +
   '<p>Thanks for using the app.</p>';
 
-// Returns true when the body has at least one visible character beyond tags.
-// TipTap always serialises an empty doc as `<p></p>`; we must not treat
-// that as "has content".
 function hasBodyContent(html) {
   if (!html) return false;
   return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().length > 0;
 }
 
 export default function AdminEmailBroadcast({ user, onFlash }) {
-  const [audience, setAudience] = useState('admin_test');
   const [subject, setSubject] = useState('Quick update from Cloud Canvas');
   const [body, setBody] = useState(DEFAULT_BODY);
-  // Mobile composer view toggle: "edit" | "preview". No effect on desktop
-  // because the CSS keeps both panes visible side-by-side.
   const [mobileView, setMobileView] = useState('edit');
 
-  const [recipientCount, setRecipientCount] = useState(null);
-  const [countLoading, setCountLoading] = useState(false);
-  const [countError, setCountError] = useState(null);
+  // Audience: per-user checkbox list
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [usersError, setUsersError] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
+  const [search, setSearch] = useState('');
 
   const [sendingTest, setSendingTest] = useState(false);
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
@@ -86,29 +113,25 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
   const [highlightId, setHighlightId] = useState(null);
   const [detail, setDetail] = useState(null);
 
-  // Debounced recipient count: refresh 300ms after audience changes.
+  const loadUsers = useCallback(async () => {
+    setUsersLoading(true);
+    setUsersError(null);
+    try {
+      const rows = await fetchEligibleUsers();
+      setUsers(rows);
+    } catch (err) {
+      setUsersError(err.message || String(err));
+      setUsers([]);
+    } finally {
+      setUsersLoading(false);
+    }
+  }, []);
+
+  // Load fresh list on mount. No caching — reopening the tab re-fetches so
+  // new signups show up automatically.
   useEffect(() => {
-    let cancelled = false;
-    setCountLoading(true);
-    setCountError(null);
-    const h = setTimeout(async () => {
-      try {
-        const { count } = await countAudience(audience);
-        if (!cancelled) setRecipientCount(count);
-      } catch (err) {
-        if (!cancelled) {
-          setRecipientCount(null);
-          setCountError(err.message || String(err));
-        }
-      } finally {
-        if (!cancelled) setCountLoading(false);
-      }
-    }, 300);
-    return () => {
-      cancelled = true;
-      clearTimeout(h);
-    };
-  }, [audience]);
+    loadUsers();
+  }, [loadUsers]);
 
   const loadPast = useCallback(async () => {
     setPastLoading(true);
@@ -127,8 +150,61 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
   }, [loadPast]);
 
   // Sanitize on every render so the preview never shows a vector the server
-  // would have stripped. Keeps the two sides of the pipeline identical.
+  // would have stripped.
   const previewHtml = useMemo(() => sanitizeEmailHtml(body), [body]);
+
+  const filteredUsers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter((u) => {
+      const email = (u.email || '').toLowerCase();
+      const name = (u.name || '').toLowerCase();
+      const tier = (u.subscription_tier || '').toLowerCase();
+      return email.includes(q) || name.includes(q) || tier.includes(q);
+    });
+  }, [users, search]);
+
+  const totalUsers = users.length;
+  const selectedCount = selectedIds.size;
+
+  const toggleId = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const addMatchingToSelection = (predicate) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      for (const u of users) {
+        if (predicate(u)) next.add(u.id);
+      }
+      return next;
+    });
+  };
+
+  const handleChipAll = () => {
+    setSelectedIds(new Set(users.map((u) => u.id)));
+  };
+  const handleChipNone = () => {
+    setSelectedIds(new Set());
+  };
+  const handleChipPaid = () => {
+    addMatchingToSelection((u) => PAID_TIERS.has((u.subscription_tier || '').toLowerCase()));
+  };
+  const handleChipTrial = () => {
+    addMatchingToSelection((u) => (u.subscription_tier || '').toLowerCase() === 'trial');
+  };
+  const handleChipInactive = () => {
+    const cutoff = Date.now() - 30 * 86_400_000;
+    addMatchingToSelection((u) => {
+      const t = u.last_active_at ? new Date(u.last_active_at).getTime() : 0;
+      return !t || t < cutoff;
+    });
+  };
 
   const resetConfirm = () => {
     setConfirmOpen(false);
@@ -143,7 +219,7 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
     return token;
   };
 
-  const handleSendTest = async () => {
+  const handleSendTestToMe = async () => {
     if (!user?.email) {
       onFlash?.('error', 'No admin email on session.');
       return;
@@ -155,12 +231,29 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
     setSendingTest(true);
     try {
       const token = await getAccessToken();
-      const res = await sendTestEmail({ to: user.email, accessToken: token });
-      if (res.ok) {
+      const safeBody = sanitizeEmailHtml(body);
+      // Write a test-tagged row so the past-broadcasts list keeps a record.
+      const row = await createBroadcast({
+        subject: subject.trim(),
+        body: safeBody,
+        audience: 'test',
+        userId: user?.id,
+        recipientUserIds: user?.id ? [user.id] : [],
+      });
+      const res = await dispatchBroadcast({
+        broadcastId: row.id,
+        subject: subject.trim(),
+        body: safeBody,
+        accessToken: token,
+        testMode: true,
+      });
+      if (res?.ok) {
         onFlash?.('success', `Test sent to ${user.email}.`);
         setLastResult({ type: 'test', detail: res });
+        setHighlightId(row.id);
+        setTimeout(loadPast, 400);
       } else {
-        throw new Error(res.error || `HTTP ${res.status}`);
+        throw new Error(res?.error || 'Unknown error');
       }
     } catch (err) {
       onFlash?.('error', `Test send failed: ${err.message}`);
@@ -175,22 +268,21 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
     setSendingBroadcast(true);
     try {
       const token = await getAccessToken();
-      // Always store the already-sanitized version so the row we write
-      // matches what the server will actually send. Belt-and-braces: the
-      // server also sanitizes on receive.
       const safeBody = sanitizeEmailHtml(body);
+      const recipientIds = Array.from(selectedIds);
       const row = await createBroadcast({
         subject: subject.trim(),
         body: safeBody,
-        audience,
+        audience: 'custom',
         userId: user?.id,
+        recipientUserIds: recipientIds,
       });
       const res = await dispatchBroadcast({
         broadcastId: row.id,
-        audience,
         subject: subject.trim(),
         body: safeBody,
         accessToken: token,
+        recipientUserIds: recipientIds,
       });
       const count = res.recipient_count ?? 0;
       setLastResult({ type: 'broadcast', broadcastId: row.id, detail: res });
@@ -200,7 +292,6 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
         `Broadcast queued for ${count} recipient${count === 1 ? '' : 's'}. Status will update in the Past broadcasts list.`
       );
       resetConfirm();
-      // Soft refresh after a short delay so the new row shows up with `sending`
       setTimeout(loadPast, 400);
     } catch (err) {
       onFlash?.('error', `Broadcast failed: ${err.message}`);
@@ -215,14 +306,14 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
     !subject.trim() ||
     !hasBodyContent(body) ||
     sendingBroadcast ||
-    (recipientCount !== null && recipientCount === 0);
+    selectedCount === 0;
 
   return (
     <div className="eb-root">
       <header className="eb-header">
         <div>
           <h2>Email broadcast</h2>
-          <p>Compose and send an email to a filtered slice of users. Every send is logged.</p>
+          <p>Pick exactly which users receive the email. Every send is logged.</p>
         </div>
         <button className="ad-btn ad-btn-outline" onClick={loadPast} disabled={pastLoading}>
           {pastLoading ? '…' : '↻'} Refresh past
@@ -233,7 +324,6 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
         <section className="eb-card eb-composer">
           <div className="eb-card-head">
             <h3>Composer</h3>
-            {/* Mobile tab toggle — hidden by CSS on desktop. */}
             <div className="eb-mobile-tabs" role="tablist" aria-label="Editor view">
               <button
                 type="button"
@@ -261,32 +351,126 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
               mobileView === 'preview' ? ' eb-composer-body-preview' : ''
             }`}
           >
-            <label className="eb-label">
-              Audience
-              <select
-                className="eb-input"
-                value={audience}
-                onChange={(e) => setAudience(e.target.value)}
-              >
-                {Object.entries(AUDIENCE_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className="eb-recipient-row">
-              <span>Recipients:</span>
-              {countError ? (
-                <span className="eb-recipient-count eb-err">error ({countError})</span>
-              ) : countLoading ? (
-                <span className="eb-recipient-count eb-count-loading">counting…</span>
-              ) : (
-                <span className="eb-recipient-count">
-                  {recipientCount === null ? '—' : recipientCount.toLocaleString('en-IN')}
+            {/* AUDIENCE PICKER — per-user checkbox list */}
+            <div className="eb-audience" aria-label="Audience picker">
+              <div className="eb-audience-head">
+                <span className="eb-audience-title">Audience</span>
+                <span className="eb-audience-summary">
+                  <strong>{selectedCount.toLocaleString('en-IN')}</strong> of{' '}
+                  <strong>{totalUsers.toLocaleString('en-IN')}</strong> users selected
                 </span>
-              )}
+                <button
+                  type="button"
+                  className="eb-link-btn"
+                  onClick={loadUsers}
+                  disabled={usersLoading}
+                  title="Reload the user list from Supabase"
+                >
+                  {usersLoading ? '…' : '↻'} Refresh
+                </button>
+              </div>
+
+              <div className="eb-audience-controls">
+                <input
+                  type="search"
+                  className="eb-input eb-audience-search"
+                  placeholder="Search by email, name, or tier…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  aria-label="Search users"
+                />
+                <div className="eb-chips" role="group" aria-label="Quick filters">
+                  <button
+                    type="button"
+                    className="eb-chip eb-chip-all"
+                    onClick={handleChipAll}
+                    disabled={usersLoading || totalUsers === 0}
+                  >
+                    ✓ All
+                  </button>
+                  <button
+                    type="button"
+                    className="eb-chip eb-chip-none"
+                    onClick={handleChipNone}
+                    disabled={selectedCount === 0}
+                  >
+                    ✗ None
+                  </button>
+                  <button
+                    type="button"
+                    className="eb-chip"
+                    onClick={handleChipPaid}
+                    disabled={usersLoading}
+                    title="Add every paid-tier user to the current selection"
+                  >
+                    Paid
+                  </button>
+                  <button
+                    type="button"
+                    className="eb-chip"
+                    onClick={handleChipTrial}
+                    disabled={usersLoading}
+                    title="Add every trial user to the current selection"
+                  >
+                    Trial
+                  </button>
+                  <button
+                    type="button"
+                    className="eb-chip"
+                    onClick={handleChipInactive}
+                    disabled={usersLoading}
+                    title="Add every user inactive for 30+ days"
+                  >
+                    Inactive 30d+
+                  </button>
+                </div>
+              </div>
+
+              <div className="eb-user-list" role="list">
+                {usersError ? (
+                  <div className="eb-empty eb-err">
+                    Failed to load users: {usersError}
+                  </div>
+                ) : usersLoading ? (
+                  <div className="eb-empty">Loading users…</div>
+                ) : filteredUsers.length === 0 ? (
+                  <div className="eb-empty">
+                    {search ? 'No users match this search.' : 'No opted-in users yet.'}
+                  </div>
+                ) : (
+                  filteredUsers.map((u) => {
+                    const checked = selectedIds.has(u.id);
+                    const tier = tierBadge(u.subscription_tier);
+                    return (
+                      <label
+                        key={u.id}
+                        className={`eb-user-row${checked ? ' eb-user-row-checked' : ''}`}
+                        role="listitem"
+                      >
+                        <input
+                          type="checkbox"
+                          className="eb-user-checkbox"
+                          checked={checked}
+                          onChange={() => toggleId(u.id)}
+                          aria-label={`Select ${u.email}`}
+                        />
+                        <div className="eb-user-main">
+                          <div className="eb-user-email">{u.email}</div>
+                          <div className="eb-user-meta">
+                            <span
+                              className="eb-tier-badge"
+                              style={{ background: tier.bg, color: tier.color }}
+                            >
+                              {tier.label}
+                            </span>
+                            <span className="eb-user-last">{lastActiveLabel(u.last_active_at)}</span>
+                          </div>
+                        </div>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
             </div>
 
             <label className="eb-label">
@@ -317,11 +501,11 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
               <button
                 className="ad-btn ad-btn-outline"
                 type="button"
-                onClick={handleSendTest}
+                onClick={handleSendTestToMe}
                 disabled={sendingTest || !subject.trim() || !hasBodyContent(body)}
-                title="Send a probe email to your admin address through the real pipeline"
+                title="Sends exactly one email to your admin address (test_mode)."
               >
-                {sendingTest ? 'Sending…' : '✉️ Send test to me'}
+                {sendingTest ? 'Sending…' : '✉️ Send test to me only'}
               </button>
               <button
                 className="ad-btn ad-btn-primary"
@@ -341,7 +525,7 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
               >
                 {lastResult.type === 'test'
                   ? lastResult.detail?.ok
-                    ? `Test email delivered. Resend id: ${lastResult.detail?.id || 'n/a'}.`
+                    ? `Test email delivered to admin address.`
                     : `Test email failed: ${lastResult.detail?.error || 'unknown'}.`
                   : lastResult.detail?.ok
                   ? `Broadcast queued for ${lastResult.detail?.recipient_count ?? 0} recipient(s).`
@@ -405,7 +589,10 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
                         <td data-label="Sent at">{fmt(row.completed_at || row.created_at)}</td>
                         <td data-label="Audience">{AUDIENCE_LABELS[row.audience] || row.audience}</td>
                         <td data-label="Subject" className="eb-td-subject">{row.subject}</td>
-                        <td data-label="Recipients">{row.recipient_count}</td>
+                        <td data-label="Recipients">
+                          {row.recipient_count}
+                          {row.recipient_count === 1 ? ' recipient' : ' recipients'}
+                        </td>
                         <td data-label="Status">
                           <span
                             className="eb-status-pill"
@@ -433,9 +620,8 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
             <h3>Confirm broadcast</h3>
             <p>
               You're about to send to{' '}
-              <strong>{recipientCount === null ? '—' : recipientCount.toLocaleString('en-IN')}</strong> user
-              {recipientCount === 1 ? '' : 's'} (
-              <em>{AUDIENCE_LABELS[audience]}</em>). This cannot be undone.
+              <strong>{selectedCount.toLocaleString('en-IN')}</strong> user
+              {selectedCount === 1 ? '' : 's'}. This cannot be undone.
             </p>
             <label>Type <code>SEND</code> to confirm</label>
             <input
