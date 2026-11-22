@@ -52,19 +52,19 @@ CREATE INDEX IF NOT EXISTS email_sends_to_email_idx        ON public.email_sends
 ALTER TABLE public.email_broadcasts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.email_sends       ENABLE ROW LEVEL SECURITY;
 
+-- Admin check uses auth.jwt() -> 'email' so the authenticated role never needs
+-- SELECT privilege on auth.users (which is revoked in Supabase by default and
+-- was causing "permission denied for table users" errors).
+
 -- email_broadcasts: admin-only SELECT / INSERT / UPDATE
 DROP POLICY IF EXISTS email_broadcasts_admin_select ON public.email_broadcasts;
 CREATE POLICY email_broadcasts_admin_select
   ON public.email_broadcasts FOR SELECT TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM auth.users
-      WHERE id = auth.uid()
-        AND lower(email) IN (
-          'arunimpandey2903@hotmail.com',
-          'demo@arunimitcaffe.com',
-          'admin@azuredesigner.com'
-        )
+    lower(coalesce(auth.jwt() ->> 'email', '')) IN (
+      'arunimpandey2903@hotmail.com',
+      'demo@arunimitcaffe.com',
+      'admin@azuredesigner.com'
     )
   );
 
@@ -72,14 +72,10 @@ DROP POLICY IF EXISTS email_broadcasts_admin_insert ON public.email_broadcasts;
 CREATE POLICY email_broadcasts_admin_insert
   ON public.email_broadcasts FOR INSERT TO authenticated
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM auth.users
-      WHERE id = auth.uid()
-        AND lower(email) IN (
-          'arunimpandey2903@hotmail.com',
-          'demo@arunimitcaffe.com',
-          'admin@azuredesigner.com'
-        )
+    lower(coalesce(auth.jwt() ->> 'email', '')) IN (
+      'arunimpandey2903@hotmail.com',
+      'demo@arunimitcaffe.com',
+      'admin@azuredesigner.com'
     )
   );
 
@@ -87,25 +83,17 @@ DROP POLICY IF EXISTS email_broadcasts_admin_update ON public.email_broadcasts;
 CREATE POLICY email_broadcasts_admin_update
   ON public.email_broadcasts FOR UPDATE TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM auth.users
-      WHERE id = auth.uid()
-        AND lower(email) IN (
-          'arunimpandey2903@hotmail.com',
-          'demo@arunimitcaffe.com',
-          'admin@azuredesigner.com'
-        )
+    lower(coalesce(auth.jwt() ->> 'email', '')) IN (
+      'arunimpandey2903@hotmail.com',
+      'demo@arunimitcaffe.com',
+      'admin@azuredesigner.com'
     )
   )
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM auth.users
-      WHERE id = auth.uid()
-        AND lower(email) IN (
-          'arunimpandey2903@hotmail.com',
-          'demo@arunimitcaffe.com',
-          'admin@azuredesigner.com'
-        )
+    lower(coalesce(auth.jwt() ->> 'email', '')) IN (
+      'arunimpandey2903@hotmail.com',
+      'demo@arunimitcaffe.com',
+      'admin@azuredesigner.com'
     )
   );
 
@@ -114,13 +102,9 @@ DROP POLICY IF EXISTS email_sends_admin_select ON public.email_sends;
 CREATE POLICY email_sends_admin_select
   ON public.email_sends FOR SELECT TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM auth.users
-      WHERE id = auth.uid()
-        AND lower(email) IN (
-          'arunimpandey2903@hotmail.com',
-          'demo@arunimitcaffe.com',
-          'admin@azuredesigner.com'
-        )
+    lower(coalesce(auth.jwt() ->> 'email', '')) IN (
+      'arunimpandey2903@hotmail.com',
+      'demo@arunimitcaffe.com',
+      'admin@azuredesigner.com'
     )
   );

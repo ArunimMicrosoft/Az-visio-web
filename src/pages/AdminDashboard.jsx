@@ -6,6 +6,7 @@ import { saveAdminNote } from '../utils/activityTracker';
 import { ADMIN_EMAILS } from '../utils/adminConfig';
 import AdminBlogTab from '../components/AdminBlogTab';
 import AdminEmailBroadcast from '../components/AdminEmailBroadcast';
+import AdminEmailSchedules from '../components/AdminEmailSchedules';
 import './AdminDashboard.css';
 
 const PLAN_COLORS = {
@@ -615,6 +616,12 @@ const AdminDashboard = () => {
           onClick={() => setActiveTab('emailBroadcast')}
         >
           ✉️ Email Broadcast
+        </button>
+        <button
+          className={`ad-tab${activeTab === 'emailSchedules' ? ' ad-tab-active' : ''}`}
+          onClick={() => setActiveTab('emailSchedules')}
+        >
+          ⏰ Scheduled Emails
         </button>
       </div>
 
@@ -1296,6 +1303,10 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
 
       {activeTab === 'emailBroadcast' && (
         <AdminEmailBroadcast user={user} onFlash={showFlash} />
+      )}
+
+      {activeTab === 'emailSchedules' && (
+        <AdminEmailSchedules user={user} onFlash={showFlash} />
       )}
 
       {modal && (

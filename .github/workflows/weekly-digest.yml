@@ -1,10 +1,14 @@
-name: Weekly Digest Email
+name: Scheduled Emails
 
-# Runs every Monday at 03:30 UTC = 09:00 IST
-# Also allows manual trigger from the Actions tab (workflow_dispatch)
+# Runs hourly at :00 UTC. Hits the generic scheduled-emails endpoint, which
+# reads every enabled row from public.email_schedules and dispatches whichever
+# ones are due per their own cadence (weekly_mon_09, daily_09, custom cron...).
+# Filename is kept as weekly-digest.yml so the existing CRON_SECRET repo secret
+# and any external references keep resolving — the workflow name changed, the
+# file did not.
 on:
   schedule:
-    - cron: '30 3 * * 1'
+    - cron: '0 * * * *'
   workflow_dispatch:
     inputs:
       dryRun:
@@ -19,17 +23,22 @@ on:
         description: 'Send only to this email (leave blank for all users)'
         required: false
         default: ''
+      kind:
+        description: 'Limit to a single schedule kind (e.g. weekly_digest). Blank = all.'
+        required: false
+        default: ''
 
 jobs:
-  send-digest:
+  send-scheduled-emails:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Call weekly-digest endpoint on Cloudflare Pages
+      - name: Call scheduled-emails endpoint on Cloudflare Pages
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           DRY_RUN: ${{ github.event.inputs.dryRun || 'false' }}
           TARGET_EMAIL: ${{ github.event.inputs.email || '' }}
+          TARGET_KIND: ${{ github.event.inputs.kind || '' }}
         run: |
           if [ -z "$CRON_SECRET" ]; then
             echo "::error::CRON_SECRET GitHub Actions secret is not set"
@@ -37,14 +46,15 @@ jobs:
           fi
 
           body='{}'
-          if [ "$DRY_RUN" = "true" ] || [ -n "$TARGET_EMAIL" ]; then
-            body=$(printf '{"dryRun": %s, "email": "%s"}' "$DRY_RUN" "$TARGET_EMAIL")
+          if [ "$DRY_RUN" = "true" ] || [ -n "$TARGET_EMAIL" ] || [ -n "$TARGET_KIND" ]; then
+            body=$(printf '{"dryRun": %s, "email": "%s", "kind": "%s"}' \
+              "$DRY_RUN" "$TARGET_EMAIL" "$TARGET_KIND")
           fi
 
-          echo "Calling weekly-digest endpoint with body: $body"
+          echo "Calling scheduled-emails endpoint with body: $body"
 
           response=$(curl -sS -w "\n%{http_code}" \
-            -X POST https://cloudcanvas.co/api/cron/weekly-digest \
+            -X POST https://cloudcanvas.co/api/cron/scheduled-emails \
             -H "Authorization: Bearer $CRON_SECRET" \
             -H "Content-Type: application/json" \
             --data "$body")
@@ -56,6 +66,6 @@ jobs:
           echo "$body_out"
 
           if [ "$status" != "200" ]; then
-            echo "::error::weekly-digest endpoint returned HTTP $status"
+            echo "::error::scheduled-emails endpoint returned HTTP $status"
             exit 1
           fi
