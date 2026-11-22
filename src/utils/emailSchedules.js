@@ -14,6 +14,10 @@ export const CADENCE_OPTIONS = [
   { value: 'daily_09',       label: 'Daily — 09:00 UTC' },
   { value: 'monthly_1st_09', label: 'Monthly — 1st at 09:00 UTC' },
   { value: 'custom',         label: 'Custom (cron expression)' },
+  // Fired by application events (e.g. user signup) rather than the
+  // hourly cron. The dispatcher in functions/api/cron/scheduled-emails.js
+  // skips any row with this cadence.
+  { value: 'transactional',  label: 'Transactional — fires on app events' },
 ];
 
 export const CADENCE_LABELS = CADENCE_OPTIONS.reduce((acc, o) => {
@@ -25,6 +29,10 @@ export function cadenceFriendly(row) {
   if (!row) return '—';
   if (row.cadence === 'custom') {
     return row.custom_cron ? `Custom: ${row.custom_cron}` : 'Custom (not configured)';
+  }
+  if (row.cadence === 'transactional') {
+    // Mapped per-kind in the admin UI; fall back to a generic label here.
+    return 'Transactional (app event)';
   }
   return CADENCE_LABELS[row.cadence] || row.cadence;
 }

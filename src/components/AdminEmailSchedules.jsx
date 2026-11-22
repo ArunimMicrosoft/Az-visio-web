@@ -36,6 +36,9 @@ const TEMPLATE_VARIABLES = [
   { key: 'suggested_article_title', description: 'Title of a recommended blog post.' },
   { key: 'suggested_article_url',   description: 'Full URL to the recommended blog post.' },
   { key: 'unsubscribe_url',         description: 'One-click unsubscribe link for this recipient.' },
+  { key: 'canvas_url',              description: 'Deep-link to the canvas editor (cloudcanvas.co/app).' },
+  { key: 'home_url',                description: 'Deep-link to the user home dashboard (cloudcanvas.co/home).' },
+  { key: 'sop_url',                 description: 'Deep-link to the Product Guide / SOP article.' },
 ];
 
 const VAR_RE = /\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g;
@@ -69,6 +72,9 @@ function buildPreviewContext(adminUser) {
     suggested_article_title: 'How to Use Cloud Canvas Designer: The Complete SOP',
     suggested_article_url: 'https://cloudcanvas.co/blog/cloud-canvas-designer-sop',
     unsubscribe_url: 'https://cloudcanvas.co/api/email-unsubscribe?token=preview',
+    canvas_url: 'https://cloudcanvas.co/app',
+    home_url: 'https://cloudcanvas.co/home',
+    sop_url: 'https://cloudcanvas.co/blog/cloud-canvas-designer-sop',
   };
 }
 
@@ -107,8 +113,10 @@ function fmtFuture(iso) {
 
 // Mirrors functions/_shared/cadence.js for display. Kept small and pure so
 // the admin UI shows "next run in 3d" without a server round trip.
+// Returns null for `transactional` — those rows never fire on the cron.
 function clientNextRun(row, now = new Date()) {
   if (!row) return null;
+  if (row.cadence === 'transactional') return null;
   const from = row.last_run_at && new Date(row.last_run_at) > new Date(0)
     ? new Date(row.last_run_at)
     : new Date(now.getTime() - 1000);
@@ -140,6 +148,17 @@ function clientNextRun(row, now = new Date()) {
     default:
       return null;
   }
+}
+
+// Human-readable "fires on …" label for every transactional kind the app
+// supports. Keep aligned with the `kind` values used by the dedicated
+// trigger endpoints (currently only /api/send-welcome).
+const TRANSACTIONAL_TRIGGERS = {
+  welcome: 'New user signup',
+};
+
+function transactionalTriggerLabel(kind) {
+  return TRANSACTIONAL_TRIGGERS[kind] || 'App event';
 }
 
 const LAST_RUN_STYLES = {
@@ -294,9 +313,20 @@ export default function AdminEmailSchedules({ user, onFlash }) {
             <tbody>
               {rows.map((row) => {
                 const next = clientNextRun(row);
+                const isTransactional = row.cadence === 'transactional';
                 return (
                   <tr key={row.id}>
-                    <td data-label="Kind" className="es-td-kind">{row.kind}</td>
+                    <td data-label="Kind" className="es-td-kind">
+                      {row.kind}
+                      {isTransactional && (
+                        <span
+                          className="es-pill es-pill-transactional"
+                          title="Fired by app events — not by the hourly cron"
+                        >
+                          ⚡ {transactionalTriggerLabel(row.kind)}
+                        </span>
+                      )}
+                    </td>
                     <td data-label="Enabled">
                       <button
                         className={`es-toggle ${row.enabled ? 'es-toggle-on' : ''}`}
@@ -308,7 +338,11 @@ export default function AdminEmailSchedules({ user, onFlash }) {
                         <span className="es-toggle-text">{row.enabled ? 'On' : 'Paused'}</span>
                       </button>
                     </td>
-                    <td data-label="Cadence">{cadenceFriendly(row)}</td>
+                    <td data-label="Cadence">
+                      {isTransactional
+                        ? `Transactional — fires on ${transactionalTriggerLabel(row.kind).toLowerCase()}`
+                        : cadenceFriendly(row)}
+                    </td>
                     <td data-label="Last run">
                       <div className="es-last-run">
                         <span>{fmtRelative(row.last_run_at)}</span>
@@ -319,7 +353,11 @@ export default function AdminEmailSchedules({ user, onFlash }) {
                       </div>
                     </td>
                     <td data-label="Next run">
-                      {row.enabled ? (next ? fmtFuture(next.toISOString()) : '—') : 'Paused'}
+                      {isTransactional
+                        ? <span className="es-muted">On signup</span>
+                        : row.enabled
+                          ? (next ? fmtFuture(next.toISOString()) : '—')
+                          : 'Paused'}
                     </td>
                     <td data-label="Actions">
                       <div className="es-actions">
@@ -329,13 +367,15 @@ export default function AdminEmailSchedules({ user, onFlash }) {
                         <button className="ad-btn ad-btn-outline es-btn-sm" onClick={() => setPreviewRow(row)}>
                           👁️ Preview
                         </button>
-                        <button
-                          className="ad-btn ad-btn-primary es-btn-sm"
-                          onClick={() => handleRunNow(row)}
-                          disabled={busyId === row.id}
-                        >
-                          {busyId === row.id ? 'Running…' : '🚀 Run now'}
-                        </button>
+                        {!isTransactional && (
+                          <button
+                            className="ad-btn ad-btn-primary es-btn-sm"
+                            onClick={() => handleRunNow(row)}
+                            disabled={busyId === row.id}
+                          >
+                            {busyId === row.id ? 'Running…' : '🚀 Run now'}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -477,6 +517,13 @@ function EditModal({ row, onClose, onSave, busy }) {
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
+              {cadence === 'transactional' && (
+                <small className="es-muted" style={{ marginLeft: 0, display: 'block', marginTop: 6 }}>
+                  Transactional schedules aren't fired by the hourly cron. They're
+                  dispatched when an app event triggers them (currently: new user
+                  signup for <code>welcome</code>).
+                </small>
+              )}
             </label>
 
             {cadence === 'custom' && (
@@ -501,7 +548,11 @@ function EditModal({ row, onClose, onSave, busy }) {
                 checked={enabled}
                 onChange={(e) => setEnabled(e.target.checked)}
               />
-              <span>Enabled — the hourly cron will send when due</span>
+              <span>
+                {cadence === 'transactional'
+                  ? 'Enabled — the triggering event will send this email'
+                  : 'Enabled — the hourly cron will send when due'}
+              </span>
             </label>
           </section>
 

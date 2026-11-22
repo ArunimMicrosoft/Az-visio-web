@@ -301,6 +301,18 @@ export async function runScheduledEmails({
   const now = new Date();
 
   for (const schedule of schedules) {
+    // Transactional rows (e.g. kind='welcome') are NEVER fired by the
+    // hourly dispatcher. They are triggered by app events — the welcome
+    // email is dispatched by /api/send-welcome right after signup — and
+    // iterating them here would either pull an empty audience or, worse,
+    // spam every user with the greeting. Skip even when the admin UI
+    // forces `ignoreDue` / `ignoreEnabled`; the dedicated endpoint is the
+    // only sanctioned path.
+    if (schedule.cadence === 'transactional') {
+      summary.skipped += 1;
+      summary.results.push({ kind: schedule.kind, status: 'transactional' });
+      continue;
+    }
     // `enabled` is honoured unless the caller explicitly opts out (admin
     // "Run now" with force=true). The hourly cron and the legacy wrapper
     // both stop sending the moment an admin flips the toggle in the UI.

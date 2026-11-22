@@ -74,6 +74,7 @@ export function buildRecipientContext({
 
   const article = suggestedArticle || null;
   const articleUrl = article?.slug ? `${appUrl}/blog/${article.slug}` : '';
+  const trimmedAppUrl = String(appUrl || '').replace(/\/+$/, '');
 
   return {
     first_name: firstName || 'there',
@@ -83,6 +84,13 @@ export function buildRecipientContext({
     suggested_article_title: article?.title || '',
     suggested_article_url: articleUrl,
     unsubscribe_url: unsubscribeUrl,
+    // Product deep-links — stable URLs so welcome/onboarding templates
+    // can point users straight at the canvas, home dashboard, and SOP
+    // guide without the admin having to hardcode the hostname in every
+    // body_template.
+    canvas_url: `${trimmedAppUrl}/app`,
+    home_url: `${trimmedAppUrl}/home`,
+    sop_url: `${trimmedAppUrl}/blog/cloud-canvas-designer-sop`,
   };
 }
 
@@ -99,4 +107,7 @@ export const TEMPLATE_VARIABLES = [
   { key: 'suggested_article_title',description: 'Title of a recommended blog post.' },
   { key: 'suggested_article_url',  description: 'Full URL to the recommended blog post.' },
   { key: 'unsubscribe_url',        description: 'One-click unsubscribe link for this recipient.' },
+  { key: 'canvas_url',             description: 'Deep-link to the canvas editor (cloudcanvas.co/app).' },
+  { key: 'home_url',               description: 'Deep-link to the user home dashboard (cloudcanvas.co/home).' },
+  { key: 'sop_url',                description: 'Deep-link to the Product Guide / SOP article.' },
 ];

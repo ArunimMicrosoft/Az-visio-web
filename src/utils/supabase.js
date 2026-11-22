@@ -99,6 +99,30 @@ export async function supabaseSignUp(email, password, name) {
         role: isAdminSignup ? 'admin' : 'architect',
       },
     });
+
+    // Fire the admin-editable welcome + quickstart email. This is
+    // deliberately non-blocking: the user has already landed on the home
+    // dashboard; delivery runs asynchronously on the Cloudflare Function
+    // side and failure must never surface as a signup error.
+    //
+    // Admins are excluded both here (fast path) and server-side (defence
+    // in depth) so a test signup from an admin account never fires a real
+    // welcome mail to themselves.
+    if (!isAdminSignup) {
+      const accessToken = data.session?.access_token || null;
+      if (accessToken) {
+        try {
+          fetch('/api/send-welcome', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: '{}',
+          }).catch(() => {});
+        } catch (_) { /* fire-and-forget */ }
+      }
+    }
   }
 
   return data;
