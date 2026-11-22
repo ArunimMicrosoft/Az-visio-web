@@ -53,27 +53,13 @@ ON CONFLICT (kind) DO NOTHING;
 -- re-running the migration is safe whether the old constraint still exists,
 -- the new one is already in place, or the constraint has been renamed.
 
-DO $$
-DECLARE
-  cons_name text;
-BEGIN
-  SELECT c.conname INTO cons_name
-    FROM pg_constraint c
-    JOIN pg_class t ON t.oid = c.conrelid
-    JOIN pg_namespace n ON n.oid = t.relnamespace
-   WHERE n.nspname = 'public'
-     AND t.relname = 'email_sends'
-     AND c.contype = 'c'
-     AND pg_get_constraintdef(c.oid) ILIKE '%kind%IN%';
-
-  IF cons_name IS NOT NULL THEN
-    EXECUTE format('ALTER TABLE public.email_sends DROP CONSTRAINT %I', cons_name);
-  END IF;
-
-  ALTER TABLE public.email_sends
-    ADD CONSTRAINT email_sends_kind_check
-    CHECK (kind IN ('digest','broadcast','reengagement','test','welcome'));
-END $$;
+-- PostgreSQL rewrites `IN (...)` to `= ANY (ARRAY[...])` internally, so the
+-- previous ILIKE '%kind%IN%' pattern never matched. Just DROP IF EXISTS by
+-- the standard auto-generated name — simpler and correct.
+ALTER TABLE public.email_sends DROP CONSTRAINT IF EXISTS email_sends_kind_check;
+ALTER TABLE public.email_sends
+  ADD CONSTRAINT email_sends_kind_check
+  CHECK (kind IN ('digest','broadcast','reengagement','test','welcome'));
 
 -- ----------------------- (defensive) EXTEND email_schedules.cadence CHECK
 -- docs/ADD_EMAIL_SCHEDULES.sql seeded email_schedules WITHOUT a CHECK on
@@ -81,31 +67,17 @@ END $$;
 -- exists and does NOT list 'transactional', rewrite it so the welcome row
 -- is accepted. Silent no-op when no cadence CHECK exists at all.
 
-DO $$
-DECLARE
-  cons_name text;
-  cons_def  text;
-BEGIN
-  SELECT c.conname, pg_get_constraintdef(c.oid)
-    INTO cons_name, cons_def
-    FROM pg_constraint c
-    JOIN pg_class t ON t.oid = c.conrelid
-    JOIN pg_namespace n ON n.oid = t.relnamespace
-   WHERE n.nspname = 'public'
-     AND t.relname = 'email_schedules'
-     AND c.contype = 'c'
-     AND pg_get_constraintdef(c.oid) ILIKE '%cadence%IN%';
-
-  IF cons_name IS NOT NULL AND cons_def NOT ILIKE '%transactional%' THEN
-    EXECUTE format('ALTER TABLE public.email_schedules DROP CONSTRAINT %I', cons_name);
-    ALTER TABLE public.email_schedules
-      ADD CONSTRAINT email_schedules_cadence_check
-      CHECK (cadence IN (
-        'weekly_mon_09','weekly_fri_17','daily_09','monthly_1st_09',
-        'custom','transactional'
-      ));
-  END IF;
-END $$;
+-- Same pattern for the cadence CHECK (same PostgreSQL IN/ANY rewrite trap).
+-- Safe to drop-and-recreate because the full set of valid cadence values is
+-- canonical. If no such constraint existed (seed migration left cadence open),
+-- the DROP IF EXISTS is a silent no-op and we create it cleanly.
+ALTER TABLE public.email_schedules DROP CONSTRAINT IF EXISTS email_schedules_cadence_check;
+ALTER TABLE public.email_schedules
+  ADD CONSTRAINT email_schedules_cadence_check
+  CHECK (cadence IN (
+    'weekly_mon_09','weekly_fri_17','daily_09','monthly_1st_09',
+    'custom','transactional'
+  ));
 
 -- Verify — should return the welcome row alongside any pre-existing rows.
 SELECT kind, enabled, cadence, last_run_at, updated_at
