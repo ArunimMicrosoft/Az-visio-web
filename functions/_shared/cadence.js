@@ -89,8 +89,9 @@ function nextPresetRun(preset, from) {
 }
 
 /**
- * Parse a single cron field value like '*', '5', '0,15,30', '*/2' against
- * a bound [min, max]. Returns true if `value` matches.
+ * Parse a single cron field value like a wildcard, '5', '0,15,30', or a
+ * step form (star-slash-N) against a bound [min, max]. Returns true if
+ * `value` matches.
  */
 function cronFieldMatches(field, value, min, max) {
   if (!field || field === '*') return true;
