@@ -1,12 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase, writeAuditLog } from '../utils/supabase';
 import { saveAdminNote } from '../utils/activityTracker';
 import { ADMIN_EMAILS } from '../utils/adminConfig';
 import AdminBlogTab from '../components/AdminBlogTab';
-import AdminEmailBroadcast from '../components/AdminEmailBroadcast';
-import AdminEmailSchedules from '../components/AdminEmailSchedules';
+// Email tabs pull in TipTap + ProseMirror + DOMPurify (~150 KB gzipped).
+// Only admins see this page, and an admin typically opens Users or Audit
+// first, so we lazy-load the email surfaces to keep the initial admin
+// bundle slim. React.Suspense boundary below falls back to a thin loader.
+const AdminEmailBroadcast = React.lazy(() => import('../components/AdminEmailBroadcast'));
+const AdminEmailSchedules = React.lazy(() => import('../components/AdminEmailSchedules'));
 import './AdminDashboard.css';
 
 const PLAN_COLORS = {
@@ -1302,11 +1306,15 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
       )}
 
       {activeTab === 'emailBroadcast' && (
-        <AdminEmailBroadcast user={user} onFlash={showFlash} />
+        <Suspense fallback={<div className="ad-loading">⏳ Loading rich-text editor…</div>}>
+          <AdminEmailBroadcast user={user} onFlash={showFlash} />
+        </Suspense>
       )}
 
       {activeTab === 'emailSchedules' && (
-        <AdminEmailSchedules user={user} onFlash={showFlash} />
+        <Suspense fallback={<div className="ad-loading">⏳ Loading rich-text editor…</div>}>
+          <AdminEmailSchedules user={user} onFlash={showFlash} />
+        </Suspense>
       )}
 
       {modal && (

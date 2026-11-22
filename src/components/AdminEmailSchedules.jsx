@@ -5,10 +5,15 @@
 // All DB reads/writes go through the Supabase client with admin-only RLS.
 // "Run now" hits /api/admin-run-schedule which is admin-JWT guarded, so a
 // non-admin opening this file in devtools cannot trigger a send.
+//
+// NOTE on template format (2026-11): body_template now stores HTML with
+// `{{var}}` placeholders. The mustache renderer in templateRender.js works
+// on strings so the switch from markdown to HTML required no server-side
+// changes beyond swapping the markdown-to-HTML step for a sanitize step.
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { renderMarkdown } from '../utils/blogRenderer';
 import { supabase } from '../utils/supabase';
+import { sanitizeEmailHtml } from '../utils/htmlSanitize';
 import {
   CADENCE_OPTIONS,
   cadenceFriendly,
@@ -16,6 +21,7 @@ import {
   updateSchedule,
   runScheduleNow,
 } from '../utils/emailSchedules';
+import RichTextEditor from './RichTextEditor';
 import './AdminEmailSchedules.css';
 
 // ------------------------------------------------------------------ helpers
@@ -64,6 +70,12 @@ function buildPreviewContext(adminUser) {
     suggested_article_url: 'https://cloudcanvas.co/blog/cloud-canvas-designer-sop',
     unsubscribe_url: 'https://cloudcanvas.co/api/email-unsubscribe?token=preview',
   };
+}
+
+// Ignores TipTap's "<p></p>" empty-doc marker for the save-enabled check.
+function hasBodyContent(html) {
+  if (!html) return false;
+  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().length > 0;
 }
 
 function fmtRelative(iso) {
@@ -284,8 +296,8 @@ export default function AdminEmailSchedules({ user, onFlash }) {
                 const next = clientNextRun(row);
                 return (
                   <tr key={row.id}>
-                    <td className="es-td-kind">{row.kind}</td>
-                    <td>
+                    <td data-label="Kind" className="es-td-kind">{row.kind}</td>
+                    <td data-label="Enabled">
                       <button
                         className={`es-toggle ${row.enabled ? 'es-toggle-on' : ''}`}
                         onClick={() => handleToggleEnabled(row)}
@@ -296,8 +308,8 @@ export default function AdminEmailSchedules({ user, onFlash }) {
                         <span className="es-toggle-text">{row.enabled ? 'On' : 'Paused'}</span>
                       </button>
                     </td>
-                    <td>{cadenceFriendly(row)}</td>
-                    <td>
+                    <td data-label="Cadence">{cadenceFriendly(row)}</td>
+                    <td data-label="Last run">
                       <div className="es-last-run">
                         <span>{fmtRelative(row.last_run_at)}</span>
                         <StatusPill status={row.last_run_status} />
@@ -306,8 +318,10 @@ export default function AdminEmailSchedules({ user, onFlash }) {
                         )}
                       </div>
                     </td>
-                    <td>{row.enabled ? (next ? fmtFuture(next.toISOString()) : '—') : 'Paused'}</td>
-                    <td>
+                    <td data-label="Next run">
+                      {row.enabled ? (next ? fmtFuture(next.toISOString()) : '—') : 'Paused'}
+                    </td>
+                    <td data-label="Actions">
                       <div className="es-actions">
                         <button className="ad-btn ad-btn-outline es-btn-sm" onClick={() => setEditRow(row)}>
                           ✏️ Edit
@@ -360,6 +374,8 @@ function EditModal({ row, onClose, onSave, busy }) {
   const [cadence, setCadence] = useState(row.cadence);
   const [customCron, setCustomCron] = useState(row.custom_cron || '');
   const [enabled, setEnabled] = useState(!!row.enabled);
+  // Mobile view toggle — see AdminEmailBroadcast for the matching pattern.
+  const [mobileView, setMobileView] = useState('edit');
 
   const previewContext = useMemo(() => buildPreviewContext(null), []);
 
@@ -369,12 +385,13 @@ function EditModal({ row, onClose, onSave, busy }) {
   );
   const previewHtml = useMemo(() => {
     const substituted = renderTemplateClient(body, previewContext);
-    return renderMarkdown(substituted);
+    // Preview is the exact string the server will sanitize and ship.
+    return sanitizeEmailHtml(substituted);
   }, [body, previewContext]);
 
   const canSave =
     subject.trim().length > 0 &&
-    body.trim().length > 0 &&
+    hasBodyContent(body) &&
     !busy &&
     (cadence !== 'custom' || customCron.trim().length > 0);
 
@@ -392,10 +409,38 @@ function EditModal({ row, onClose, onSave, busy }) {
   return (
     <div className="ad-overlay" onClick={onClose}>
       <div className="ad-modal es-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="ad-modal-x" onClick={onClose}>✕</button>
-        <h3>Edit schedule — {row.kind}</h3>
+        <div className="es-modal-head">
+          <h3>Edit schedule — {row.kind}</h3>
+          <button className="ad-modal-x" onClick={onClose}>✕</button>
+        </div>
 
-        <div className="es-edit-grid">
+        {/* Mobile tabs — hidden on desktop by the CSS. */}
+        <div className="es-mobile-tabs" role="tablist" aria-label="Editor view">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileView === 'edit'}
+            className={`es-mobile-tab${mobileView === 'edit' ? ' es-mobile-tab-active' : ''}`}
+            onClick={() => setMobileView('edit')}
+          >
+            ✍️ Edit
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileView === 'preview'}
+            className={`es-mobile-tab${mobileView === 'preview' ? ' es-mobile-tab-active' : ''}`}
+            onClick={() => setMobileView('preview')}
+          >
+            👁 Preview
+          </button>
+        </div>
+
+        <div
+          className={`es-edit-grid${
+            mobileView === 'preview' ? ' es-edit-grid-preview' : ' es-edit-grid-edit'
+          }`}
+        >
           <section className="es-edit-form">
             <label className="es-label">
               Subject template
@@ -409,16 +454,17 @@ function EditModal({ row, onClose, onSave, busy }) {
               />
             </label>
 
-            <label className="es-label">
-              Body template (markdown)
-              <textarea
-                className="es-input es-textarea"
+            <div className="es-label">
+              Body template
+              <RichTextEditor
                 value={body}
-                onChange={(e) => setBody(e.target.value)}
-                rows={14}
-                spellCheck
+                onChange={setBody}
+                placeholder="Write the email body. Use {{var_name}} to reference template variables."
+                uploadPrefix={`schedule-${row.kind || row.id}`}
+                minHeight={280}
+                ariaLabel="Scheduled email body template"
               />
-            </label>
+            </div>
 
             <label className="es-label">
               Cadence
@@ -488,7 +534,7 @@ function EditModal({ row, onClose, onSave, busy }) {
           </section>
         </div>
 
-        <div className="ad-modal-footer">
+        <div className="ad-modal-footer es-modal-footer">
           <button className="ad-btn ad-btn-outline" onClick={onClose} disabled={busy}>Cancel</button>
           <button className="ad-btn ad-btn-primary" onClick={submit} disabled={!canSave}>
             {busy ? 'Saving…' : 'Save changes'}
@@ -505,14 +551,22 @@ function PreviewModal({ row, user, onClose }) {
   const context = useMemo(() => buildPreviewContext(user), [user]);
   const subject = renderTemplateClient(row.subject_template, context) || row.subject_template;
   const substitutedBody = renderTemplateClient(row.body_template, context);
-  const html = renderMarkdown(substitutedBody);
-  const text = substitutedBody; // plaintext fallback = the substituted markdown source
+  const html = sanitizeEmailHtml(substitutedBody);
+  // Plaintext fallback — strip HTML to something readable.
+  const text = substitutedBody
+    .replace(/<br\s*\/?>(?!\n)/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6]|blockquote)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\n\s*\n+/g, '\n\n')
+    .trim();
 
   return (
     <div className="ad-overlay" onClick={onClose}>
       <div className="ad-modal es-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="ad-modal-x" onClick={onClose}>✕</button>
-        <h3>Preview — {row.kind}</h3>
+        <div className="es-modal-head">
+          <h3>Preview — {row.kind}</h3>
+          <button className="ad-modal-x" onClick={onClose}>✕</button>
+        </div>
         <p className="es-muted">
           Rendered with your own profile as the sample recipient. The live cron run
           substitutes each user's real values.
@@ -533,7 +587,7 @@ function PreviewModal({ row, user, onClose }) {
           <pre className="es-preview-plain">{text}</pre>
         </div>
 
-        <div className="ad-modal-footer">
+        <div className="ad-modal-footer es-modal-footer">
           <button className="ad-btn ad-btn-outline" onClick={onClose}>Close</button>
         </div>
       </div>

@@ -157,11 +157,17 @@ async function suggestedArticleFor(env) {
 /**
  * Render one schedule row for one recipient. Returns the inputs `sendEmail`
  * needs: { subject, html, text }.
+ *
+ * `schedule.body_template` is HTML with `{{var}}` placeholders — the admin
+ * rich-text editor stores HTML directly. The template renderer is string-
+ * level mustache substitution so it works unchanged on HTML. The function
+ * `renderBroadcastMarkdown` is a legacy name; it sanitizes the HTML against
+ * the email-safe allowlist (see functions/_shared/htmlSanitize.js).
  */
 function renderScheduledEmail({ schedule, context, appUrl }) {
   const subject = renderTemplate(schedule.subject_template, context) || schedule.subject_template;
-  const bodyMd = renderTemplate(schedule.body_template, context);
-  const bodyHtml = renderBroadcastMarkdown(bodyMd);
+  const substitutedBody = renderTemplate(schedule.body_template, context);
+  const bodyHtml = renderBroadcastMarkdown(substitutedBody);
   const { html, text } = buildBroadcastEmail({
     subject,
     bodyHtml,

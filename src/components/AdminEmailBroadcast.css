@@ -51,6 +51,40 @@
   font-weight: 700;
   color: #0f172a;
 }
+.eb-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.eb-card-head h3 { margin: 0 0 14px; }
+
+/* Mobile edit/preview toggle — hidden on desktop. */
+.eb-mobile-tabs {
+  display: none;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+.eb-mobile-tab {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  font-weight: 600;
+  font-size: 13px;
+  color: #475569;
+  cursor: pointer;
+}
+.eb-mobile-tab-active {
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
 
 .eb-label {
   display: block;
@@ -61,6 +95,7 @@
   color: #475569;
   margin-bottom: 12px;
 }
+.eb-editor-label { margin-bottom: 16px; }
 .eb-input {
   display: block;
   width: 100%;
@@ -78,13 +113,6 @@
   outline: none;
   border-color: #0078D4;
   box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
-}
-.eb-textarea {
-  min-height: 300px;
-  resize: vertical;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 13px;
-  line-height: 1.55;
 }
 
 .eb-recipient-row {
@@ -166,6 +194,7 @@
 .eb-preview-body h3 { font-size: 16px; }
 .eb-preview-body p  { margin: 10px 0; }
 .eb-preview-body a  { color: #0078D4; text-decoration: underline; }
+.eb-preview-body img { max-width: 100%; height: auto; border-radius: 8px; }
 .eb-preview-body code {
   background: #f1f5f9;
   padding: 1px 6px;
@@ -175,6 +204,14 @@
 }
 .eb-preview-body ul,
 .eb-preview-body ol { padding-left: 24px; }
+.eb-preview-body blockquote {
+  margin: 10px 0;
+  padding: 6px 14px;
+  border-left: 3px solid #93c5fd;
+  background: #f8fafc;
+  border-radius: 0 8px 8px 0;
+  color: #475569;
+}
 .eb-preview-hint {
   margin: 12px 0 0;
   font-size: 11.5px;
@@ -267,6 +304,10 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
+.eb-detail-body {
+  max-height: 60vh;
+  overflow: auto;
+}
 
 .eb-confirm label {
   display: block;
@@ -281,4 +322,106 @@
   border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   color: #0f172a;
+}
+
+/* ── Mobile ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .eb-root {
+    padding: 12px;
+    border-radius: 12px;
+    margin-top: 8px;
+  }
+  .eb-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .eb-header h2 { font-size: 20px; }
+
+  .eb-card { padding: 14px; }
+
+  /* Reveal the edit/preview toggle. */
+  .eb-mobile-tabs { display: flex; }
+
+  /* Default state: show the editor, hide the preview card. */
+  .eb-preview-card { display: none; }
+  .eb-preview-card.eb-preview-card-mobile-visible {
+    display: block;
+    grid-column: 1 / -1;
+  }
+  /* When the user is on the preview tab, hide the composer body (keep the
+     head so the toggle stays accessible). The parent JSX also toggles
+     .eb-preview-card-mobile-visible on the preview card for the matching
+     half of the state. */
+  .eb-composer-body { display: block; }
+  .eb-composer-body-preview { display: none; }
+
+  .eb-input,
+  .eb-preview-body,
+  .ad-modal-input {
+    font-size: 16px; /* prevent iOS auto-zoom */
+  }
+
+  .eb-actions {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    margin: 12px -14px -14px;
+    padding: 10px 14px;
+    border-top: 1px solid #e2e8f0;
+    justify-content: stretch;
+    z-index: 3;
+  }
+  .eb-actions .ad-btn {
+    flex: 1 1 140px;
+    min-height: 44px;
+  }
+
+  /* Past broadcasts: table -> stacked cards. */
+  .eb-table thead { display: none; }
+  .eb-table,
+  .eb-table tbody,
+  .eb-table tr,
+  .eb-table td { display: block; width: 100%; }
+  .eb-table tr {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    background: #fff;
+  }
+  .eb-table td {
+    padding: 4px 0;
+    border-bottom: 0;
+    text-align: left;
+    white-space: normal;
+  }
+  .eb-table td::before {
+    content: attr(data-label) ': ';
+    display: inline-block;
+    min-width: 92px;
+    font-weight: 700;
+    color: #64748b;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .eb-td-subject {
+    max-width: none;
+    white-space: normal;
+  }
+
+  /* Confirm modal: full-viewport with sticky footer. */
+  .eb-confirm,
+  .eb-detail {
+    max-width: 100%;
+    width: 100%;
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+    padding: 20px 16px 88px;
+    overflow-y: auto;
+  }
+  .eb-detail-body { max-height: none; }
 }

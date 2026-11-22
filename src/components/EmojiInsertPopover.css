@@ -1,0 +1,133 @@
+/* Emoji insert popover — used inside RichTextEditor toolbars.
+   Scoped with .eip- to stay out of global CSS. */
+
+.eip-root {
+  position: relative;
+  display: inline-flex;
+}
+
+.eip-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  min-width: 36px;
+  padding: 0 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.eip-trigger:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.eip-trigger:focus-visible {
+  outline: none;
+  border-color: #0078D4;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.18);
+}
+
+.eip-pop {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 280px;
+  max-width: calc(100vw - 32px);
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px -16px rgba(15, 23, 42, 0.3);
+  padding: 10px;
+}
+
+.eip-search {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #0f172a;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+.eip-search:focus {
+  outline: none;
+  border-color: #0078D4;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+}
+
+.eip-scroll {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.eip-group { margin-bottom: 8px; }
+.eip-group-title {
+  margin: 4px 0 6px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.eip-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+
+.eip-cell {
+  height: 32px;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.12s;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.eip-cell:hover { background: #f1f5f9; }
+.eip-cell:focus-visible {
+  outline: none;
+  background: #e0f2fe;
+}
+
+.eip-empty {
+  grid-column: 1 / -1;
+  color: #94a3b8;
+  font-size: 12.5px;
+  padding: 10px 2px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .eip-trigger {
+    /* Lift icon-only trigger to the 44px WCAG / Apple HIG floor on phones. */
+    height: 44px;
+    min-width: 44px;
+  }
+  .eip-pop {
+    position: fixed;
+    top: auto;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    max-height: 60vh;
+  }
+  .eip-scroll { max-height: calc(60vh - 80px); }
+  .eip-grid { grid-template-columns: repeat(8, 1fr); }
+  .eip-cell {
+    /* Each emoji cell is an icon-only tap target; honour the 44px floor. */
+    height: 44px;
+    min-width: 44px;
+    font-size: 22px;
+  }
+}

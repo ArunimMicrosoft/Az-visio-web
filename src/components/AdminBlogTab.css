@@ -269,6 +269,80 @@
   .ad-blog-editor-split { grid-template-columns: 1fr; }
   .ad-blog-content, .ad-blog-preview { min-height: 280px; }
 }
+@media (max-width: 768px) {
+  .ad-blog-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 10px;
+  }
+  .ad-blog-stats { gap: 6px; justify-content: flex-start; }
+  .ad-blog-stat { font-size: 12px; padding: 5px 10px; }
+  .ad-blog-toolbar-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .ad-blog-toolbar-right .ad-filter,
+  .ad-blog-toolbar-right .ad-btn {
+    min-height: 44px;
+    font-size: 14px;
+  }
+  .ad-blog-toolbar-right .ad-btn-primary { grid-column: 1 / -1; }
+
+  /* Rows -> cards. */
+  .ad-blog-tab .ad-table thead { display: none; }
+  .ad-blog-tab .ad-table,
+  .ad-blog-tab .ad-table tbody,
+  .ad-blog-tab .ad-table tr,
+  .ad-blog-tab .ad-table td { display: block; width: 100%; }
+  .ad-blog-tab .ad-table tr {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #fff;
+  }
+  .ad-blog-tab .ad-table td {
+    padding: 4px 0;
+    border-bottom: 0;
+    text-align: left !important;
+    white-space: normal;
+  }
+  .ad-blog-tab .ad-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .ad-blog-tab .ad-act,
+  .ad-blog-tab .ad-actions a {
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+
+  /* Editor modal: full-screen with sticky footer. */
+  .ad-blog-modal {
+    max-width: 100vw;
+    width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+    padding: 20px 14px 100px;
+  }
+  .ad-blog-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 10px 14px;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -4px 20px rgba(15,23,42,0.08);
+    z-index: 10;
+  }
+  .ad-blog-footer .ad-btn { min-height: 44px; flex: 1 1 120px; }
+  .ad-modal-input { font-size: 16px; }
+}
 @media (max-width: 640px) {
   .ad-blog-form-grid { grid-template-columns: 1fr; }
   .ad-blog-field-wide { grid-column: span 1; }

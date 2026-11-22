@@ -1,8 +1,17 @@
 // Admin dashboard tab: compose + send broadcast emails, inspect past runs.
 // Lives under src/components/ to match AdminBlogTab convention.
+//
+// NOTE on storage format (2026-11):
+//   `email_broadcasts.body` previously held markdown. Since the rich-text
+//   editor landed it now holds raw HTML. The DB column is text in either
+//   case, so no migration is needed; `renderBroadcastMarkdown` on the
+//   server has been updated to pass HTML through unchanged after
+//   sanitization. See src/components/RichTextEditor.jsx for the editor,
+//   src/utils/htmlSanitize.js for the preview sanitizer, and
+//   functions/_shared/htmlSanitize.js for the server sanitizer.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { renderMarkdown } from '../utils/blogRenderer';
 import { supabase } from '../utils/supabase';
+import { sanitizeEmailHtml } from '../utils/htmlSanitize';
 import {
   AUDIENCE_LABELS,
   countAudience,
@@ -11,6 +20,7 @@ import {
   dispatchBroadcast,
   sendTestEmail,
 } from '../utils/emailBroadcast';
+import RichTextEditor from './RichTextEditor';
 import './AdminEmailBroadcast.css';
 
 const STATUS_STYLES = {
@@ -32,19 +42,33 @@ const fmt = (iso) =>
       })
     : '—';
 
-const DEFAULT_BODY = `# Hi {{name}},
+// Default body is now HTML (what the TipTap editor emits for the markdown-
+// equivalent of the old default). Keeping a sample gives new admins a feel
+// for the format without having to fight the empty state.
+const DEFAULT_BODY =
+  '<h2>Hi {{name}},</h2>' +
+  '<p>Short, friendly note from the Cloud Canvas team.</p>' +
+  '<ul>' +
+    '<li>Bullet point one</li>' +
+    '<li>Bullet point two</li>' +
+  '</ul>' +
+  '<p>Thanks for using the app.</p>';
 
-Short, friendly note from the Cloud Canvas team.
-
-- Bullet point one
-- Bullet point two
-
-Thanks for using the app.`;
+// Returns true when the body has at least one visible character beyond tags.
+// TipTap always serialises an empty doc as `<p></p>`; we must not treat
+// that as "has content".
+function hasBodyContent(html) {
+  if (!html) return false;
+  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().length > 0;
+}
 
 export default function AdminEmailBroadcast({ user, onFlash }) {
   const [audience, setAudience] = useState('admin_test');
   const [subject, setSubject] = useState('Quick update from Cloud Canvas');
   const [body, setBody] = useState(DEFAULT_BODY);
+  // Mobile composer view toggle: "edit" | "preview". No effect on desktop
+  // because the CSS keeps both panes visible side-by-side.
+  const [mobileView, setMobileView] = useState('edit');
 
   const [recipientCount, setRecipientCount] = useState(null);
   const [countLoading, setCountLoading] = useState(false);
@@ -102,7 +126,9 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
     loadPast();
   }, [loadPast]);
 
-  const previewHtml = useMemo(() => renderMarkdown(body), [body]);
+  // Sanitize on every render so the preview never shows a vector the server
+  // would have stripped. Keeps the two sides of the pipeline identical.
+  const previewHtml = useMemo(() => sanitizeEmailHtml(body), [body]);
 
   const resetConfirm = () => {
     setConfirmOpen(false);
@@ -122,7 +148,7 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
       onFlash?.('error', 'No admin email on session.');
       return;
     }
-    if (!subject.trim() || !body.trim()) {
+    if (!subject.trim() || !hasBodyContent(body)) {
       onFlash?.('error', 'Subject and body are required.');
       return;
     }
@@ -149,9 +175,13 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
     setSendingBroadcast(true);
     try {
       const token = await getAccessToken();
+      // Always store the already-sanitized version so the row we write
+      // matches what the server will actually send. Belt-and-braces: the
+      // server also sanitizes on receive.
+      const safeBody = sanitizeEmailHtml(body);
       const row = await createBroadcast({
         subject: subject.trim(),
-        body,
+        body: safeBody,
         audience,
         userId: user?.id,
       });
@@ -159,7 +189,7 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
         broadcastId: row.id,
         audience,
         subject: subject.trim(),
-        body,
+        body: safeBody,
         accessToken: token,
       });
       const count = res.recipient_count ?? 0;
@@ -183,7 +213,7 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
   const confirmDisabled = confirmText !== 'SEND' || sendingBroadcast;
   const disableSend =
     !subject.trim() ||
-    !body.trim() ||
+    !hasBodyContent(body) ||
     sendingBroadcast ||
     (recipientCount !== null && recipientCount === 0);
 
@@ -201,110 +231,146 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
 
       <div className="eb-grid">
         <section className="eb-card eb-composer">
-          <h3>Composer</h3>
+          <div className="eb-card-head">
+            <h3>Composer</h3>
+            {/* Mobile tab toggle — hidden by CSS on desktop. */}
+            <div className="eb-mobile-tabs" role="tablist" aria-label="Editor view">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mobileView === 'edit'}
+                className={`eb-mobile-tab${mobileView === 'edit' ? ' eb-mobile-tab-active' : ''}`}
+                onClick={() => setMobileView('edit')}
+              >
+                ✍️ Edit
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mobileView === 'preview'}
+                className={`eb-mobile-tab${mobileView === 'preview' ? ' eb-mobile-tab-active' : ''}`}
+                onClick={() => setMobileView('preview')}
+              >
+                👁 Preview
+              </button>
+            </div>
+          </div>
 
-          <label className="eb-label">
-            Audience
-            <select
-              className="eb-input"
-              value={audience}
-              onChange={(e) => setAudience(e.target.value)}
-            >
-              {Object.entries(AUDIENCE_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div
+            className={`eb-composer-body${
+              mobileView === 'preview' ? ' eb-composer-body-preview' : ''
+            }`}
+          >
+            <label className="eb-label">
+              Audience
+              <select
+                className="eb-input"
+                value={audience}
+                onChange={(e) => setAudience(e.target.value)}
+              >
+                {Object.entries(AUDIENCE_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <div className="eb-recipient-row">
-            <span>Recipients:</span>
-            {countError ? (
-              <span className="eb-recipient-count eb-err">error ({countError})</span>
-            ) : countLoading ? (
-              <span className="eb-recipient-count eb-count-loading">counting…</span>
-            ) : (
-              <span className="eb-recipient-count">
-                {recipientCount === null ? '—' : recipientCount.toLocaleString('en-IN')}
-              </span>
+            <div className="eb-recipient-row">
+              <span>Recipients:</span>
+              {countError ? (
+                <span className="eb-recipient-count eb-err">error ({countError})</span>
+              ) : countLoading ? (
+                <span className="eb-recipient-count eb-count-loading">counting…</span>
+              ) : (
+                <span className="eb-recipient-count">
+                  {recipientCount === null ? '—' : recipientCount.toLocaleString('en-IN')}
+                </span>
+              )}
+            </div>
+
+            <label className="eb-label">
+              Subject
+              <input
+                className="eb-input"
+                type="text"
+                maxLength={300}
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="A short, direct subject line"
+              />
+            </label>
+
+            <div className="eb-label eb-editor-label">
+              Body
+              <RichTextEditor
+                value={body}
+                onChange={setBody}
+                placeholder="Write the email body. Rich formatting, images, and emoji are supported."
+                uploadPrefix="broadcast"
+                minHeight={320}
+                ariaLabel="Email broadcast body"
+              />
+            </div>
+
+            <div className="eb-actions">
+              <button
+                className="ad-btn ad-btn-outline"
+                type="button"
+                onClick={handleSendTest}
+                disabled={sendingTest || !subject.trim() || !hasBodyContent(body)}
+                title="Send a probe email to your admin address through the real pipeline"
+              >
+                {sendingTest ? 'Sending…' : '✉️ Send test to me'}
+              </button>
+              <button
+                className="ad-btn ad-btn-primary"
+                type="button"
+                onClick={() => setConfirmOpen(true)}
+                disabled={disableSend}
+              >
+                📣 Send broadcast
+              </button>
+            </div>
+
+            {lastResult && (
+              <div
+                className={`eb-flash ${
+                  lastResult.detail?.ok === false ? 'eb-flash-err' : 'eb-flash-ok'
+                }`}
+              >
+                {lastResult.type === 'test'
+                  ? lastResult.detail?.ok
+                    ? `Test email delivered. Resend id: ${lastResult.detail?.id || 'n/a'}.`
+                    : `Test email failed: ${lastResult.detail?.error || 'unknown'}.`
+                  : lastResult.detail?.ok
+                  ? `Broadcast queued for ${lastResult.detail?.recipient_count ?? 0} recipient(s).`
+                  : `Broadcast failed: ${lastResult.detail?.error || 'unknown'}.`}
+              </div>
             )}
           </div>
-
-          <label className="eb-label">
-            Subject
-            <input
-              className="eb-input"
-              type="text"
-              maxLength={300}
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="A short, direct subject line"
-            />
-          </label>
-
-          <label className="eb-label">
-            Body (markdown)
-            <textarea
-              className="eb-input eb-textarea"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              rows={16}
-              spellCheck
-              placeholder="Write the email body. Markdown is supported."
-            />
-          </label>
-
-          <div className="eb-actions">
-            <button
-              className="ad-btn ad-btn-outline"
-              type="button"
-              onClick={handleSendTest}
-              disabled={sendingTest || !subject.trim() || !body.trim()}
-              title="Send a probe email to your admin address through the real pipeline"
-            >
-              {sendingTest ? 'Sending…' : '✉️ Send test to me'}
-            </button>
-            <button
-              className="ad-btn ad-btn-primary"
-              type="button"
-              onClick={() => setConfirmOpen(true)}
-              disabled={disableSend}
-            >
-              📣 Send broadcast
-            </button>
-          </div>
-
-          {lastResult && (
-            <div
-              className={`eb-flash ${
-                lastResult.detail?.ok === false ? 'eb-flash-err' : 'eb-flash-ok'
-              }`}
-            >
-              {lastResult.type === 'test'
-                ? lastResult.detail?.ok
-                  ? `Test email delivered. Resend id: ${lastResult.detail?.id || 'n/a'}.`
-                  : `Test email failed: ${lastResult.detail?.error || 'unknown'}.`
-                : lastResult.detail?.ok
-                ? `Broadcast queued for ${lastResult.detail?.recipient_count ?? 0} recipient(s).`
-                : `Broadcast failed: ${lastResult.detail?.error || 'unknown'}.`}
-            </div>
-          )}
         </section>
 
-        <section className="eb-card eb-preview-card">
+        <section
+          className={`eb-card eb-preview-card${
+            mobileView === 'preview' ? ' eb-preview-card-mobile-visible' : ''
+          }`}
+        >
           <h3>Live preview</h3>
           <div className="eb-preview-shell">
             <div className="eb-preview-subject">
               <span className="eb-preview-label">Subject</span>
               <strong>{subject || '(no subject)'}</strong>
             </div>
-            <div className="eb-preview-body cc-article" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+            <div
+              className="eb-preview-body cc-article"
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
+            />
           </div>
           <p className="eb-preview-hint">
-            This preview uses the same markdown renderer as the public blog. Server-side
-            rendering in the email itself uses a slimmer renderer — expect minor
-            visual differences in the delivered inbox.
+            Preview is sanitized with the same email-safe allowlist the server
+            applies before delivery. Resend renders the final email inside the
+            broadcast shell — expect small differences in margins and fonts.
           </p>
         </section>
 
@@ -336,11 +402,11 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
                         className={isHighlight ? 'eb-row-highlight' : ''}
                         onClick={() => setDetail(row)}
                       >
-                        <td>{fmt(row.completed_at || row.created_at)}</td>
-                        <td>{AUDIENCE_LABELS[row.audience] || row.audience}</td>
-                        <td className="eb-td-subject">{row.subject}</td>
-                        <td>{row.recipient_count}</td>
-                        <td>
+                        <td data-label="Sent at">{fmt(row.completed_at || row.created_at)}</td>
+                        <td data-label="Audience">{AUDIENCE_LABELS[row.audience] || row.audience}</td>
+                        <td data-label="Subject" className="eb-td-subject">{row.subject}</td>
+                        <td data-label="Recipients">{row.recipient_count}</td>
+                        <td data-label="Status">
                           <span
                             className="eb-status-pill"
                             style={{ background: s.bg, color: s.color }}
@@ -421,8 +487,11 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
                 </>
               )}
             </dl>
-            <h4>Body</h4>
-            <pre className="eb-pre">{detail.body}</pre>
+            <h4>Body (rendered)</h4>
+            <div
+              className="eb-preview-body cc-article eb-detail-body"
+              dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(detail.body || '') }}
+            />
           </div>
         </div>
       )}

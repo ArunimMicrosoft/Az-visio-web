@@ -129,6 +129,10 @@ async function sleep(ms) {
 }
 
 async function dispatch({ env, broadcastId, recipients, subject, body }) {
+  // `renderBroadcastMarkdown` is a legacy name — it now sanitizes the
+  // admin-authored HTML against the Workers-safe allowlist in
+  // functions/_shared/htmlSanitize.js. The client already sanitized before
+  // sending, so this is defense-in-depth against a crafted direct POST.
   const bodyHtml = renderBroadcastMarkdown(body);
   const secret = env.UNSUBSCRIBE_SECRET || env.CRON_SECRET;
 
@@ -207,7 +211,14 @@ export const onRequestPost = async (ctx) => {
   const broadcast_id = typeof body?.broadcast_id === 'string' ? body.broadcast_id.trim() : '';
   const audience = typeof body?.audience === 'string' ? body.audience.trim() : '';
   const subject = typeof body?.subject === 'string' ? body.subject.trim() : '';
-  const bodyMd = typeof body?.body === 'string' ? body.body : '';
+  // Body is now HTML authored in the RichTextEditor. The empty-doc marker
+  // TipTap emits is "<p></p>" — treat anything with no visible text as empty
+  // so admins can't accidentally dispatch a blank broadcast.
+  const bodyHtmlIn = typeof body?.body === 'string' ? body.body : '';
+  const visibleBodyLen = bodyHtmlIn
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .trim().length;
 
   if (!broadcast_id) return jsonResponse(400, { error: 'missing_broadcast_id' });
   if (!VALID_AUDIENCES.has(audience)) {
@@ -215,8 +226,10 @@ export const onRequestPost = async (ctx) => {
   }
   if (!subject) return jsonResponse(400, { error: 'missing_subject' });
   if (subject.length > 300) return jsonResponse(400, { error: 'subject_too_long' });
-  if (!bodyMd.trim()) return jsonResponse(400, { error: 'missing_body' });
-  if (bodyMd.length > 100_000) return jsonResponse(400, { error: 'body_too_long' });
+  if (!visibleBodyLen) return jsonResponse(400, { error: 'missing_body' });
+  // Keep the on-the-wire cap generous (images referenced by URL expand the
+  // HTML quickly, but real-world bodies stay well under this).
+  if (bodyHtmlIn.length > 200_000) return jsonResponse(400, { error: 'body_too_long' });
 
   let recipients;
   try {
@@ -257,7 +270,7 @@ export const onRequestPost = async (ctx) => {
     broadcastId: broadcast_id,
     recipients,
     subject,
-    body: bodyMd,
+    body: bodyHtmlIn,
   }).catch(async (err) => {
     console.error('[broadcast] dispatch fatal:', err);
     await updateBroadcast(env, broadcast_id, {

@@ -479,11 +479,167 @@
   .ad-tabs { padding: 0 16px; }
   .ad-audit-stats { padding: 16px 16px 0; }
 }
-@media (max-width: 600px) {
-  .ad-stats { grid-template-columns: 1fr 1fr; padding: 16px; }
-  .ad-toolbar { flex-direction: column; }
-  .ad-search { min-width: 100%; }
-  .ad-audit-stat { min-width: calc(50% - 6px); }
+
+/* ============================================================
+   ≤768 px — phone / narrow tablet. Admin dashboard must remain
+   fully usable: no horizontal page scroll, every button hits a
+   44px target, modals go full-screen, large tables stay
+   scrollable horizontally while the small tables collapse to
+   stacked cards (component-scoped CSS handles those).
+   ============================================================ */
+@media (max-width: 768px) {
+  .ad-root { font-size: 14px; }
+
+  .ad-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .ad-header-left { gap: 10px; }
+  .ad-logo { font-size: 28px; }
+  .ad-title { font-size: 18px; }
+  .ad-sub { font-size: 12px; }
+  .ad-header-right {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .ad-header-right::-webkit-scrollbar { display: none; }
+  .ad-header-right .ad-btn {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 14px;
+  }
+
+  .ad-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 14px;
+  }
+  .ad-stat-card { padding: 12px; }
+  .ad-stat-value { font-size: 26px; }
+
+  /* Tab bar: horizontally scrollable with snap so the admin can swipe
+     between surfaces without the dashboard hiding tabs behind an
+     off-screen "more" menu. */
+  .ad-tabs {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    gap: 2px;
+    padding: 0 8px;
+    margin: 4px 0 0;
+    border-bottom: 2px solid #e5e7eb;
+  }
+  .ad-tabs::-webkit-scrollbar { display: none; }
+  .ad-tabs { scrollbar-width: none; }
+  .ad-tab {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+    min-height: 48px;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+  .ad-tab-badge { padding: 1px 6px; min-width: 20px; }
+
+  .ad-toolbar,
+  .ad-table-wrap {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+  .ad-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+  .ad-search,
+  .ad-filter {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    font-size: 16px; /* avoid iOS auto-zoom */
+  }
+  .ad-toolbar .ad-btn,
+  .ad-toolbar .ad-filter { min-height: 44px; }
+
+  /* Users + audit tables stay scrollable horizontally — they have 10+
+     columns each and a "card per row" would be unwieldy. The
+     component-scoped CSS for Broadcasts / Schedules / Blog collapses
+     those smaller tables to cards. */
+  .ad-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .ad-table { font-size: 12.5px; }
+  .ad-table th,
+  .ad-table td { padding: 9px 10px; }
+  .ad-act { padding: 8px 12px; font-size: 11.5px; min-height: 44px; }
+
+  .ad-rls-warning {
+    flex-direction: column;
+    padding: 14px 16px;
+    margin: 10px;
+  }
+
+  .ad-audit-stats {
+    padding: 12px 10px 0;
+    gap: 8px;
+  }
+  .ad-audit-stat {
+    min-width: calc(50% - 4px);
+    padding: 10px 14px;
+    gap: 8px;
+  }
+  .ad-audit-stat-value { font-size: 20px; }
+
+  /* Modal: full-viewport with sticky footer action bar. */
+  .ad-overlay { align-items: stretch; justify-content: stretch; }
+  .ad-modal {
+    width: 100vw;
+    max-width: 100vw;
+    min-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+    padding: 20px 16px 100px;
+    overflow-y: auto;
+  }
+  .ad-modal h3 { font-size: 18px; }
+  .ad-modal-input { font-size: 16px; min-height: 44px; }
+  .ad-modal-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    padding: 10px 14px;
+    z-index: 10;
+    box-shadow: 0 -4px 16px rgba(15,23,42,0.08);
+  }
+  .ad-modal-footer .ad-btn {
+    flex: 1 1 140px;
+    min-height: 44px;
+  }
+
+  .ad-plan-grid { grid-template-columns: 1fr; }
+
+  .ad-audit-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .ad-audit-page-btns {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .ad-page-btn { min-height: 44px; min-width: 44px; }
+}
+
+@media (max-width: 480px) {
+  .ad-stats { grid-template-columns: 1fr 1fr; }
 }
 
 /* Device info in audit logs */
