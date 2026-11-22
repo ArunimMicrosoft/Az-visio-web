@@ -57,9 +57,12 @@ export default function RichTextEditor({
   const [uploadError, setUploadError] = useState(null);
 
   const editor = useEditor({
-    // Cloudflare Pages SSR keeps React out of the server bundle, so we can
-    // render immediately on the client without hydration mismatches.
-    immediatelyRender: true,
+    // React 19 + TipTap v3: `immediatelyRender: true` can expose `editor`
+    // before its schema is attached, causing `editor.getHTML()` to crash with
+    // "Cannot read properties of null (reading 'cached')" from ProseMirror's
+    // DOMSerializer.fromSchema(). Setting false defers initialisation to
+    // post-mount so the schema is always wired by the time we touch the editor.
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3] },
@@ -101,11 +104,20 @@ export default function RichTextEditor({
   });
 
   // If the parent swaps `value` (e.g. opens a different schedule row), sync it.
+  // Guard: the editor can become non-null but still have an incomplete schema
+  // during the first micro-task, and getHTML() will throw a cryptic null-cached
+  // error. Wrap in try/catch so one transient read doesn't kill the admin tree.
   useEffect(() => {
-    if (!editor) return;
-    const current = editor.getHTML();
-    if ((value || '') !== current) {
-      editor.commands.setContent(value || '', { emitUpdate: false });
+    if (!editor || editor.isDestroyed || !editor.view) return;
+    try {
+      const current = editor.getHTML();
+      if ((value || '') !== current) {
+        editor.commands.setContent(value || '', { emitUpdate: false });
+      }
+    } catch (err) {
+      // Editor schema not fully attached yet; a subsequent effect pass will sync.
+      // eslint-disable-next-line no-console
+      console.warn('[RichTextEditor] deferred content sync:', err?.message);
     }
   }, [value, editor]);
 
