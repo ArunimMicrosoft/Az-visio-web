@@ -9,13 +9,13 @@
 //   SUPABASE_SERVICE_ROLE_KEY      — needed to bypass RLS on server-side batch reads
 //   EMAIL_FROM                     — e.g. hello@cloudcanvas.co (SPF/DKIM required)
 //   EMAIL_FROM_NAME                — display name for sender (optional)
-//   RESEND_API_KEY                 — optional, preferred provider
+//   RESEND_API_KEY                 — required (only supported provider)
 //   UNSUBSCRIBE_SECRET             — random secret for signing unsubscribe tokens
 //
 // Body (optional, for manual test runs):
 //   { "email": "someone@x.com", "dryRun": true }
 
-import { sendEmail, makeUnsubscribeToken } from '../../_shared/emailDelivery.js';
+import { sendEmail, logEmailSend, makeUnsubscribeToken } from '../../_shared/emailDelivery.js';
 import { buildDigestEmail } from '../../_shared/digestTemplate.js';
 
 const APP_URL = 'https://cloudcanvas.co';
@@ -249,6 +249,12 @@ export const onRequestPost = async ({ request, env }) => {
           text: digest.text,
           env,
         });
+        await logEmailSend(env, {
+          to: user.email,
+          kind: 'digest',
+          broadcast_id: null,
+          result,
+        });
         if (result.ok) {
           summary.sent += 1;
         } else {
@@ -258,6 +264,12 @@ export const onRequestPost = async ({ request, env }) => {
       } catch (err) {
         summary.failed += 1;
         summary.errors.push({ email: user.email, error: err.message });
+        await logEmailSend(env, {
+          to: user.email,
+          kind: 'digest',
+          broadcast_id: null,
+          result: { ok: false, status: 0, error: err.message },
+        });
       }
     }
   } catch (err) {
@@ -267,8 +279,16 @@ export const onRequestPost = async ({ request, env }) => {
     );
   }
 
-  return new Response(JSON.stringify({ ok: true, summary }), {
-    status: 200,
+  // Fail loudly when we attempted real sends and every single one failed.
+  // Previously this returned 200 and silently masked an outage. GH Actions
+  // only fails the run on non-200, so this flip is what finally surfaces
+  // delivery problems in the cron log.
+  const attemptedRealSends = summary.attempted - summary.skipped;
+  const allFailed = attemptedRealSends > 0 && summary.sent === 0;
+  const status = allFailed ? 502 : 200;
+
+  return new Response(JSON.stringify({ ok: !allFailed, summary }), {
+    status,
     headers: { 'Content-Type': 'application/json' },
   });
 };

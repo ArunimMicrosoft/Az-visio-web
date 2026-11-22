@@ -77,6 +77,10 @@ export async function supabaseSignUp(email, password, name) {
       trial_exports_used: 0,
       diagrams_created: 0,
       is_active: true,
+      // Default-opt-in for the weekly digest. The column default also sets
+      // this at the DB level (see docs/ADD_EMAIL_PREFERENCES.sql) but we
+      // make it explicit here so the intent survives future schema edits.
+      email_preferences: { weekly_digest: true },
       created_at: now,
     });
 

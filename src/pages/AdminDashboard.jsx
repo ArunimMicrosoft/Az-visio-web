@@ -5,6 +5,7 @@ import { supabase, writeAuditLog } from '../utils/supabase';
 import { saveAdminNote } from '../utils/activityTracker';
 import { ADMIN_EMAILS } from '../utils/adminConfig';
 import AdminBlogTab from '../components/AdminBlogTab';
+import AdminEmailBroadcast from '../components/AdminEmailBroadcast';
 import './AdminDashboard.css';
 
 const PLAN_COLORS = {
@@ -608,6 +609,12 @@ const AdminDashboard = () => {
           onClick={() => setActiveTab('blogPosts')}
         >
           📝 Blog Posts
+        </button>
+        <button
+          className={`ad-tab${activeTab === 'emailBroadcast' ? ' ad-tab-active' : ''}`}
+          onClick={() => setActiveTab('emailBroadcast')}
+        >
+          ✉️ Email Broadcast
         </button>
       </div>
 
@@ -1285,6 +1292,10 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
 
       {activeTab === 'blogPosts' && (
         <AdminBlogTab user={user} onFlash={showFlash} />
+      )}
+
+      {activeTab === 'emailBroadcast' && (
+        <AdminEmailBroadcast user={user} onFlash={showFlash} />
       )}
 
       {modal && (
