@@ -127,10 +127,25 @@ export default function AdminEmailBroadcast({ user, onFlash }) {
     }
   }, []);
 
-  // Load fresh list on mount. No caching — reopening the tab re-fetches so
-  // new signups show up automatically.
+  // Load fresh list on mount, and keep it fresh automatically:
+  //   - every 30s while the tab is mounted (covers "left it open for a while")
+  //   - on window focus (covers "tabbed away, came back")
+  //   - on visibilitychange back to visible (covers minimised windows)
+  // This way admins never need to click Refresh for new signups to appear.
   useEffect(() => {
     loadUsers();
+    const poll = setInterval(loadUsers, 30_000);
+    const onFocus = () => loadUsers();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') loadUsers();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      clearInterval(poll);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [loadUsers]);
 
   const loadPast = useCallback(async () => {
