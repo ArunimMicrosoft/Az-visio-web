@@ -106,6 +106,28 @@
   padding: 0;
 }
 
+/* HTML source view — appears when the <> HTML toolbar button is active.
+   Monospaced so the admin can see what the email will actually contain. */
+.rte-source {
+  display: block;
+  width: 100%;
+  padding: 14px 18px;
+  border: 0;
+  outline: none;
+  resize: vertical;
+  font-family: 'SF Mono', Menlo, Consolas, 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #0f172a;
+  background: #f8fafc;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.rte-source:focus {
+  background: #ffffff;
+}
+
 .ProseMirror {
   min-height: var(--rte-min-h);
   padding: 14px 18px;

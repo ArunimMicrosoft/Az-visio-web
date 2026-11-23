@@ -55,6 +55,12 @@ export default function RichTextEditor({
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
+  // Source view toggle — lets admins paste raw HTML (useful when the clipboard
+  // only carries text/plain, e.g. copied from a code block). In source mode the
+  // textarea is the source of truth; on toggle-off, its contents are pushed
+  // back through setContent so TipTap parses the HTML properly.
+  const [sourceMode, setSourceMode] = useState(false);
+  const [sourceDraft, setSourceDraft] = useState('');
 
   const editor = useEditor({
     // React 19 + TipTap v3: `immediatelyRender: true` can expose `editor`
@@ -179,6 +185,34 @@ export default function RichTextEditor({
     [editor]
   );
 
+  const toggleSourceMode = useCallback(() => {
+    if (!editor) return;
+    if (sourceMode) {
+      // Leaving source mode: push the textarea contents into TipTap so it
+      // parses the HTML. emitUpdate=true so onChange fires with the new HTML.
+      editor.commands.setContent(sourceDraft, { emitUpdate: true });
+      setSourceMode(false);
+    } else {
+      // Entering source mode: snapshot current HTML into the textarea.
+      try {
+        setSourceDraft(editor.getHTML());
+      } catch {
+        setSourceDraft('');
+      }
+      setSourceMode(true);
+    }
+  }, [editor, sourceMode, sourceDraft]);
+
+  const onSourceEdit = useCallback(
+    (ev) => {
+      const val = ev.target.value;
+      setSourceDraft(val);
+      // Live-propagate to parent onChange so unsaved HTML isn't lost on blur.
+      if (typeof onChange === 'function') onChange(val);
+    },
+    [onChange]
+  );
+
   if (!editor) {
     return <div className="rte-shell rte-loading">Loading editor…</div>;
   }
@@ -284,6 +318,16 @@ export default function RichTextEditor({
         >
           ↷
         </ToolbarBtn>
+
+        <span className="rte-sep" aria-hidden="true" />
+
+        <ToolbarBtn
+          title={sourceMode ? 'Switch back to visual editor' : 'Edit raw HTML — paste HTML here if TipTap stripped your tags'}
+          active={sourceMode}
+          onClick={toggleSourceMode}
+        >
+          {'<> HTML'}
+        </ToolbarBtn>
       </div>
 
       {uploadError && (
@@ -292,7 +336,18 @@ export default function RichTextEditor({
         </div>
       )}
 
-      <EditorContent editor={editor} className="rte-content" />
+      {sourceMode ? (
+        <textarea
+          className="rte-source"
+          value={sourceDraft}
+          onChange={onSourceEdit}
+          spellCheck={false}
+          aria-label="HTML source"
+          style={{ minHeight: `${minHeight}px` }}
+        />
+      ) : (
+        <EditorContent editor={editor} className="rte-content" />
+      )}
 
       <input
         ref={fileInputRef}
