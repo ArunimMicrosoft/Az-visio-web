@@ -39,6 +39,15 @@ const TEMPLATE_VARIABLES = [
   { key: 'canvas_url',              description: 'Deep-link to the canvas editor (cloudcanvas.co/app).' },
   { key: 'home_url',                description: 'Deep-link to the user home dashboard (cloudcanvas.co/home).' },
   { key: 'sop_url',                 description: 'Deep-link to the Product Guide / SOP article.' },
+  // Richer weekly-digest personalization (added 2026-11).
+  { key: 'diagrams_this_week',      description: "Diagrams the user updated in the last 7 days." },
+  { key: 'total_diagrams',          description: "Total diagrams the user has ever created." },
+  { key: 'top_diagram_name',        description: "Name of the user's most recently updated diagram (empty if none)." },
+  { key: 'top_diagram_url',         description: "Deep-link that opens the top diagram in the canvas (empty if none)." },
+  { key: 'streak_days',             description: "Rough activity streak — v1 uses login_count as a proxy." },
+  { key: 'login_count',             description: "Total successful sign-ins for this user." },
+  { key: 'new_blog_posts_this_week', description: "Platform-wide blog posts published in the last 7 days." },
+  { key: 'new_templates_this_week',  description: "Platform-wide templates added in the last 7 days (v1: empty)." },
 ];
 
 const VAR_RE = /\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g;
@@ -75,6 +84,16 @@ function buildPreviewContext(adminUser) {
     canvas_url: 'https://cloudcanvas.co/app',
     home_url: 'https://cloudcanvas.co/home',
     sop_url: 'https://cloudcanvas.co/blog/cloud-canvas-designer-sop',
+    // Richer digest preview values — pick plausible numbers so the preview
+    // reads like a real Monday morning note rather than a bunch of zeros.
+    diagrams_this_week: '2',
+    total_diagrams: '12',
+    top_diagram_name: 'Hub-and-Spoke Production Network',
+    top_diagram_url: 'https://cloudcanvas.co/app?open=preview-diagram-id',
+    streak_days: '4',
+    login_count: '18',
+    new_blog_posts_this_week: '3',
+    new_templates_this_week: '',
   };
 }
 

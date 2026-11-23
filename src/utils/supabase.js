@@ -409,5 +409,80 @@ export function onAuthStateChange(callback) {
   return supabase.auth.onAuthStateChange(callback);
 }
 
+// ==========================================
+// ADMIN: DELETE USER
+// ==========================================
+
+/**
+ * Count the rows that will be removed or anonymized by deleting a user.
+ * Powers the confirmation modal — all three queries are cheap count-only
+ * lookups that run in parallel so the modal opens with real numbers.
+ *
+ * Returns `{ diagrams, blogDrafts, broadcasts }` with any individual
+ * failure reported as `null` (so the UI can show "—" rather than crashing).
+ */
+export async function getUserDeletionImpact(userId) {
+  if (!userId) return { diagrams: 0, blogDrafts: 0, broadcasts: 0 };
+
+  async function countOf(promise) {
+    try {
+      const { count, error } = await promise;
+      if (error) return null;
+      return count ?? 0;
+    } catch {
+      return null;
+    }
+  }
+
+  const [diagrams, blogDrafts, broadcasts] = await Promise.all([
+    countOf(
+      supabase
+        .from('diagrams')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+    ),
+    countOf(
+      supabase
+        .from('blog_posts')
+        .select('id', { count: 'exact', head: true })
+        .eq('created_by', userId)
+        .eq('published', false)
+    ),
+    countOf(
+      supabase
+        .from('email_broadcasts')
+        .select('id', { count: 'exact', head: true })
+        .eq('created_by', userId)
+    ),
+  ]);
+
+  return { diagrams, blogDrafts, broadcasts };
+}
+
+/**
+ * Call the admin-delete-user endpoint. Requires an active admin session —
+ * the server verifies the JWT and the admin allowlist.
+ */
+export async function deleteUser(userId, { soft = false } = {}) {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw sessionError;
+  const token = sessionData?.session?.access_token;
+  if (!token) throw new Error('No active session. Please sign in again.');
+
+  const resp = await fetch('/api/admin-delete-user', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ user_id: userId, soft: !!soft }),
+  });
+  const json = await resp.json().catch(() => ({}));
+  if (!resp.ok || json?.ok !== true) {
+    throw new Error(json?.error || `HTTP ${resp.status}`);
+  }
+  return json;
+}
+
 export { supabase };
 export default supabase;

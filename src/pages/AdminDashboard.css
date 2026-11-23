@@ -217,6 +217,12 @@
 .ad-act-reset  { background: #f3f4f6; color: #374151; }
 .ad-act-ban    { background: #fef2f2; color: #b91c1c; }
 .ad-act-unban  { background: #ecfdf5; color: #065f46; }
+.ad-act-delete {
+  background: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.3);
+}
+.ad-act-delete:hover { background: #b91c1c; }
 
 /* ── Modal ───────────────────────────────────────────────────── */
 .ad-overlay {
@@ -701,4 +707,131 @@
   color: #ffffff;
   border: 1px solid #dc2626;
   box-shadow: 0 1px 3px rgba(220, 38, 38, 0.25);
+}
+
+/* ── Delete user modal ──────────────────────────────────────── */
+.ad-delete-title { color: #b91c1c; }
+
+.ad-delete-meta {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  font-size: 12px;
+}
+.ad-delete-meta > div { min-width: 0; }
+.ad-delete-meta dt {
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-size: 10.5px;
+  margin: 0 0 2px;
+}
+.ad-delete-meta dd {
+  margin: 0;
+  color: #1a1a2e;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ad-delete-impact {
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #dc2626;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #7f1d1d;
+  margin-bottom: 16px;
+  line-height: 1.55;
+}
+.ad-delete-impact strong { color: #991b1b; font-weight: 700; }
+.ad-delete-impact-muted { color: #9ca3af; font-style: italic; }
+
+.ad-delete-mode {
+  margin: 0 0 16px;
+  padding: 0;
+  border: none;
+}
+.ad-delete-mode legend {
+  padding: 0;
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: #374151;
+  font-size: 13px;
+}
+.ad-delete-mode-card {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #fff;
+}
+.ad-delete-mode-card:hover { background: #f8faff; }
+.ad-delete-mode-card input[type='radio'] {
+  margin-top: 3px;
+  accent-color: #0078D4;
+  cursor: pointer;
+}
+.ad-delete-mode-label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.ad-delete-mode-label strong {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+.ad-delete-mode-label small {
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.ad-delete-mode-card.is-selected.is-hard {
+  background: #fef2f2;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
+}
+.ad-delete-mode-card.is-selected.is-soft {
+  background: #fffbeb;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08);
+}
+
+.ad-delete-confirm-label {
+  display: block;
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  font-weight: 600 !important;
+  margin: 4px 0 6px !important;
+}
+.ad-delete-confirm-label code {
+  background: #f3f4f6;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: 'Consolas', monospace;
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.ad-btn-danger[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  filter: none !important;
 }

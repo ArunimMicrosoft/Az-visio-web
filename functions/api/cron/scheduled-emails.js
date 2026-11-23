@@ -142,6 +142,63 @@ async function recentDiagramsCount(env, userId) {
   }
 }
 
+// Weekly digest cutoff — diagrams updated after this date count toward the
+// "this week" variable in the template context.
+const SEVEN_DAYS_MS = 7 * 86_400_000;
+
+/**
+ * Bulk-fetch every recipient's diagram rows in one round trip per chunk,
+ * then index by user_id. Avoids the per-user N+1 the legacy digest did.
+ *
+ * Returns a Map keyed by user_id with:
+ *   { total: number, thisWeek: number, top: { id, name } | null }
+ */
+async function bulkFetchDiagramStatsByUser(env, userIds, now) {
+  const map = new Map();
+  if (!Array.isArray(userIds) || userIds.length === 0) return map;
+  const cutoffIso = new Date(now.getTime() - SEVEN_DAYS_MS).toISOString();
+  // PostgREST `in` filter needs commas; ids are UUIDs so no escaping worries.
+  const CHUNK = 100;
+  for (let i = 0; i < userIds.length; i += CHUNK) {
+    const slice = userIds.slice(i, i + CHUNK);
+    const idList = slice.join(',');
+    const rows = await supabaseSafe(
+      env,
+      `/rest/v1/diagrams?select=id,user_id,name,updated_at&user_id=in.(${idList})` +
+        `&order=updated_at.desc&limit=5000`
+    );
+    if (!Array.isArray(rows)) continue;
+    for (const row of rows) {
+      const key = row.user_id;
+      if (!key) continue;
+      let entry = map.get(key);
+      if (!entry) {
+        entry = { total: 0, thisWeek: 0, top: null };
+        map.set(key, entry);
+      }
+      entry.total += 1;
+      if (row.updated_at && row.updated_at >= cutoffIso) entry.thisWeek += 1;
+      // Rows are ordered updated_at DESC — first row wins.
+      if (!entry.top) entry.top = { id: row.id, name: row.name || '' };
+    }
+  }
+  return map;
+}
+
+/**
+ * Platform-wide count of blog posts published in the last 7 days. Same
+ * value for every recipient in a given cron run, so cache once per run.
+ */
+async function platformNewBlogPostsThisWeek(env, now) {
+  const cutoffIso = new Date(now.getTime() - SEVEN_DAYS_MS).toISOString();
+  const rows = await supabaseSafe(
+    env,
+    `/rest/v1/blog_posts?select=id&published=eq.true` +
+      `&published_at=gte.${encodeURIComponent(cutoffIso)}&limit=500`
+  );
+  return Array.isArray(rows) ? rows.length : 0;
+}
+
 async function suggestedArticleFor(env) {
   // Latest published blog post, or fallback.
   const rows = await supabaseSafe(
@@ -193,6 +250,26 @@ async function dispatchSchedule({ env, schedule, singleEmail, dryRun }) {
   const suggested = await suggestedArticleFor(env);
   const kindToLog = kind === 'weekly_digest' ? 'digest' : 'broadcast';
 
+  // Weekly-digest only: pre-fetch everyone's diagram stats and the
+  // platform-wide "new this week" counts in one pass. Other kinds skip
+  // this round trip entirely.
+  const now = new Date();
+  let diagramStatsByUser = new Map();
+  let newBlogPostsThisWeek = 0;
+  if (kind === 'weekly_digest') {
+    try {
+      const userIds = recipients.map((r) => r?.id).filter(Boolean);
+      diagramStatsByUser = await bulkFetchDiagramStatsByUser(env, userIds, now);
+    } catch (err) {
+      console.warn('[scheduled-emails] bulk diagram stats failed:', err.message);
+    }
+    try {
+      newBlogPostsThisWeek = await platformNewBlogPostsThisWeek(env, now);
+    } catch (err) {
+      console.warn('[scheduled-emails] platform digest counts failed:', err.message);
+    }
+  }
+
   for (const profile of recipients) {
     const prefs = profile.email_preferences || {};
     // Belt-and-braces opt-out check (the main query already filters this,
@@ -210,13 +287,24 @@ async function dispatchSchedule({ env, schedule, singleEmail, dryRun }) {
         ? `${APP_URL}/api/email-unsubscribe?token=${encodeURIComponent(unsubToken)}`
         : `${APP_URL}/home`;
 
-      const diagramCount = await recentDiagramsCount(env, profile.id);
+      // Prefer the bulk stats for weekly_digest; fall back to the legacy
+      // per-user count for any other kind that happens to use this handler.
+      const stats = diagramStatsByUser.get(profile.id) || null;
+      const diagramCount = stats
+        ? stats.thisWeek || stats.total || 0
+        : await recentDiagramsCount(env, profile.id);
       const context = buildRecipientContext({
         profile,
         recentDiagramsCount: diagramCount,
         suggestedArticle: suggested,
         unsubscribeUrl,
         appUrl: APP_URL,
+        now,
+        diagramsThisWeek: stats ? stats.thisWeek : 0,
+        totalDiagrams: stats ? stats.total : null,
+        topDiagram: stats ? stats.top : null,
+        newBlogPostsThisWeek,
+        newTemplatesThisWeek: '',
       });
 
       const { subject, html, text, headers, replyTo } = renderScheduledEmail({

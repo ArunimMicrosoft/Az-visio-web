@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { supabase, writeAuditLog } from '../utils/supabase';
+import { supabase, writeAuditLog, deleteUser, getUserDeletionImpact } from '../utils/supabase';
 import { saveAdminNote } from '../utils/activityTracker';
 import { ADMIN_EMAILS } from '../utils/adminConfig';
 import AdminBlogTab from '../components/AdminBlogTab';
@@ -38,6 +38,8 @@ const AUDIT_EVENT_META = {
   SUB_REVOKED: { icon: '🔴', label: 'Sub Revoked', color: '#ef4444', bg: '#fee2e2' },
   USER_BANNED: { icon: '🔒', label: 'User Banned', color: '#dc2626', bg: '#fee2e2' },
   USER_UNBANNED: { icon: '🔓', label: 'User Unbanned', color: '#059669', bg: '#d1fae5' },
+  USER_DELETED: { icon: '🗑', label: 'User Deleted', color: '#dc2626', bg: '#fee2e2' },
+  USER_SOFT_DELETED: { icon: '🧹', label: 'User Soft Deleted', color: '#b45309', bg: '#fef3c7' },
   COUNTERS_RESET: { icon: '🔄', label: 'Counters Reset', color: '#6b7280', bg: '#f3f4f6' },
   SESSION_ACTIVE: { icon: '💻', label: 'Session Active', color: '#0891b2', bg: '#cffafe' },
   PASSWORD_RESET_REQUESTED: { icon: '🔑', label: 'Password Reset', color: '#d97706', bg: '#fef3c7' },
@@ -399,6 +401,43 @@ const AdminDashboard = () => {
     }
   };
 
+  // Called when the admin opens the Delete modal — loads a cheap impact
+  // summary (diagram count, draft count, broadcast count) so the admin
+  // sees what the delete will touch before confirming.
+  const openDeleteModal = async (u) => {
+    setModal({ type: 'deleteUser', u, impact: null, mode: 'hard', confirmInput: '' });
+    try {
+      const impact = await getUserDeletionImpact(u.id);
+      // Modal might have been dismissed before the lookup resolves — only
+      // update if we're still showing the same user.
+      setModal((prev) => (prev && prev.type === 'deleteUser' && prev.u.id === u.id ? { ...prev, impact } : prev));
+    } catch (err) {
+      console.warn('[admin] getUserDeletionImpact failed:', err.message);
+      setModal((prev) => (prev && prev.type === 'deleteUser' && prev.u.id === u.id ? { ...prev, impact: { diagrams: null, blogDrafts: null, broadcasts: null } } : prev));
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!modal || modal.type !== 'deleteUser') return;
+    const target = modal.u;
+    const soft = modal.mode === 'soft';
+    try {
+      const result = await deleteUser(target.id, { soft });
+      // Audit log is written server-side (service role) so it survives
+      // even when the client UI is bypassed. No client-side write here.
+      showFlash(
+        'success',
+        soft
+          ? `🧹 Soft-deleted ${target.email} — email ${result.freed_email} is now available to re-signup.`
+          : `🗑 Deleted ${target.email} — email is now available to re-signup.`
+      );
+      setModal(null);
+      await loadUsers();
+    } catch (e) {
+      showFlash('error', `Delete failed: ${e.message}`);
+    }
+  };
+
   const handleUnlockAccount = async (u) => {
     if (!window.confirm(`Unlock ${u.email}? They will be able to sign in again immediately.`)) return;
     try {
@@ -548,7 +587,7 @@ const AdminDashboard = () => {
     signups: auditLogs.filter((l) => l.event === 'SIGNUP').length,
     failures: auditLogs.filter((l) => l.event === 'LOGIN_FAILED' || l.event === 'SIGNUP_FAILED').length,
     adminActions: auditLogs.filter((l) =>
-      ['PLAN_CHANGED', 'TRIAL_EXTENDED', 'SUB_EXTENDED', 'SUB_REVOKED', 'USER_BANNED', 'USER_UNBANNED', 'COUNTERS_RESET'].includes(l.event)
+      ['PLAN_CHANGED', 'TRIAL_EXTENDED', 'SUB_EXTENDED', 'SUB_REVOKED', 'USER_BANNED', 'USER_UNBANNED', 'USER_DELETED', 'USER_SOFT_DELETED', 'COUNTERS_RESET'].includes(l.event)
     ).length,
   };
 
@@ -991,6 +1030,13 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                                 {u.is_active !== false ? '🔒 Ban' : '🔓 Unban'}
                               </button>
                               <button
+                                className="ad-act ad-act-delete"
+                                title={`Permanently remove ${u.email} — frees the email for re-signup.`}
+                                onClick={() => openDeleteModal(u)}
+                              >
+                                🗑 Delete
+                              </button>
+                              <button
                                 className="ad-act ad-act-note"
                                 title="Admin notes"
                                 onClick={() => {
@@ -1078,6 +1124,8 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                 <option value="SUB_REVOKED">🔴 Sub Revoked</option>
                 <option value="USER_BANNED">🔒 User Banned</option>
                 <option value="USER_UNBANNED">🔓 User Unbanned</option>
+                <option value="USER_DELETED">🗑 User Deleted</option>
+                <option value="USER_SOFT_DELETED">🧹 User Soft Deleted</option>
                 <option value="COUNTERS_RESET">🔄 Counters Reset</option>
               </optgroup>
             </select>
@@ -1444,6 +1492,97 @@ SELECT email, role, subscription_tier FROM public.profiles ORDER BY created_at D
                   </button>
                   <button className="ad-btn ad-btn-outline" onClick={() => setModal(null)}>
                     Cancel
+                  </button>
+                </div>
+              </>
+            )}
+
+            {modal.type === 'deleteUser' && (
+              <>
+                <h3 className="ad-delete-title">🗑 Delete user</h3>
+                <p className="ad-modal-email">{modal.u.email}</p>
+                <dl className="ad-delete-meta">
+                  <div>
+                    <dt>Plan</dt>
+                    <dd>{PLAN_LABELS[modal.u.subscription_tier] || modal.u.subscription_tier || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Joined</dt>
+                    <dd>{modal.u.created_at ? fmtDateTime(modal.u.created_at) : '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Last active</dt>
+                    <dd>{modal.u.last_active_at ? fmtDateTime(modal.u.last_active_at) : '—'}</dd>
+                  </div>
+                </dl>
+
+                <div className="ad-delete-impact">
+                  {modal.impact === null ? (
+                    <span className="ad-delete-impact-muted">Loading impact…</span>
+                  ) : (
+                    <span>
+                      <strong>{modal.impact.diagrams ?? '—'}</strong> diagrams,{' '}
+                      <strong>{modal.impact.blogDrafts ?? '—'}</strong> blog drafts,{' '}
+                      <strong>{modal.impact.broadcasts ?? '—'}</strong> broadcasts created by this user
+                      will be removed or anonymized.
+                    </span>
+                  )}
+                </div>
+
+                <fieldset className="ad-delete-mode">
+                  <legend>Delete mode</legend>
+                  <label className={`ad-delete-mode-card ${modal.mode === 'hard' ? 'is-selected is-hard' : ''}`}>
+                    <input
+                      type="radio"
+                      name="ad-delete-mode"
+                      value="hard"
+                      checked={modal.mode === 'hard'}
+                      onChange={() => setModal((p) => ({ ...p, mode: 'hard' }))}
+                    />
+                    <span className="ad-delete-mode-label">
+                      <strong>🗑 Hard delete</strong>
+                      <small>Permanently remove the account. Email becomes reusable. This cannot be undone.</small>
+                    </span>
+                  </label>
+                  <label className={`ad-delete-mode-card ${modal.mode === 'soft' ? 'is-selected is-soft' : ''}`}>
+                    <input
+                      type="radio"
+                      name="ad-delete-mode"
+                      value="soft"
+                      checked={modal.mode === 'soft'}
+                      onChange={() => setModal((p) => ({ ...p, mode: 'soft' }))}
+                    />
+                    <span className="ad-delete-mode-label">
+                      <strong>🧹 Soft delete</strong>
+                      <small>Keep audit history. Anonymize PII. Email becomes reusable. User cannot log back in.</small>
+                    </span>
+                  </label>
+                </fieldset>
+
+                <label className="ad-delete-confirm-label">
+                  Type <code>DELETE</code> to confirm
+                </label>
+                <input
+                  className="ad-modal-input"
+                  type="text"
+                  autoFocus
+                  value={modal.confirmInput || ''}
+                  onChange={(e) =>
+                    setModal((p) => ({ ...p, confirmInput: e.target.value }))
+                  }
+                  placeholder="DELETE"
+                />
+
+                <div className="ad-modal-footer">
+                  <button className="ad-btn ad-btn-outline" onClick={() => setModal(null)}>
+                    Cancel
+                  </button>
+                  <button
+                    className="ad-btn ad-btn-danger"
+                    disabled={modal.confirmInput !== 'DELETE'}
+                    onClick={handleConfirmDelete}
+                  >
+                    {modal.mode === 'soft' ? '🧹 Soft delete user' : '🗑 Delete user'}
                   </button>
                 </div>
               </>
