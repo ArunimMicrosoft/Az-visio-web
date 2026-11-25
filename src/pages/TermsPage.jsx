@@ -65,7 +65,7 @@ const TermsPage = () => {
             <li>You agree to provide accurate, current, and complete information.</li>
             <li>You are responsible for keeping your password confidential and for all activity under your account.</li>
             <li>One person or legal entity per account. Sharing credentials is prohibited.</li>
-            <li>You must notify us promptly at <a href="mailto:arunimpandey2903@hotmail.com">arunimpandey2903@hotmail.com</a> if you suspect unauthorized access.</li>
+            <li>You must notify us promptly at <a href="mailto:support@cloudcanvas.co">support@cloudcanvas.co</a> if you suspect unauthorized access.</li>
           </ul>
 
           <h2 id="plans">4. Subscription Plans & Billing</h2>
@@ -160,12 +160,12 @@ const TermsPage = () => {
 
           <h2 id="law">16. Governing Law & Disputes</h2>
           <p>These Terms are governed by the laws of India, without regard to conflict-of-law principles. Any dispute arising out of or relating to these Terms or the Service shall be subject to the exclusive jurisdiction of the courts located in <strong>New Delhi, India</strong>.</p>
-          <p>Before filing any formal claim, you agree to first contact us at <a href="mailto:arunimpandey2903@hotmail.com">arunimpandey2903@hotmail.com</a> and to attempt informal resolution in good faith for at least 30 days.</p>
+          <p>Before filing any formal claim, you agree to first contact us at <a href="mailto:support@cloudcanvas.co">support@cloudcanvas.co</a> and to attempt informal resolution in good faith for at least 30 days.</p>
 
           <h2 id="contact">17. Contact</h2>
           <p>If you have questions about these Terms, contact us:</p>
           <ul>
-            <li>Email: <a href="mailto:arunimpandey2903@hotmail.com">arunimpandey2903@hotmail.com</a></li>
+            <li>Email: <a href="mailto:support@cloudcanvas.co">support@cloudcanvas.co</a></li>
             <li>Web: <a href="https://cloudcanvas.co">https://cloudcanvas.co</a></li>
           </ul>
 

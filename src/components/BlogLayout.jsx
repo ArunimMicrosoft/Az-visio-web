@@ -50,7 +50,7 @@ export const BlogFooter = () => (
         </div>
         <div className="cc-blog-footer-col">
           <h5>Contact</h5>
-          <a href="mailto:arunimpandey2903@hotmail.com">arunimpandey2903@hotmail.com</a>
+          <a href="mailto:support@cloudcanvas.co">support@cloudcanvas.co</a>
         </div>
       </div>
     </div>

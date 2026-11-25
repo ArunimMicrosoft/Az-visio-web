@@ -174,7 +174,7 @@ const PrivacyPage = () => {
           </table>
 
           <h2 id="rights">8. Your Rights</h2>
-          <p>You have the following rights regarding your personal data. To exercise them, email <a href="mailto:arunimpandey2903@hotmail.com">arunimpandey2903@hotmail.com</a> from the address on file. We respond within 30 days (or as required by your local law).</p>
+          <p>You have the following rights regarding your personal data. To exercise them, email <a href="mailto:support@cloudcanvas.co">support@cloudcanvas.co</a> from the address on file. We respond within 30 days (or as required by your local law).</p>
           <ul>
             <li><strong>Access</strong> — get a copy of the data we hold about you</li>
             <li><strong>Rectification</strong> — correct inaccurate data (or do it yourself in your account settings)</li>
@@ -216,7 +216,7 @@ const PrivacyPage = () => {
           <p>For any privacy question, data request, or to exercise your rights, contact:</p>
           <ul>
             <li><strong>Data Protection Contact:</strong> Arunim Pandey</li>
-            <li><strong>Email:</strong> <a href="mailto:arunimpandey2903@hotmail.com">arunimpandey2903@hotmail.com</a></li>
+            <li><strong>Email:</strong> <a href="mailto:support@cloudcanvas.co">support@cloudcanvas.co</a></li>
             <li><strong>Postal:</strong> Arunim&apos;s IT Café, New Delhi, India</li>
           </ul>
 

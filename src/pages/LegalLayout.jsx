@@ -31,6 +31,6 @@ export const LegalFooter = () => (
     {' · '}
     <Link to="/terms">Terms</Link>{' · '}
     <Link to="/privacy">Privacy</Link>{' · '}
-    <a href="mailto:arunimpandey2903@hotmail.com">Contact</a>
+    <a href="mailto:support@cloudcanvas.co">Contact</a>
   </footer>
 );

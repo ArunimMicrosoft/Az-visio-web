@@ -48,7 +48,7 @@ The old `staticwebapp.config.json` and `/api/*` Azure Functions stay in the repo
 | `VITE_SUPABASE_URL` | `https://quknseohpwzlbbisgfpi.supabase.co` | (or your value from `.env`) |
 | `VITE_SUPABASE_ANON_KEY` | *(your anon key)* | safe to be public |
 | `VITE_RAZORPAY_KEY_ID` | `rzp_live_SRRAUP26wGg3OF` | public key id |
-| `VITE_ADMIN_EMAILS` | `arunimpandey2903@hotmail.com,demo@arunimitcaffe.com` | comma-separated |
+| `VITE_ADMIN_EMAILS` | `support@cloudcanvas.co,demo@arunimitcaffe.com` | comma-separated |
 | `RAZORPAY_KEY_ID` | same as `VITE_RAZORPAY_KEY_ID` | server-side use |
 | `RAZORPAY_KEY_SECRET` | *(your secret)* | **mark as encrypted** |
 

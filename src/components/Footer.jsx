@@ -16,7 +16,7 @@ const Footer = () => {
         </span>
         <span className="footer-divider">|</span>
         <span className="footer-suggestions">
-          Suggestions: <a href="mailto:arunimpandey2903@hotmail.com">arunimpandey2903@hotmail.com</a>
+          Suggestions: <a href="mailto:support@cloudcanvas.co">support@cloudcanvas.co</a>
         </span>
       </div>
     </footer>
