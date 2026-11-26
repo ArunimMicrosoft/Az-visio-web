@@ -129,6 +129,21 @@
   margin-left: 6px;
 }
 
+/* Amber banner shown inside the Edit modal when the admin picks the
+   "⏸ Paused — stop sending" option in the cadence dropdown. Makes it
+   unambiguous that no emails will go out in this state. */
+.es-paused-banner {
+  display: block;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fef3c7;
+  color: #78350f;
+  border: 1px solid #fcd34d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .es-actions {
   display: flex;
   gap: 8px;

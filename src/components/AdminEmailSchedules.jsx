@@ -16,6 +16,7 @@ import { supabase } from '../utils/supabase';
 import { sanitizeEmailHtml } from '../utils/htmlSanitize';
 import {
   CADENCE_OPTIONS,
+  PAUSED_CADENCE_VALUE,
   cadenceFriendly,
   listSchedules,
   updateSchedule,
@@ -430,7 +431,12 @@ export default function AdminEmailSchedules({ user, onFlash }) {
 function EditModal({ row, onClose, onSave, busy }) {
   const [subject, setSubject] = useState(row.subject_template);
   const [body, setBody] = useState(row.body_template);
-  const [cadence, setCadence] = useState(row.cadence);
+  // If the row is paused (enabled=false), show the dedicated "⏸ Paused" option
+  // as the current selection. Keeps the real cadence in state so resuming
+  // (picking any real cadence) restores the previous schedule without losing it.
+  const [cadence, setCadence] = useState(
+    row.enabled ? row.cadence : PAUSED_CADENCE_VALUE
+  );
   const [customCron, setCustomCron] = useState(row.custom_cron || '');
   const [enabled, setEnabled] = useState(!!row.enabled);
   // Mobile view toggle — see AdminEmailBroadcast for the matching pattern.
@@ -455,12 +461,23 @@ function EditModal({ row, onClose, onSave, busy }) {
     (cadence !== 'custom' || customCron.trim().length > 0);
 
   const submit = () => {
+    // Translate the UI pseudo-value "⏸ Paused" into a real DB write:
+    //   enabled=false, keep the row's existing real cadence (or fall back to
+    //   weekly_mon_09 if the row never had one). This way the schedule can be
+    //   resumed later by picking a real cadence from the dropdown without
+    //   having to re-enter config from scratch.
+    const isPausing = cadence === PAUSED_CADENCE_VALUE;
+    const effectiveCadence = isPausing
+      ? (row.cadence && row.cadence !== PAUSED_CADENCE_VALUE ? row.cadence : 'weekly_mon_09')
+      : cadence;
+    const effectiveEnabled = isPausing ? false : enabled;
+
     const patch = {
       subject_template: subject.trim(),
       body_template: body,
-      cadence,
-      enabled,
-      custom_cron: cadence === 'custom' ? customCron.trim() : null,
+      cadence: effectiveCadence,
+      enabled: effectiveEnabled,
+      custom_cron: effectiveCadence === 'custom' ? customCron.trim() : null,
     };
     onSave(patch);
   };
@@ -543,6 +560,13 @@ function EditModal({ row, onClose, onSave, busy }) {
                   signup for <code>welcome</code>).
                 </small>
               )}
+              {cadence === PAUSED_CADENCE_VALUE && (
+                <div className="es-paused-banner" role="status">
+                  ⏸ <strong>Paused.</strong> The hourly cron will skip this schedule
+                  on every tick. No emails go out until you pick a real cadence
+                  from this dropdown.
+                </div>
+              )}
             </label>
 
             {cadence === 'custom' && (
@@ -561,6 +585,7 @@ function EditModal({ row, onClose, onSave, busy }) {
               </label>
             )}
 
+            {cadence !== PAUSED_CADENCE_VALUE && (
             <label className="es-check">
               <input
                 type="checkbox"
@@ -573,6 +598,7 @@ function EditModal({ row, onClose, onSave, busy }) {
                   : 'Enabled — the hourly cron will send when due'}
               </span>
             </label>
+            )}
           </section>
 
           <section className="es-edit-side">

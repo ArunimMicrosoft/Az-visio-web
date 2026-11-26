@@ -8,7 +8,14 @@
 import { supabase } from './supabase';
 
 // Shared with functions/_shared/cadence.js — keep the keys in sync.
+// Pseudo-value used only by the admin UI — never written to the DB. When the
+// admin picks this in the cadence dropdown, the save handler translates it to
+// { enabled: false } while preserving the previously-set real cadence so the
+// schedule can be resumed later without losing its config.
+export const PAUSED_CADENCE_VALUE = '__paused__';
+
 export const CADENCE_OPTIONS = [
+  { value: PAUSED_CADENCE_VALUE, label: '⏸ Paused — stop sending' },
   { value: 'weekly_mon_09',  label: 'Weekly — Monday 09:00 UTC' },
   { value: 'weekly_fri_17',  label: 'Weekly — Friday 17:00 UTC' },
   { value: 'daily_09',       label: 'Daily — 09:00 UTC' },
